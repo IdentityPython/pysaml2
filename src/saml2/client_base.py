@@ -341,22 +341,17 @@ class Base(Entity):
         # Allow argument values either as class instances or as dictionaries
         # all of these have cardinality 0..1
         _msg = AuthnRequest()
-        for param in ["scoping", "requested_authn_context", "conditions",
-                      "subject"]:
-            try:
-                _item = kwargs[param]
-            except KeyError:
-                pass
+        for param in ["scoping", "requested_authn_context", "conditions", "subject"]:
+            _item = kwargs.pop(param, None)
+            if not _item:
+                continue
+
+            if isinstance(_item, _msg.child_class(param)):
+                args[param] = _item
+            elif isinstance(_item, dict):
+                args[param] = RequestedAuthnContext(**_item)
             else:
-                del kwargs[param]
-                # either class instance or argument dictionary
-                if isinstance(_item, _msg.child_class(param)):
-                    args[param] = _item
-                elif isinstance(_item, dict):
-                    args[param] = RequestedAuthnContext(**_item)
-                else:
-                    raise ValueError("%s or wrong type expected %s" % (_item,
-                                                                       param))
+                raise ValueError("Wrong type for param {name}".format(name=param))
 
         try:
             args["name_id_policy"] = kwargs["name_id_policy"]
