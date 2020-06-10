@@ -438,17 +438,39 @@ class Base(Entity):
                 self.sec.cert_handler.update_cert(True, client_crt)
                 if client_crt is not None:
                     sign_prepare = True
-                return self._message(AuthnRequest, destination, message_id,
-                                     consent, extensions, sign, sign_prepare,
-                                     protocol_binding=binding,
-                                     scoping=scoping, nsprefix=nsprefix,
-                                     sign_alg=sign_alg, digest_alg=digest_alg,
-                                     **args)
-        return self._message(AuthnRequest, destination, message_id, consent,
-                             extensions, sign, sign_prepare,
-                             protocol_binding=binding,
-                             scoping=scoping, nsprefix=nsprefix,
-                             sign_alg=sign_alg, digest_alg=digest_alg, **args)
+                msg = self._message(
+                    AuthnRequest,
+                    destination,
+                    message_id,
+                    consent,
+                    extensions,
+                    sign,
+                    sign_prepare,
+                    protocol_binding=binding,
+                    scoping=scoping,
+                    nsprefix=nsprefix,
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg,
+                    **args,
+                )
+        else:
+            msg = self._message(
+                AuthnRequest,
+                destination,
+                message_id,
+                consent,
+                extensions,
+                sign,
+                sign_prepare,
+                protocol_binding=binding,
+                scoping=scoping,
+                nsprefix=nsprefix,
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
+                **args,
+            )
+
+        return msg
 
     def create_attribute_query(self, destination, name_id=None,
             attribute=None, message_id=0, consent=None,
