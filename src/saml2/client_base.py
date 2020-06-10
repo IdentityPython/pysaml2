@@ -349,57 +349,43 @@ class Base(Entity):
             else:
                 raise ValueError("Wrong type for param {name}".format(name=param))
 
-        try:
-            args["name_id_policy"] = kwargs["name_id_policy"]
-            del kwargs["name_id_policy"]
-        except KeyError:
-            if allow_create is None:
-                allow_create = self.config.getattr("name_id_format_allow_create", "sp")
-                if allow_create is None:
-                    allow_create = "false"
-                else:
-                    if allow_create is True:
-                        allow_create = "true"
-                    else:
-                        allow_create = "false"
+        # NameIDPolicy
+        nameid_format_config = self.config.getattr("name_id_format", "sp")
+        nameid_format = (
+            nameid_format
+            if nameid_format is not None
+            else NAMEID_FORMAT_TRANSIENT
+            if nameid_format_config is None
+            else nameid_format_config[0]
+            if isinstance(nameid_format_config, list)
+            else None
+            if nameid_format == 'None'
+            else nameid_format_config
+        )
 
-            if nameid_format == "":
-                name_id_policy = None
-            else:
-                if nameid_format is None:
-                    nameid_format = self.config.getattr("name_id_format", "sp")
+        allow_create_config = self.config.getattr("name_id_format_allow_create", "sp")
+        allow_create = (
+            None
+            # SAML 2.0 errata says AllowCreate MUST NOT be used for transient ids
+            if nameid_format == NAMEID_FORMAT_TRANSIENT
+            else allow_create
+            if allow_create is not None
+            else str(bool(allow_create_config)).lower()
+        )
 
-                    # If no nameid_format has been set in the configuration
-                    # or passed in then transient is the default.
-                    if nameid_format is None:
-                        # SAML 2.0 errata says AllowCreate MUST NOT be used for
-                        # transient ids - to make a conservative change this is
-                        # only applied for the default cause
-                        allow_create = None
-                        nameid_format = NAMEID_FORMAT_TRANSIENT
+        name_id_policy = (
+            kwargs.pop("name_id_policy", None)
+            if "name_id_policy" in kwargs
+            else None
+            if nameid_format == ""
+            else samlp.NameIDPolicy(allow_create=allow_create, format=nameid_format)
+        )
 
-                    # If a list has been configured or passed in choose the
-                    # first since NameIDPolicy can only have one format specified.
-                    elif isinstance(nameid_format, list):
-                        nameid_format = nameid_format[0]
+        if name_id_policy and vorg:
+            name_id_policy.sp_name_qualifier = vorg
+            name_id_policy.format = saml.NAMEID_FORMAT_PERSISTENT
 
-                    # Allow a deployer to signal that no format should be specified
-                    # in the NameIDPolicy by passing in or configuring the string 'None'.
-                    elif nameid_format == 'None':
-                        nameid_format = None
-
-                name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
-                                                    format=nameid_format)
-
-            if name_id_policy and vorg:
-                try:
-                    name_id_policy.sp_name_qualifier = vorg
-                    name_id_policy.format = saml.NAMEID_FORMAT_PERSISTENT
-                except KeyError:
-                    pass
-            args["name_id_policy"] = name_id_policy
-
-        nsprefix = kwargs.get("nsprefix")
+        args["name_id_policy"] = name_id_policy
 
         conf_sp_type = self.config.getattr('sp_type', 'sp')
         conf_sp_type_in_md = self.config.getattr('sp_type_in_metadata', 'sp')
