@@ -387,6 +387,7 @@ class Base(Entity):
 
         args["name_id_policy"] = name_id_policy
 
+        # eIDAS SPType
         conf_sp_type = self.config.getattr('sp_type', 'sp')
         conf_sp_type_in_md = self.config.getattr('sp_type_in_metadata', 'sp')
         if conf_sp_type and conf_sp_type_in_md is False:
@@ -395,6 +396,7 @@ class Base(Entity):
             item = sp_type.SPType(text=conf_sp_type)
             extensions.add_extension_element(item)
 
+        # eIDAS RequestedAttributes
         requested_attrs = (
             requested_attributes
             or self.config.getattr('requested_attributes', 'sp')
@@ -408,6 +410,7 @@ class Base(Entity):
                 extensions = Extensions()
             extensions.add_extension_element(req_attrs_node)
 
+        # ForceAuthn
         force_authn = str(
             kwargs.pop("force_authn", None)
             or self.config.getattr("force_authn", "sp")
