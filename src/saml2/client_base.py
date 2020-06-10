@@ -90,6 +90,52 @@ class NoServiceDefined(SAMLError):
     pass
 
 
+def create_requested_attribute_node(requested_attrs, attribute_converters):
+    items = []
+    for attr in requested_attrs:
+        friendly_name = attr.get('friendly_name')
+        name = attr.get('name')
+        name_format = attr.get('name_format')
+        is_required = str(attr.get('required', False)).lower()
+
+        if not name and not friendly_name:
+            raise ValueError("Missing required attribute: 'name' or 'friendly_name'")
+
+        if not name:
+            for converter in attribute_converters:
+                try:
+                    name = converter._to[friendly_name.lower()]
+                except KeyError:
+                    continue
+                else:
+                    if not name_format:
+                        name_format = converter.name_format
+                    break
+
+        if not friendly_name:
+            for converter in attribute_converters:
+                try:
+                    friendly_name = converter._fro[name.lower()]
+                except KeyError:
+                    continue
+                else:
+                    if not name_format:
+                        name_format = converter.name_format
+                    break
+
+        items.append(
+            RequestedAttribute(
+                is_required=is_required,
+                name_format=name_format,
+                friendly_name=friendly_name,
+                name=name,
+            )
+        )
+
+    node = RequestedAttributes(extension_elements=items)
+    return node
+
+
 class Base(Entity):
     """ The basic pySAML2 service provider class """
 
@@ -388,57 +434,13 @@ class Base(Entity):
             or self.config.getattr('requested_attributes', 'sp')
             or []
         )
-
-        if not extensions:
-            extensions = Extensions()
-
-        items = []
-        for attr in requested_attrs:
-            friendly_name = attr.get('friendly_name')
-            name = attr.get('name')
-            name_format = attr.get('name_format')
-            is_required = str(attr.get('required', False)).lower()
-
-            if not name and not friendly_name:
-                raise ValueError(
-                    "Missing required attribute: '{}' or '{}'".format(
-                        'name', 'friendly_name'
-                    )
-                )
-
-            if not name:
-                for converter in self.config.attribute_converters:
-                    try:
-                        name = converter._to[friendly_name.lower()]
-                    except KeyError:
-                        continue
-                    else:
-                        if not name_format:
-                            name_format = converter.name_format
-                        break
-
-            if not friendly_name:
-                for converter in self.config.attribute_converters:
-                    try:
-                        friendly_name = converter._fro[name.lower()]
-                    except KeyError:
-                        continue
-                    else:
-                        if not name_format:
-                            name_format = converter.name_format
-                        break
-
-            items.append(
-                RequestedAttribute(
-                    is_required=is_required,
-                    name_format=name_format,
-                    friendly_name=friendly_name,
-                    name=name,
-                )
+        if requested_attrs:
+            req_attrs_node = create_requested_attribute_node(
+                requested_attrs, self.config.attribute_converters
             )
-
-        item = RequestedAttributes(extension_elements=items)
-        extensions.add_extension_element(item)
+            if not extensions:
+                extensions = Extensions()
+            extensions.add_extension_element(req_attrs_node)
 
         force_authn = str(
             kwargs.pop("force_authn", None)
