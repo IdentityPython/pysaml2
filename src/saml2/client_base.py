@@ -14,6 +14,7 @@ from saml2.entity import Entity
 
 from saml2.mdstore import destinations
 from saml2.profile import paos, ecp
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import AuthnQuery, RequestedAuthnContext
 from saml2.samlp import NameIDMappingRequest
@@ -383,7 +384,7 @@ class Base(Entity):
 
         if name_id_policy and vorg:
             name_id_policy.sp_name_qualifier = vorg
-            name_id_policy.format = saml.NAMEID_FORMAT_PERSISTENT
+            name_id_policy.format = nameid_format or NAMEID_FORMAT_PERSISTENT
 
         args["name_id_policy"] = name_id_policy
 
