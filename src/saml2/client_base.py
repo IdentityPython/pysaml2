@@ -307,10 +307,6 @@ class Base(Entity):
         :return: either a tuple of request ID and <samlp:AuthnRequest> instance
                  or a tuple of request ID and str when sign is set to True
         """
-        client_crt = None
-        if "client_crt" in kwargs:
-            client_crt = kwargs["client_crt"]
-
         args = {}
 
         # AssertionConsumerServiceURL
@@ -403,10 +399,7 @@ class Base(Entity):
                     pass
             args["name_id_policy"] = name_id_policy
 
-        try:
-            nsprefix = kwargs["nsprefix"]
-        except KeyError:
-            nsprefix = None
+        nsprefix = kwargs.get("nsprefix")
 
         conf_sp_type = self.config.getattr('sp_type', 'sp')
         conf_sp_type_in_md = self.config.getattr('sp_type_in_metadata', 'sp')
@@ -441,11 +434,11 @@ class Base(Entity):
                 AuthnRequest(), extensions, **kwargs
             )
             args.update(_args)
-
         args.pop("id", None)
 
-        if sign is None:
-            sign = self.authn_requests_signed
+        client_crt = kwargs.get("client_crt")
+        nsprefix = kwargs.get("nsprefix")
+        sign = self.authn_requests_signed if sign is None else sign
 
         if (sign and self.sec.cert_handler.generate_cert()) or client_crt is not None:
             with self.lock:
