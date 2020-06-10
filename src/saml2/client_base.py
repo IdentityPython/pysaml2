@@ -332,14 +332,11 @@ class Base(Entity):
         elif service_url:
             args["assertion_consumer_service_url"] = service_url
 
-
-        try:
-            args["provider_name"] = kwargs["provider_name"]
-        except KeyError:
-            if binding == BINDING_PAOS:
-                pass
-            else:
-                args["provider_name"] = self._my_name()
+        # ProviderName
+        provider_name = kwargs.get("provider_name")
+        if not provider_name and binding != BINDING_PAOS:
+            provider_name = self._my_name()
+        args["provider_name"] = provider_name
 
         # Allow argument values either as class instances or as dictionaries
         # all of these have cardinality 0..1
