@@ -1,5 +1,12 @@
 # Changelog
 
+## 5.2.0 (2020-06-23)
+
+- Fix presence of empty eIDAS RequestedAttributes element on AuthnRequest
+- Refactor create_authn_request method to be easier to reason about
+- Fix NameIDPolicy checks for allowed Format and allowCreate values
+
+
 ## 5.1.0 (2020-06-09)
 
 - support eIDAS RequestedAttributes per AuthnRequest
