@@ -363,7 +363,7 @@ class Base(Entity):
             else NAMEID_FORMAT_TRANSIENT
             if nameid_format_config is None
             else None
-            if nameid_format == 'None'
+            if nameid_format_config == 'None'
             else nameid_format_config
         )
 
