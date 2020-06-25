@@ -1,5 +1,10 @@
 # Changelog
 
+## 5.3.0 (2020-06-25)
+
+- Fix check for nameid_format set to the string "None" in the configuration
+
+
 ## 5.2.0 (2020-06-23)
 
 - Fix presence of empty eIDAS RequestedAttributes element on AuthnRequest
