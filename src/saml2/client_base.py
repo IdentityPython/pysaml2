@@ -288,7 +288,7 @@ class Base(Entity):
         :param vorg: The virtual organization the service belongs to.
         :param scoping: The scope of the request
         :param binding: The protocol to use for the Response !!
-        :param nameid_format: Format of the NameID
+        :param nameid_format: Format of the NameIDPolicy
         :param service_url_binding: Where the reply should be sent dependent
             on reply binding.
         :param message_id: The identifier for this request
@@ -351,29 +351,20 @@ class Base(Entity):
                 raise ValueError("Wrong type for param {name}".format(name=param))
 
         # NameIDPolicy
-        nameid_format_config = self.config.getattr("name_id_format", "sp")
-        nameid_format_config = (
-            nameid_format_config[0]
-            if isinstance(nameid_format_config, list)
-            else nameid_format_config
-        )
-        nameid_format = (
+        nameid_policy_format_config = self.config.getattr("name_id_policy_format", "sp")
+        nameid_policy_format = (
             nameid_format
-            if nameid_format is not None
-            else NAMEID_FORMAT_TRANSIENT
-            if nameid_format_config is None
-            else None
-            if nameid_format_config == 'None'
-            else nameid_format_config
+            or nameid_policy_format_config
+            or None
         )
 
         allow_create_config = self.config.getattr("name_id_format_allow_create", "sp")
         allow_create = (
             None
             # SAML 2.0 errata says AllowCreate MUST NOT be used for transient ids
-            if nameid_format == NAMEID_FORMAT_TRANSIENT
+            if nameid_policy_format == NAMEID_FORMAT_TRANSIENT
             else allow_create
-            if allow_create is not None
+            if allow_create
             else str(bool(allow_create_config)).lower()
         )
 
@@ -381,13 +372,15 @@ class Base(Entity):
             kwargs.pop("name_id_policy", None)
             if "name_id_policy" in kwargs
             else None
-            if nameid_format == ""
-            else samlp.NameIDPolicy(allow_create=allow_create, format=nameid_format)
+            if not nameid_policy_format
+            else samlp.NameIDPolicy(
+                allow_create=allow_create, format=nameid_policy_format
+            )
         )
 
         if name_id_policy and vorg:
             name_id_policy.sp_name_qualifier = vorg
-            name_id_policy.format = nameid_format or NAMEID_FORMAT_PERSISTENT
+            name_id_policy.format = nameid_policy_format or NAMEID_FORMAT_PERSISTENT
 
         args["name_id_policy"] = name_id_policy
 

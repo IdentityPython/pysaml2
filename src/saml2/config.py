@@ -89,6 +89,7 @@ SP_ARGS = [
     "allow_unsolicited",
     "ecp",
     "name_id_format",
+    "name_id_policy_format",
     "name_id_format_allow_create",
     "logout_requests_signed",
     "requested_attribute_name_format",
@@ -209,6 +210,7 @@ class Config(object):
         self.contact_person = None
         self.name_form = None
         self.name_id_format = None
+        self.name_id_policy_format = None
         self.name_id_format_allow_create = None
         self.virtual_organization = None
         self.only_use_keys_in_metadata = True

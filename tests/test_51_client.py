@@ -242,7 +242,7 @@ class TestClient:
         req_id, req = self.client.create_attribute_query(
             "https://aai-demo-idp.switch.ch/idp/shibboleth",
             "_e7b68a04488f715cda642fbdd90099f5",
-            format=saml.NAMEID_FORMAT_TRANSIENT,
+            format=NAMEID_FORMAT_TRANSIENT,
             message_id="id1")
 
         assert isinstance(req, samlp.AttributeQuery)
@@ -253,12 +253,15 @@ class TestClient:
         assert req.issue_instant
         assert req.issuer.text == "urn:mace:example.com:saml:roland:sp"
         nameid = req.subject.name_id
-        assert nameid.format == saml.NAMEID_FORMAT_TRANSIENT
+        assert nameid.format == NAMEID_FORMAT_TRANSIENT
         assert nameid.text == "_e7b68a04488f715cda642fbdd90099f5"
 
     def test_create_auth_request_0(self):
         ar_str = "%s" % self.client.create_authn_request(
-            "http://www.example.com/sso", message_id="id1")[1]
+            "http://www.example.com/sso",
+            message_id="id1",
+            nameid_format=NAMEID_FORMAT_TRANSIENT,
+        )[1]
 
         ar = samlp.authn_request_from_string(ar_str)
         assert ar.assertion_consumer_service_url == ("http://lingon.catalogix"
@@ -270,7 +273,7 @@ class TestClient:
         assert ar.issuer.text == "urn:mace:example.com:saml:roland:sp"
         nid_policy = ar.name_id_policy
         assert nid_policy.allow_create is None
-        assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
+        assert nid_policy.format == NAMEID_FORMAT_TRANSIENT
 
         node_requested_attributes = None
         for e in ar.extensions.extension_elements:
@@ -892,7 +895,7 @@ class TestClient:
             subject=factory(saml.Subject, text="_aaa",
                             name_id=factory(
                                 saml.NameID,
-                                format=saml.NAMEID_FORMAT_TRANSIENT)),
+                                format=NAMEID_FORMAT_TRANSIENT)),
             attribute_statement=do_attribute_statement(
                 {
                     ("", "", "sn"): ("Jeter", ""),
@@ -976,7 +979,7 @@ class TestClient:
             self.client.config.entityid,
             self.server.config.attribute_converters,
             self.server.config.getattr("policy", "idp"),
-            name_id=factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
+            name_id=factory(saml.NameID, format=NAMEID_FORMAT_TRANSIENT),
             issuer=self.server._issuer(),
             authn_class=INTERNETPROTOCOLPASSWORD,
             authn_auth="http://www.example.com/login",
@@ -1037,7 +1040,7 @@ class TestClient:
             'in_response_to': "_012345",
             'subject_confirmation_method': saml.SCM_BEARER
         }
-        name_id = factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT)
+        name_id = factory(saml.NameID, format=NAMEID_FORMAT_TRANSIENT)
 
         farg = add_path(
             {},
@@ -1149,7 +1152,7 @@ class TestClient:
             farg['assertion']['subject']['subject_confirmation'],
             ['subject_confirmation_data', 'recipient',
              "http://lingon.catalogix.se:8087/"])
-        name_id = factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT)
+        name_id = factory(saml.NameID, format=NAMEID_FORMAT_TRANSIENT)
 
         assertion_1 = asser_1.construct(
             self.client.config.entityid,
@@ -1796,7 +1799,7 @@ class TestClientNonAsciiAva:
         req_id, req = self.client.create_attribute_query(
             "https://aai-demo-idp.switch.ch/idp/shibboleth",
             "_e7b68a04488f715cda642fbdd90099f5",
-            format=saml.NAMEID_FORMAT_TRANSIENT,
+            format=NAMEID_FORMAT_TRANSIENT,
             message_id="id1")
 
         assert isinstance(req, samlp.AttributeQuery)
@@ -1807,12 +1810,15 @@ class TestClientNonAsciiAva:
         assert req.issue_instant
         assert req.issuer.text == "urn:mace:example.com:saml:roland:sp"
         nameid = req.subject.name_id
-        assert nameid.format == saml.NAMEID_FORMAT_TRANSIENT
+        assert nameid.format == NAMEID_FORMAT_TRANSIENT
         assert nameid.text == "_e7b68a04488f715cda642fbdd90099f5"
 
     def test_create_auth_request_0(self):
         ar_str = "%s" % self.client.create_authn_request(
-            "http://www.example.com/sso", message_id="id1")[1]
+            "http://www.example.com/sso",
+            message_id="id1",
+            nameid_format=NAMEID_FORMAT_TRANSIENT,
+        )[1]
 
         ar = samlp.authn_request_from_string(ar_str)
         assert ar.assertion_consumer_service_url == ("http://lingon.catalogix"
@@ -1824,7 +1830,7 @@ class TestClientNonAsciiAva:
         assert ar.issuer.text == "urn:mace:example.com:saml:roland:sp"
         nid_policy = ar.name_id_policy
         assert nid_policy.allow_create is None
-        assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
+        assert nid_policy.format == NAMEID_FORMAT_TRANSIENT
 
         node_requested_attributes = None
         for e in ar.extensions.extension_elements:
@@ -2464,7 +2470,7 @@ class TestClientNonAsciiAva:
             subject=factory(saml.Subject, text="_aaa",
                             name_id=factory(
                                 saml.NameID,
-                                format=saml.NAMEID_FORMAT_TRANSIENT)),
+                                format=NAMEID_FORMAT_TRANSIENT)),
             attribute_statement=do_attribute_statement(
                 {
                     ("", "", "sn"): ("Jeter", ""),
@@ -2548,7 +2554,7 @@ class TestClientNonAsciiAva:
             self.client.config.entityid,
             self.server.config.attribute_converters,
             self.server.config.getattr("policy", "idp"),
-            name_id=factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
+            name_id=factory(saml.NameID, format=NAMEID_FORMAT_TRANSIENT),
             issuer=self.server._issuer(),
             authn_class=INTERNETPROTOCOLPASSWORD,
             authn_auth="http://www.example.com/login",
@@ -2609,7 +2615,7 @@ class TestClientNonAsciiAva:
             'in_response_to': "_012345",
             'subject_confirmation_method': saml.SCM_BEARER
         }
-        name_id = factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT)
+        name_id = factory(saml.NameID, format=NAMEID_FORMAT_TRANSIENT)
 
         farg = add_path(
             {},
@@ -2722,7 +2728,7 @@ class TestClientNonAsciiAva:
             farg['assertion']['subject']['subject_confirmation'],
             ['subject_confirmation_data', 'recipient',
              "http://lingon.catalogix.se:8087/"])
-        name_id = factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT)
+        name_id = factory(saml.NameID, format=NAMEID_FORMAT_TRANSIENT)
 
         assertion_1 = asser_1.construct(
             self.client.config.entityid,

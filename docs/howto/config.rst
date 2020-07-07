@@ -536,16 +536,50 @@ Example::
     }
 
 
+name_id_policy_format
+"""""""""""""""""""""
+
+A string value that will be used to set the ``Format`` attribute of the
+``<NameIDPolicy>`` element of an ``<AuthnRequest>``.
+
+Example::
+
+    "service": {
+        "sp": {
+            "name_id_policy_format": "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+        }
+    }
+
+
 name_id_format_allow_create
 """""""""""""""""""""""""""
 
-Enable AllowCreate in NameIDPolicy.
+A boolean value (``True`` or ``False``) that will be used to set the ``AllowCreate``
+attribute of the ``<NameIDPolicy>`` element of an ``<AuthnRequest>``.
 
 Example::
 
     "service": {
         "sp": {
             "name_id_format_allow_create": True,
+        }
+    }
+
+
+name_id_format
+""""""""""""""
+
+A list of string values that will be used to set the ``<NameIDFormat>`` element of the
+metadata of an entity.
+
+Example::
+
+    "service": {
+        "idp": {
+            "name_id_format": [
+                "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+                "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
+            ]
         }
     }
 

@@ -379,13 +379,15 @@ def do_extensions(mname, item):
 
 
 def _do_nameid_format(cls, conf, typ):
-    namef = conf.getattr("name_id_format", typ)
-    if namef:
-        if isinstance(namef, six.string_types):
-            ids = [md.NameIDFormat(namef)]
-        else:
-            ids = [md.NameIDFormat(text=form) for form in namef]
-        setattr(cls, "name_id_format", ids)
+    name_id_format = conf.getattr("name_id_format", typ)
+    if not name_id_format:
+        return
+
+    if isinstance(name_id_format, six.string_types):
+        name_id_format = [name_id_format]
+
+    formats = [md.NameIDFormat(text=format) for format in name_id_format]
+    setattr(cls, "name_id_format", formats)
 
 
 def do_endpoints(conf, endpoints):
