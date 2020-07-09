@@ -32,9 +32,32 @@ SAML_SUBJECT_ID = 'urn:oasis:names:tc:SAML:attribute:'
 # https://github.com/Umbrella-Commiters/UmbrellaIdP3/blob/master/schema/99-user.ldif
 UMBRELLA_EAAUser_ID = 'urn:oid:1.3.6.1.4.1.42750.1.1.'
 
+# INERA specification
+# Closet public spec source I could find, sadly in swedish
+# https://www.sambi.se/wordpress/wp-content/uploads/2017/06/Sambi_Attributspecifikation_1.1.pdf
+INERA_OID = 'urn:oid:1.2.752.29.4.'
+
+# DIGG specification
+# https://docs.swedenconnect.se/technical-framework/latest/ELN-0604_-_Attribute_Specification_for_the_Swedish_eID_Framework.html
+DIGG_OID = 'urn:oid:1.2.752.201.3.'
+
 MAP = {
     'identifier': 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',
     'fro': {
+        DIGG_OID + '1': 'orgAffiliation',
+        DIGG_OID + '2': 'transactionIdentifier',
+        DIGG_OID + '3': 'authContextParams',
+        DIGG_OID + '4': 'prid',
+        DIGG_OID + '5': 'pridPersistence',
+        DIGG_OID + '6': 'personalIdentityNumberBinding',
+        DIGG_OID + '7': 'eidasPersonIdentifier',
+        DIGG_OID + '8': 'birthName',
+        DIGG_OID + '9': 'eidasNaturalPersonAddress',
+        DIGG_OID + '10': 'userCertificate',
+        DIGG_OID + '11': 'userSignature',
+        DIGG_OID + '12': 'sad',
+        DIGG_OID + '13': 'authServerSignature',
+        DIGG_OID + '14': 'signMessageDigest',
         EIDAS_LEGALPERSON+'LegalPersonIdentifier': 'LegalPersonIdentifier',
         EIDAS_LEGALPERSON+'LegalPersonAddress': 'LegalAddress',
         EIDAS_LEGALPERSON+'LegalName': 'LegalName',
@@ -71,6 +94,8 @@ MAP = {
         EDUPERSON_OID+'12': 'eduPersonPrincipalNamePrior',
         EDUPERSON_OID+'13': 'eduPersonUniqueId',
         EDUPERSON_OID+'16': 'eduPersonOrcid',
+        INERA_OID + '1': 'employeeHsaId',
+        INERA_OID + '13': 'personalIdentityNumber',
         LDAPGVAT_OID+'1': 'PVP-GID',
         LDAPGVAT_OID+'149': 'PVP-BPK',
         LDAPGVAT_OID+'153': 'PVP-OU-OKZ',
@@ -237,7 +262,10 @@ MAP = {
         'CurrentAddress': EIDAS_NATURALPERSON+'CurrentAddress',
         'Gender': EIDAS_NATURALPERSON+'Gender',
         'associatedDomain': UCL_DIR_PILOT+'37',
+        'authContextParams': DIGG_OID+'3',
         'authorityRevocationList': X500ATTR_OID+'38',
+        'authServerSignature': DIGG_OID+'13',
+        'birthName': DIGG_OID+'8',
         'businessCategory': X500ATTR_OID+'15',
         'c': X500ATTR_OID+'6',
         'cACertificate': X500ATTR_OID+'37',
@@ -271,7 +299,10 @@ MAP = {
         'eduPersonAssurance': EDUPERSON_OID+'11',
         'eduPersonUniqueId': EDUPERSON_OID+'13',
         'eduPersonOrcid': EDUPERSON_OID+'16',
+        'eidasNaturalPersonAddress': DIGG_OID+'9',
+        'eidasPersonIdentifier': DIGG_OID+'7',
         'email': PKCS_9+'1',
+        'employeeHsaId': INERA_OID+'1',
         'employeeNumber': NETSCAPE_LDAP+'3',
         'employeeType': NETSCAPE_LDAP+'4',
         'enhancedSearchGuide': X500ATTR_OID+'47',
@@ -309,8 +340,11 @@ MAP = {
         'osiOtherHomePhone': OPENOSI_OID+'109',
         'osiWorkURL': OPENOSI_OID+'120',
         'ou': X500ATTR_OID+'11',
+        'orgAffiliation': DIGG_OID+'1',
         'owner': X500ATTR_OID+'32',
         'pairwise-id': SAML_SUBJECT_ID+'pairwise-id',
+        'personalIdentityNumber': INERA_OID+'13',
+        'personalIdentityNumberBinding': DIGG_OID+'6',
         'physicalDeliveryOfficeName': X500ATTR_OID+'19',
         'postOfficeBox': X500ATTR_OID+'18',
         'postalAddress': X500ATTR_OID+'16',
@@ -318,6 +352,8 @@ MAP = {
         'preferredDeliveryMethod': X500ATTR_OID+'28',
         'preferredLanguage': NETSCAPE_LDAP+'39',
         'presentationAddress': X500ATTR_OID+'29',
+        'prid': DIGG_OID+'4',
+        'pridPersistence': DIGG_OID+'5',
         'protocolInformation': X500ATTR_OID+'48',
         'pseudonym': X500ATTR_OID+'65',
         'PVP-USERID': LDAPGVAT_UCL_DIR_PILOT+'1',
@@ -341,6 +377,7 @@ MAP = {
         'PVP-GIVENNAME': LDAPGVAT_X500ATTR_OID+'42',
         'registeredAddress': X500ATTR_OID+'26',
         'roleOccupant': X500ATTR_OID+'33',
+        'sad': DIGG_OID+'12',
         'schacCountryOfCitizenship': SCHAC+'5',
         'schacCountryOfResidence': SCHAC+'11',
         'schacDateOfBirth': SCHAC+'3',
@@ -363,6 +400,7 @@ MAP = {
         'schacUserStatus': SCHAC+'19',
         'searchGuide': X500ATTR_OID+'14',
         'serialNumber': X500ATTR_OID+'5',
+        'signMessageDigest': DIGG_OID+'14',
         'sisLegalGuardianFor': SIS+'1',
         'sisSchoolGrade': SIS+'2',
         'sn': X500ATTR_OID+'4',
@@ -375,11 +413,14 @@ MAP = {
         'teletexTerminalIdentifier': X500ATTR_OID+'22',
         'telexNumber': X500ATTR_OID+'21',
         'title': X500ATTR_OID+'12',
+        'transactionIdentifier': DIGG_OID+'2',
         'uid': UCL_DIR_PILOT+'1',
         'uniqueMember': X500ATTR_OID+'50',
         'userCertificate': X500ATTR_OID+'36',
+        #  'userCertificate': DIGG_OID+'10',
         'userPKCS12': NETSCAPE_LDAP+'216',
         'userSMIMECertificate': NETSCAPE_LDAP+'40',
+        'userSignature': DIGG_OID+'11',
         'x121Address': X500ATTR_OID+'24',
         'x500UniqueIdentifier': X500ATTR_OID+'45',
         'swissEduPersonUniqueID': SWISSEDUPERSON_OID+'1',
