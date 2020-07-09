@@ -64,6 +64,18 @@ Configuration directives
 General directives
 ------------------
 
+additional_cert_files
+^^^^^^^^^^^^^^^^^^^^^
+
+Format::
+
+    additional_cert_files: ["other-cert.pem", "another-cert.pem"]
+
+Additional public certs that will be listed.  Useful during cert/key rotation or
+if you need to include a certificate chain.
+
+Each entry in *additional_cert_files* must be a PEM formatted file with a single certificate.
+
 assurance_certification
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -131,7 +143,7 @@ Format::
     cert_file: "cert.pem"
 
 This is the public part of the service private/public key pair.
-*cert_file* must be a PEM formatted certificate chain file.
+*cert_file* must be a PEM formatted file with a single certificate.
 
 contact_person
 ^^^^^^^^^^^^^^
