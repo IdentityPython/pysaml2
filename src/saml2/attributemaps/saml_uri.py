@@ -32,6 +32,10 @@ SAML_SUBJECT_ID = 'urn:oasis:names:tc:SAML:attribute:'
 # https://github.com/Umbrella-Commiters/UmbrellaIdP3/blob/master/schema/99-user.ldif
 UMBRELLA_EAAUser_ID = 'urn:oid:1.3.6.1.4.1.42750.1.1.'
 
+# PKIX specification (SMI Security for PKIX Personal Data Attributes)
+# https://tools.ietf.org/html/rfc7299
+PKIX_OID = 'urn:oid:1.3.6.1.5.5.7.9.'
+
 # INERA specification
 # Closet public spec source I could find, sadly in swedish
 # https://www.sambi.se/wordpress/wp-content/uploads/2017/06/Sambi_Attributspecifikation_1.1.pdf
@@ -143,6 +147,11 @@ MAP = {
         OPENOSI_OID+'109': 'osiOtherHomePhone',
         OPENOSI_OID+'120': 'osiWorkURL',
         PKCS_9+'1': 'email',
+        PKIX_OID + '1': 'dateOfBirth',
+        PKIX_OID + '2': 'placeOfBirth',
+        PKIX_OID + '3': 'gender',
+        PKIX_OID + '4': 'countryOfCitizenship',
+        PKIX_OID + '5': 'countryOfResidence',
         SAML_SUBJECT_ID+'subject-id': 'subject-id',
         SAML_SUBJECT_ID+'pairwise-id': 'pairwise-id',
         SCHAC+'1': 'schacMotherTongue',
@@ -273,7 +282,10 @@ MAP = {
         'certificateRevocationList': X500ATTR_OID+'39',
         'cn': X500ATTR_OID+'3',
         'co': UCL_DIR_PILOT+'43',
+        'countryOfCitizenship': PKIX_OID+'4',
+        'countryOfResidence': PKIX_OID+'5',
         'crossCertificatePair': X500ATTR_OID+'40',
+        'dateOfBirth': PKIX_OID+'1',
         'dc': UCL_DIR_PILOT+'25',
         'deltaRevocationList': X500ATTR_OID+'53',
         'departmentNumber': NETSCAPE_LDAP+'2',
@@ -308,6 +320,7 @@ MAP = {
         'enhancedSearchGuide': X500ATTR_OID+'47',
         'facsimileTelephoneNumber': X500ATTR_OID+'23',
         'federationFeideSchemaVersion': NOREDUPERSON_OID+'9',
+        'gender': PKIX_OID+'3',
         'generationQualifier': X500ATTR_OID+'44',
         'givenName': X500ATTR_OID+'42',
         'houseIdentifier': X500ATTR_OID+'51',
@@ -346,6 +359,7 @@ MAP = {
         'personalIdentityNumber': INERA_OID+'13',
         'personalIdentityNumberBinding': DIGG_OID+'6',
         'physicalDeliveryOfficeName': X500ATTR_OID+'19',
+        'placeOfBirth': PKIX_OID+'2',
         'postOfficeBox': X500ATTR_OID+'18',
         'postalAddress': X500ATTR_OID+'16',
         'postalCode': X500ATTR_OID+'17',
