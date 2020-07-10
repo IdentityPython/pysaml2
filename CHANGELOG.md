@@ -1,5 +1,10 @@
 # Changelog
 
+## 6.1.0 (2020-07-10)
+
+- Fix signed logout requests flag
+
+
 ## 6.0.0 (2020-07-10)
 
 - Differentiate between metadata NameIDFormat and AuthnRequest NameIDPolicy Format
