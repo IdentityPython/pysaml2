@@ -222,7 +222,7 @@ class Saml2Client(Base):
                     sign = True
 
                 if sign is None:
-                    sign = self.config.logout_requests_signed
+                    sign = self.logout_requests_signed
 
                 sigalg = None
                 if sign:
