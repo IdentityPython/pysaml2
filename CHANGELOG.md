@@ -1,5 +1,13 @@
 # Changelog
 
+## 5.4.0 (2020-07-10)
+
+- Fix generation of signed metadata
+- Add attribute mappings used by SwedenConnect (DIGG, INERA and PKIX specifications)
+- Update SWAMID entity category
+- Document the `additional_cert_files` configuration option
+
+
 ## 5.3.0 (2020-06-25)
 
 - Fix check for nameid_format set to the string "None" in the configuration
