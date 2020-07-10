@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.0.0 (2020-07-10)
+
+- Differentiate between metadata NameIDFormat and AuthnRequest NameIDPolicy Format
+  - Users using `name_id_format` to set the `<NameIDPolicy Format="...">` attribute now
+    need to use the new configuration option `name_id_policy_format`.
+- Fix documentation formatting
+
 ## 5.4.0 (2020-07-10)
 
 - Fix generation of signed metadata
