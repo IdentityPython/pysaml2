@@ -76,6 +76,29 @@ if you need to include a certificate chain.
 
 Each entry in *additional_cert_files* must be a PEM formatted file with a single certificate.
 
+entity_attributes
+^^^^^^^^^^^^^^^^^
+
+Generates an ``Attribute`` element with the given NameFormat, Name, FriendlyName and
+values, each as an ``AttributeValue`` element.
+
+The element is added under the generated metadata ``EntityDescriptor`` as an
+``Extension`` element under the ``EntityAttributes`` element.
+
+And omit
+
+Example::
+
+    "entity_attributes": [
+      {
+        "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+        "name": "urn:oasis:names:tc:SAML:profiles:subject-id:req",
+        # "friendly_name" is not set
+        "values": ["any"],
+      },
+    ]
+
+
 assurance_certification
 ^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -708,6 +708,24 @@ def entity_descriptor(confd):
     if confd.contact_person is not None:
         entd.contact_person = do_contact_persons_info(confd.contact_person)
 
+    if confd.entity_attributes:
+        if not entd.extensions:
+            entd.extensions = md.Extensions()
+        attributes = [
+            Attribute(
+                name_format=attr.get("format"),
+                name=attr.get("name"),
+                friendly_name=attr.get("friendly_name"),
+                attribute_value=[
+                    AttributeValue(text=value)
+                    for value in attr.get("values", [])
+                ],
+            )
+            for attr in confd.entity_attributes
+        ]
+        for attribute in attributes:
+            _add_attr_to_entity_attributes(entd.extensions, attribute)
+
     if confd.assurance_certification:
         if not entd.extensions:
             entd.extensions = md.Extensions()

@@ -54,6 +54,7 @@ COMMON_ARGS = [
     "preferred_binding",
     "session_storage",
     "assurance_certification",
+    "entity_attributes",
     "entity_category",
     "entity_category_support",
     "xmlsec_path",
@@ -226,6 +227,7 @@ class Config(object):
         self.domain = ""
         self.name_qualifier = ""
         self.assurance_certification = []
+        self.entity_attributes = []
         self.entity_category = []
         self.entity_category_support = []
         self.crypto_backend = 'xmlsec1'

@@ -3,6 +3,20 @@ from pathutils import full_path, xmlsec_path
 CONFIG = {
     "entityid": "urn:mace:example.com:saml:roland:sp",
     "name": "urn:mace:example.com:saml:roland:sp",
+    "entity_attributes": [
+        {
+            "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+            "name": "urn:oasis:names:tc:SAML:profiles:subject-id:req",
+            # "friendly_name" is not set
+            "values": ["any"],
+        },
+        {
+            "name": "somename",
+            "friendly_name": "somefriendlyname",
+            "name_format": "format",
+            "values": ["x", "y", "z"],
+        },
+    ],
     "description": "My own SP",
     "service": {
         "sp": {
