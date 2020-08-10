@@ -40,11 +40,8 @@ def load_maps(dirspec):
     for fil in os.listdir(dirspec):
         if fil.endswith(".py"):
             mod = import_module(fil[:-3])
-            for key, item in mod.__dict__.items():
-                if key.startswith("__"):
-                    continue
-                if isinstance(item, dict) and "to" in item and "fro" in item:
-                    mapd[item["identifier"]] = item
+            for item in _find_maps_in_module(mod):
+                mapd[item["identifier"]] = item
 
     return mapd
 
@@ -54,7 +51,7 @@ def ac_factory(path=""):
 
     :param path: The path to a directory where the attribute maps are expected
         to reside.
-    :return: A AttributeConverter instance
+    :return: A list of AttributeConverter instances
     """
     acs = []
 
@@ -65,28 +62,46 @@ def ac_factory(path=""):
         for fil in sorted(os.listdir(path)):
             if fil.endswith(".py"):
                 mod = import_module(fil[:-3])
-                for key, item in mod.__dict__.items():
-                    if key.startswith("__"):
-                        continue
-                    if isinstance(item,
-                                  dict) and "to" in item and "fro" in item:
-                        atco = AttributeConverter(item["identifier"])
-                        atco.from_dict(item)
-                        acs.append(atco)
+                acs.extend(_attribute_map_module_to_acs(mod))
     else:
         from saml2 import attributemaps
 
         for typ in attributemaps.__all__:
             mod = import_module(".%s" % typ, "saml2.attributemaps")
-            for key, item in mod.__dict__.items():
-                if key.startswith("__"):
-                    continue
-                if isinstance(item, dict) and "to" in item and "fro" in item:
-                    atco = AttributeConverter(item["identifier"])
-                    atco.from_dict(item)
-                    acs.append(atco)
+            acs.extend(_attribute_map_module_to_acs(mod))
 
     return acs
+
+
+def _attribute_map_module_to_acs(module):
+    """Scan an attribute map module and return any attribute maps defined
+
+    :param: module: the python map module
+    :type: types.ModuleType
+    :return: a generator yielding AttributeConverter defintions
+    :rtype: typing.Iterable[AttributeConverter]
+    """
+    for item in _find_maps_in_module(module):
+        atco = AttributeConverter(item["identifier"])
+        atco.from_dict(item)
+        yield atco
+
+
+def _find_maps_in_module(module):
+    """Find attribute map dictionaries in a map file
+
+    :param: module: the python map module
+    :type: types.ModuleType
+    :return: a generator yielding dict objects which have the right shape
+    :rtype: typing.Iterable[dict]
+    """
+    for key, item in module.__dict__.items():
+        if key.startswith("__"):
+            continue
+        if isinstance(item, dict) and "identifier" in item and (
+            "to" in item or "fro" in item
+        ):
+            yield item
 
 
 def to_local(acs, statement, allow_unknown_attributes=False):
