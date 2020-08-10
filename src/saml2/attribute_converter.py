@@ -98,7 +98,9 @@ def _find_maps_in_module(module):
     for key, item in module.__dict__.items():
         if key.startswith("__"):
             continue
-        if isinstance(item, dict) and "to" in item and "fro" in item:
+        if isinstance(item, dict) and "identifier" in item and (
+            "to" in item or "fro" in item
+        ):
             yield item
 
 
