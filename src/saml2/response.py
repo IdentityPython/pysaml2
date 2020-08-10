@@ -526,8 +526,6 @@ class AuthnResponse(StatusResponse):
                 try:
                     if not self.check_subject_confirmation_in_response_to(
                             self.in_response_to):
-                        logger.exception(
-                            "Unsolicited response %s" % self.in_response_to)
                         raise UnsolicitedResponse(
                             "Unsolicited response: %s" % self.in_response_to)
                 except AttributeError:
@@ -536,8 +534,6 @@ class AuthnResponse(StatusResponse):
                 # Should check that I haven't seen this before
                 pass
             else:
-                logger.exception(
-                    "Unsolicited response %s" % self.in_response_to)
                 raise UnsolicitedResponse(
                     "Unsolicited response: %s" % self.in_response_to)
 
