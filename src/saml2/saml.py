@@ -1079,7 +1079,7 @@ class AttributeType_(SamlBase):
     def __init__(self,
                  attribute_value=None,
                  name=None,
-                 name_format=NAME_FORMAT_UNSPECIFIED,
+                 name_format=NAME_FORMAT_URI,
                  friendly_name=None,
                  text=None,
                  extension_elements=None,
@@ -1092,6 +1092,10 @@ class AttributeType_(SamlBase):
         self.name = name
         self.name_format = name_format
         self.friendly_name = friendly_name
+
+    def harvest_element_tree(self, tree):
+        tree.attrib.setdefault('NameFormat', NAME_FORMAT_UNSPECIFIED)
+        SamlBase.harvest_element_tree(self, tree)
 
 
 def attribute_type__from_string(xml_string):

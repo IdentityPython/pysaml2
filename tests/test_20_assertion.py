@@ -2,11 +2,12 @@
 from saml2.argtree import add_path
 from saml2.authn_context import pword
 from saml2.mdie import to_dict
-from saml2 import md, assertion
+from saml2 import md, assertion, create_class_from_xml_string
 from saml2.saml import Attribute
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
 from saml2.saml import NAME_FORMAT_URI
+from saml2.saml import NAME_FORMAT_UNSPECIFIED
 from saml2.saml import AttributeValue
 from saml2.saml import NameID
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
@@ -940,6 +941,21 @@ def test_assertion_with_authn_instant():
 
     print(msg)
     assert msg.authn_statement[0].authn_instant == "2009-02-13T23:31:30Z"
+
+
+def test_attribute_producer_should_default_to_uri():
+    attr = Attribute()
+    assert attr.name_format == NAME_FORMAT_URI
+
+
+def test_attribute_consumer_should_default_to_unspecified():
+    attr_str = """
+      <saml:Attribute Name="uid" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <saml:AttributeValue xsi:type="xs:string">test</saml:AttributeValue>
+      </saml:Attribute>
+    """
+    attr = create_class_from_xml_string(Attribute, attr_str)
+    assert attr.name_format == NAME_FORMAT_UNSPECIFIED
 
 
 if __name__ == "__main__":
