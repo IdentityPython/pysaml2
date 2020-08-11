@@ -25,11 +25,11 @@ SIGNING_METHODS = {
     "rsa-sha512": 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512',
     "dsa-sha1": 'http://www.w3.org/2000/09/xmldsig#dsa-sha1',
     'dsa-sha256': 'http://www.w3.org/2009/xmldsig11#dsa-sha256',
-    'ecdsa_sha1': 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha1',
-    'ecdsa_sha224': 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha224',
-    'ecdsa_sha256': 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha256',
-    'ecdsa_sha384': 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha384',
-    'ecdsa_sha512': 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha512',
+    'ecdsa-sha1': 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha1',
+    'ecdsa-sha224': 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha224',
+    'ecdsa-sha256': 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256',
+    'ecdsa-sha384': 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha384',
+    'ecdsa-sha512': 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha512',
 }
 
 
