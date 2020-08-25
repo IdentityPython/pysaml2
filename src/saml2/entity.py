@@ -1277,11 +1277,12 @@ class Entity(HTTPBase):
 
         return destination
 
-    def artifact2message(self, artifact, descriptor):
+    def artifact2message(self, artifact, descriptor, sign=False):
         """
 
         :param artifact: The Base64 encoded SAML artifact as sent over the net
         :param descriptor: The type of entity on the other side
+        :param sign: Whether ArtifactResolve should be signed or not
         :return: A SAML message (request/response)
         """
 
@@ -1291,7 +1292,12 @@ class Entity(HTTPBase):
             raise SAMLError("Missing endpoint location")
 
         _sid = sid()
-        mid, msg = self.create_artifact_resolve(artifact, destination, _sid)
+        mid, msg = self.create_artifact_resolve(
+            artifact,
+            destination,
+            _sid,
+            sign=sign,
+        )
         return self.send_using_soap(msg, destination)
 
     def parse_artifact_resolve(self, txt, **kwargs):
