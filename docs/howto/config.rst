@@ -599,7 +599,7 @@ metadata of an entity.
 Example::
 
     "service": {
-        "idp": {
+        "sp": {
             "name_id_format": [
                 "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
                 "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
