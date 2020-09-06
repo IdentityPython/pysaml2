@@ -851,19 +851,19 @@ class Base(Entity):
         return req_id, "%s" % soap_envelope
 
     def parse_ecp_authn_response(self, txt, outstanding=None):
-        rdict = soap.class_instances_from_soap_enveloped_saml_thingies(txt,
-                                                                       [paos,
-                                                                        ecp,
-                                                                        samlp])
+        rdict = soap.class_instances_from_soap_enveloped_saml_thingies(
+            txt, [paos, ecp, samlp])
 
         _relay_state = None
         for item in rdict["header"]:
-            if item.c_tag == "RelayState" and \
-                            item.c_namespace == ecp.NAMESPACE:
+            if (item.c_tag == "RelayState" and
+                item.c_namespace == ecp.NAMESPACE):
                 _relay_state = item
 
-        response = self.parse_authn_request_response(rdict["body"],
-                                                     BINDING_PAOS, outstanding)
+        xmlstr = rdict["body"].to_string(rdict['ns'])
+
+        response = self.parse_authn_request_response(xmlstr, BINDING_PAOS,
+                                                     outstanding)
 
         return response, _relay_state
 
