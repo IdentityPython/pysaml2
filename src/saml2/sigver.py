@@ -356,7 +356,8 @@ M2_TIME_FORMAT = '%b %d %H:%M:%S %Y'
 
 
 def to_time(_time):
-    assert _time.endswith(' GMT')
+    if not _time.endswith(' GMT'):
+        raise Exception('Time does not end with GMT')
     _time = _time[:-4]
     return mktime(str_to_time(_time, M2_TIME_FORMAT))
 
@@ -372,8 +373,10 @@ def active_cert(key):
     try:
         cert_str = pem_format(key)
         cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_str)
-        assert cert.has_expired() == 0
-        assert not OpenSSLWrapper().certificate_not_valid_yet(cert)
+        if not cert.has_expired() == 0:
+            raise Exception('Cert is expired.')
+        if  OpenSSLWrapper().certificate_not_valid_yet(cert):
+            raise Exception('Certificate not valid yet.')
         return True
     except AssertionError:
         return False
