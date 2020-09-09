@@ -12,6 +12,7 @@ import uuid
 import six
 
 from time import mktime
+import pytz
 
 from six.moves.urllib import parse
 
@@ -373,15 +374,14 @@ def active_cert(key):
     try:
         cert_str = pem_format(key)
         cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_str)
-        if not cert.has_expired() == 0:
-            raise Exception('Cert is expired.')
-        if  OpenSSLWrapper().certificate_not_valid_yet(cert):
-            raise Exception('Certificate not valid yet.')
-        return True
-    except AssertionError:
-        return False
     except AttributeError:
         return False
+
+    now = pytz.UTC.localize(datetime.datetime.utcnow())
+    valid_from = dateutil.parser.parse(cert.get_notBefore())
+    valid_to = dateutil.parser.parse(cert.get_notAfter())
+    active = not cert.has_expired() and valid_from <= now < valid_to
+    return active
 
 
 def cert_from_key_info(key_info, ignore_age=False):
