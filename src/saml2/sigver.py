@@ -357,7 +357,7 @@ M2_TIME_FORMAT = '%b %d %H:%M:%S %Y'
 
 def to_time(_time):
     if not _time.endswith(' GMT'):
-        raise Exception('Time does not end with GMT')
+        raise ValueError('Time does not end with GMT')
     _time = _time[:-4]
     return mktime(str_to_time(_time, M2_TIME_FORMAT))
 
