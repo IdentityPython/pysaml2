@@ -405,9 +405,7 @@ class MetaData(object):
         return res
 
     def __eq__(self, other):
-        try:
-            assert isinstance(other, MetaData)
-        except AssertionError:
+        if not isinstance(other, MetaData):
             return False
 
         if len(self.entity) != len(other.entity):
@@ -417,9 +415,7 @@ class MetaData(object):
             return False
 
         for key, item in self.entity.items():
-            try:
-                assert item == other[key]
-            except AssertionError:
+            if item != other[key]:
                 return False
 
         return True

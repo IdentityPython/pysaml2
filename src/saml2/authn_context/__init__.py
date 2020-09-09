@@ -90,7 +90,9 @@ class AuthnBroker(object):
         if _ref is None:
             _ref = str(self.next)
 
-        assert _ref not in self.db["info"]
+        if _ref in self.db["info"]:
+            raise Exception("Internal error: reference is not unique")
+
         self.db["info"][_ref] = _info
         try:
             self.db["key"][key].append(_ref)

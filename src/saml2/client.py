@@ -75,7 +75,12 @@ class Saml2Client(Base):
                 response_binding=response_binding,
                 **kwargs)
 
-        assert negotiated_binding == binding
+        if negotiated_binding != binding:
+            raise ValueError(
+                "Negotiated binding '{}' does not match binding to use '{}'".format(
+                    negotiated_binding, binding
+                )
+            )
 
         return reqid, info
 

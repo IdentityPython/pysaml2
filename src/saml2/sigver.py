@@ -679,7 +679,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
     def __init__(self, xmlsec_binary, delete_tmpfiles=True, **kwargs):
         CryptoBackend.__init__(self, **kwargs)
-        assert (isinstance(xmlsec_binary, six.string_types))
+        if not isinstance(xmlsec_binary, six.string_types):
+            raise ValueError("xmlsec_binary should be of type string")
         self.xmlsec = xmlsec_binary
         self.delete_tmpfiles = delete_tmpfiles
         try:
@@ -1237,11 +1238,12 @@ class SecurityContext(object):
             sec_backend=None,
             delete_tmpfiles=True):
 
+        if not isinstance(crypto, CryptoBackend):
+            raise ValueError("crypto should be of type CryptoBackend")
         self.crypto = crypto
-        assert (isinstance(self.crypto, CryptoBackend))
 
-        if sec_backend:
-            assert (isinstance(sec_backend, RSACrypto))
+        if sec_backend and not isinstance(sec_backend, RSACrypto):
+            raise ValueError("sec_backend should be of type RSACrypto")
         self.sec_backend = sec_backend
 
         # Your private key for signing

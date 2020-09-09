@@ -425,12 +425,6 @@ def valid_instance(instance):
                     "Class '%s' instance cardinality error: %s" % (
                         class_name, "too few values on %s" % name))
 
-#    if not _has_val:
-#        if class_name != "RequestedAttribute":
-#            # Not allow unless xsi:nil="true"
-#            assert instance.extension_attributes
-#            assert instance.extension_attributes[XSI_NIL] == "true"
-
     return True
 
 

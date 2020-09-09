@@ -646,8 +646,10 @@ class Base(Entity):
         :return:
         """
 
-        # One of them must be present
-        assert name_id or base_id or encrypted_id
+        if not name_id and not base_id and not encrypted_id:
+            raise ValueError(
+                "At least one of name_id, base_id or encrypted_id must be present."
+            )
 
         if name_id:
             return self._message(NameIDMappingRequest, destination, message_id,
