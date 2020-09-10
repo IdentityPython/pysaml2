@@ -394,9 +394,7 @@ class StatusResponse(object):
                          self.in_response_to, self.request_id)
             return None
 
-        try:
-            assert self.response.version == "2.0"
-        except AssertionError:
+        if self.response.version != "2.0":
             _ver = float(self.response.version)
             if _ver < 2.0:
                 raise RequestVersionTooLow()
@@ -410,9 +408,8 @@ class StatusResponse(object):
                              self.return_addrs)
                 return None
 
-        assert self.issue_instant_ok()
-        assert self.status_ok()
-        return self
+        valid = self.issue_instant_ok() and self.status_ok()
+        return valid
 
     def loads(self, xmldata, decode=True, origxml=None):
         return self._loads(xmldata, decode, origxml)
@@ -509,9 +506,7 @@ class AuthnResponse(StatusResponse):
     def check_subject_confirmation_in_response_to(self, irp):
         for assertion in self.response.assertion:
             for _sc in assertion.subject.subject_confirmation:
-                try:
-                    assert _sc.subject_confirmation_data.in_response_to == irp
-                except AssertionError:
+                if _sc.subject_confirmation_data.in_response_to != irp:
                     return False
 
         return True
@@ -546,15 +541,13 @@ class AuthnResponse(StatusResponse):
         self.assertion = None
 
     def authn_statement_ok(self, optional=False):
-        try:
-            # the assertion MUST contain one AuthNStatement
-            assert len(self.assertion.authn_statement) == 1
-        except AssertionError:
+        n_authn_statements = len(self.assertion.authn_statement)
+        if n_authn_statements != 1:
             if optional:
                 return True
             else:
-                logger.error("No AuthnStatement")
-                raise
+                msg = "Invalid number of AuthnStatement found in Response: {n}".format(n=n_authn_statements)
+                raise ValueError(msg)
 
         authn_statement = self.assertion.authn_statement[0]
         if authn_statement.session_not_on_or_after:
@@ -664,9 +657,11 @@ class AuthnResponse(StatusResponse):
                 if _assertion.advice.assertion:
                     for tmp_assertion in _assertion.advice.assertion:
                         if tmp_assertion.attribute_statement:
-                            assert len(tmp_assertion.attribute_statement) == 1
-                            ava.update(self.read_attribute_statement(
-                                tmp_assertion.attribute_statement[0]))
+                            n_attr_statements = len(tmp_assertion.attribute_statement)
+                            if n_attr_statements != 1:
+                                msg = "Invalid number of AuthnStatement found in Response: {n}".format(n=n_attr_statements)
+                                raise ValueError(msg)
+                            ava.update(self.read_attribute_statement(tmp_assertion.attribute_statement[0]))
             if _assertion.attribute_statement:
                 logger.debug("Assertion contains %s attribute statement(s)",
                              (len(self.assertion.attribute_statement)))
@@ -729,7 +724,12 @@ class AuthnResponse(StatusResponse):
     def get_subject(self):
         """ The assertion must contain a Subject
         """
-        assert self.assertion.subject
+        if not self.assertion.subject:
+            raise ValueError(
+                "Invalid assertion subject: {subject}".format(
+                    subject=self.assertion.subject
+                )
+            )
         subject = self.assertion.subject
         subjconf = []
 
@@ -916,14 +916,14 @@ class AuthnResponse(StatusResponse):
             pass
         else:
             # This is a saml2int limitation
-            try:
-                assert (
-                    len(self.response.assertion) == 1
-                    or len(self.response.encrypted_assertion) == 1
-                    or self.assertion is not None
+            n_assertions = len(self.response.assertion)
+            n_assertions_enc = len(self.response.encrypted_assertion)
+            if n_assertions != 1 and n_assertions_enc != 1 and self.assertion is None:
+                raise Exception(
+                    "Invalid number of assertions in Response: {n}".format(
+                        n=n_assertions+n_assertions_enc
+                    )
                 )
-            except AssertionError:
-                raise Exception("No assertion part")
 
         if self.response.assertion:
             logger.debug("***Unencrypted assertion***")

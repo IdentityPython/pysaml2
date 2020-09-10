@@ -136,7 +136,14 @@ class Client(Entity):
         logger.debug("[P2] IdP response dict: %s", respdict)
 
         idp_response = respdict["body"]
-        assert idp_response.c_tag == "Response"
+
+        expected_tag = "Response"
+        if idp_response.c_tag != expected_tag:
+            raise ValueError(
+                "Invalid Response tag '{invalid}' should be '{valid}'".format(
+                    invalid=idp_response.c_tag, valid=expected_tag
+                )
+            )
 
         logger.debug("[P2] IdP AUTHN response: %s", idp_response)
 
@@ -165,7 +172,14 @@ class Client(Entity):
 
         # AuthnRequest in the body or not
         authn_request = respdict["body"]
-        assert authn_request.c_tag == "AuthnRequest"
+
+        expected_tag = "AuthnRequest"
+        if authn_request.c_tag != expected_tag:
+            raise ValueError(
+                "Invalid AuthnRequest tag '{invalid}' should be '{valid}'".format(
+                    invalid=authn_request.c_tag, valid=expected_tag
+                )
+            )
 
         # ecp.RelayState among headers
         _relay_state = None

@@ -822,9 +822,7 @@ class SamlBase(ExtensionContainer):
                 self.text = None
 
     def __eq__(self, other):
-        try:
-            assert isinstance(other, SamlBase)
-        except AssertionError:
+        if not isinstance(other, SamlBase):
             return False
 
         self.clear_text()

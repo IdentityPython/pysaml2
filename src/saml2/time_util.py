@@ -67,7 +67,8 @@ def parse_duration(duration):
         index += 1
     else:
         sign = '+'
-    assert duration[index] == "P"
+    if duration[index] != "P":
+        raise ValueError('Parse Duration is not valid.')
     index += 1
 
     dic = dict([(typ, 0) for (code, typ) in D_FORMAT if typ])
@@ -76,14 +77,14 @@ def parse_duration(duration):
     for code, typ in D_FORMAT:
         #print(duration[index:], code)
         if duration[index] == '-':
-            raise Exception("Negation not allowed on individual items")
+            raise ValueError("Negation not allowed on individual items")
         if code == "T":
             if duration[index] == "T":
                 index += 1
                 if index == len(duration):
-                    raise Exception("Not allowed to end with 'T'")
+                    raise ValueError("Not allowed to end with 'T'")
             else:
-                raise Exception("Missing T")
+                raise ValueError("Missing T")
         elif duration[index] == "T":
             continue
         else:

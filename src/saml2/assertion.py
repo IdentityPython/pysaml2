@@ -296,9 +296,7 @@ def post_entity_categories(maps, **kwargs):
                         else:
                             attrs = atlist
                         for _key in key:
-                            try:
-                                assert _key in ecs
-                            except AssertionError:
+                            if _key not in ecs:
                                 attrs = []
                                 break
                     elif key in ecs:

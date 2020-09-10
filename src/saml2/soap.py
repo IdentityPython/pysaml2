@@ -6,6 +6,7 @@
 Suppport for the client part of the SAML2.0 SOAP binding.
 """
 import logging
+import re
 
 from saml2 import create_class_from_element_tree
 from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
@@ -136,14 +137,25 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
     """
     envelope = defusedxml.ElementTree.fromstring(text)
 
-    # Make sure it's a SOAP message
-    assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
+    envelope_tag = "{%s}Envelope" % soapenv.NAMESPACE
+    if envelope.tag != envelope_tag:
+        raise ValueError(
+            "Invalid envelope tag '{invalid}' should be '{valid}'".format(
+                invalid=envelope.tag, valid=envelope_tag
+            )
+        )
 
-    assert len(envelope) >= 1
+    if len(envelope) < 1:
+        raise Exception("No items in envelope.")
+
     body = None
     for part in envelope:
         if part.tag == '{%s}Body' % soapenv.NAMESPACE:
-            assert len(part) == 1
+            n_children = len(part)
+            if n_children != 1:
+                raise Exception(
+                    "Expected a single child element, found {n}".format(n=n_children)
+                )
             body = part
             break
 
@@ -157,7 +169,6 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
         raise WrongMessageType("Was '%s' expected one of %s" % (saml_part.tag,
                                                                 expected_tags))
 
-import re
 
 NS_AND_TAG = re.compile(r"\{([^}]+)\}(.*)")
 
@@ -188,13 +199,23 @@ def class_instances_from_soap_enveloped_saml_thingies(text, modules):
     except Exception as exc:
         raise XmlParseError("%s" % exc)
 
-    assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
-    assert len(envelope) >= 1
+    envelope_tag = "{%s}Envelope" % soapenv.NAMESPACE
+    if envelope.tag != envelope_tag:
+        raise ValueError(
+            "Invalid envelope tag '{invalid}' should be '{valid}'".format(
+                invalid=envelope.tag, valid=envelope_tag
+            )
+        )
+
+    if len(envelope) < 1:
+        raise Exception("No items in envelope.")
+
     env = {"header": [], "body": None}
 
     for part in envelope:
         if part.tag == '{%s}Body' % soapenv.NAMESPACE:
-            assert len(part) == 1
+            if len(envelope) < 1:
+                raise Exception("No items in envelope part.")
             env["body"] = instanciate_class(part[0], modules)
         elif part.tag == "{%s}Header" % soapenv.NAMESPACE:
             for item in part:
@@ -214,13 +235,23 @@ def open_soap_envelope(text):
     except Exception as exc:
         raise XmlParseError("%s" % exc)
 
-    assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
-    assert len(envelope) >= 1
+    envelope_tag = "{%s}Envelope" % soapenv.NAMESPACE
+    if envelope.tag != envelope_tag:
+        raise ValueError(
+            "Invalid envelope tag '{invalid}' should be '{valid}'".format(
+                invalid=envelope.tag, valid=envelope_tag
+            )
+        )
+
+    if len(envelope) < 1:
+        raise Exception("No items in envelope.")
+
     content = {"header": [], "body": None}
 
     for part in envelope:
         if part.tag == '{%s}Body' % soapenv.NAMESPACE:
-            assert len(part) == 1
+            if len(envelope) < 1:
+                raise Exception("No items in envelope part.")
             content["body"] = ElementTree.tostring(part[0], encoding="UTF-8")
         elif part.tag == "{%s}Header" % soapenv.NAMESPACE:
             for item in part:

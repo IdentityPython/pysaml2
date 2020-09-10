@@ -12,6 +12,7 @@ import uuid
 import six
 
 from time import mktime
+import pytz
 
 from six.moves.urllib import parse
 
@@ -356,7 +357,8 @@ M2_TIME_FORMAT = '%b %d %H:%M:%S %Y'
 
 
 def to_time(_time):
-    assert _time.endswith(' GMT')
+    if not _time.endswith(' GMT'):
+        raise ValueError('Time does not end with GMT')
     _time = _time[:-4]
     return mktime(str_to_time(_time, M2_TIME_FORMAT))
 
@@ -372,13 +374,14 @@ def active_cert(key):
     try:
         cert_str = pem_format(key)
         cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_str)
-        assert cert.has_expired() == 0
-        assert not OpenSSLWrapper().certificate_not_valid_yet(cert)
-        return True
-    except AssertionError:
-        return False
     except AttributeError:
         return False
+
+    now = pytz.UTC.localize(datetime.datetime.utcnow())
+    valid_from = dateutil.parser.parse(cert.get_notBefore())
+    valid_to = dateutil.parser.parse(cert.get_notAfter())
+    active = not cert.has_expired() and valid_from <= now < valid_to
+    return active
 
 
 def cert_from_key_info(key_info, ignore_age=False):
@@ -676,7 +679,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
     def __init__(self, xmlsec_binary, delete_tmpfiles=True, **kwargs):
         CryptoBackend.__init__(self, **kwargs)
-        assert (isinstance(xmlsec_binary, six.string_types))
+        if not isinstance(xmlsec_binary, six.string_types):
+            raise ValueError("xmlsec_binary should be of type string")
         self.xmlsec = xmlsec_binary
         self.delete_tmpfiles = delete_tmpfiles
         try:
@@ -1234,11 +1238,12 @@ class SecurityContext(object):
             sec_backend=None,
             delete_tmpfiles=True):
 
+        if not isinstance(crypto, CryptoBackend):
+            raise ValueError("crypto should be of type CryptoBackend")
         self.crypto = crypto
-        assert (isinstance(self.crypto, CryptoBackend))
 
-        if sec_backend:
-            assert (isinstance(sec_backend, RSACrypto))
+        if sec_backend and not isinstance(sec_backend, RSACrypto):
+            raise ValueError("sec_backend should be of type RSACrypto")
         self.sec_backend = sec_backend
 
         # Your private key for signing
