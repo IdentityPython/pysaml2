@@ -10,6 +10,7 @@ from saml2.extension import idpdisc
 from saml2.extension import shibmd
 from saml2.extension import mdattr
 from saml2.extension import sp_type
+from saml2.extension import node_country
 from saml2.saml import NAME_FORMAT_URI
 from saml2.saml import AttributeValue
 from saml2.saml import Attribute
@@ -20,6 +21,7 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
 from saml2 import samlp
 from saml2 import class_name
+from saml2.utility import make_list
 
 from saml2 import xmldsig as ds
 import six
@@ -594,6 +596,14 @@ def do_idpsso_descriptor(conf, cert=None, enc_cert=None):
         except KeyError:
             setattr(idpsso, key, DEFAULTS[key])
 
+    attributes = [
+        Attribute(name=attribute.get("name", None),
+                  name_format=attribute.get("name_format", None),
+                  friendly_name=attribute.get("friendly_name", None))
+        for attribute in conf.getattr("provided_attributes", "idp")
+    ]
+    idpsso.attribute = attributes
+
     return idpsso
 
 
@@ -789,6 +799,33 @@ def entity_descriptor(confd):
         confd.context = "aq"
         entd.authn_authority_descriptor = do_aq_descriptor(confd, mycert,
                                                            enc_cert)
+
+    conf_node_country = confd.getattr('node_country', confd.context)
+    if conf_node_country:
+        if not entd.extensions:
+            entd.extensions = md.Extensions()
+        item = node_country.NodeCountry(text=conf_node_country)
+        entd.extensions.add_extension_element(item)
+
+    app_identifer = confd.getattr("application_identifier", confd.context)
+    if app_identifer:
+        entd.extensions = entd.extensions or md.Extensions()
+        ava = AttributeValue(text=app_identifer)
+        attr = Attribute(
+            attribute_value=ava,
+            name="http://eidas.europa.eu/entity-attributes/application-identifier"
+        )
+        _add_attr_to_entity_attributes(entd.extensions, attr)
+
+    protocol_version = confd.getattr("protocol_version", confd.context)
+    if protocol_version:
+        entd.extensions = entd.extensions or md.Extensions()
+        ava = [AttributeValue(text=str(c)) for c in make_list(protocol_version)]
+        attr = Attribute(
+            attribute_value=ava,
+            name="http://eidas.europa.eu/entity-attributes/protocol-version"
+        )
+        _add_attr_to_entity_attributes(entd.extensions, attr)
 
     return entd
 

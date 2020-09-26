@@ -7,6 +7,10 @@ import logging.handlers
 import os
 import re
 import sys
+from functools import partial
+import re
+from urllib import parse
+from iso3166 import countries
 
 import six
 
@@ -22,6 +26,7 @@ from saml2.assertion import Policy
 from saml2.mdstore import MetadataStore
 from saml2.saml import NAME_FORMAT_URI
 from saml2.virtual_org import VirtualOrg
+from saml2.utility import not_empty
 
 
 logger = logging.getLogger(__name__)
@@ -99,6 +104,9 @@ SP_ARGS = [
     "sp_type",
     "sp_type_in_metadata",
     "requested_attributes",
+    "node_country",
+    "application_identifier",
+    "protocol_version"
 ]
 
 AA_IDP_ARGS = [
@@ -120,6 +128,9 @@ AA_IDP_ARGS = [
     "domain",
     "name_qualifier",
     "edu_person_targeted_id",
+    "node_country",
+    "application_identifier",
+    "protocol_version",
 ]
 
 PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
@@ -177,6 +188,13 @@ PREFERRED_BINDING = {
     "artifact_resolution_service": [BINDING_SOAP],
     "attribute_consuming_service": _RPA
 }
+
+EIDAS_NOTIFIED_LOA_PREFIX = "http://eidas.europa.eu/LoA/"
+
+EIDAS_NOTIFIED_LOA = [
+    "{prefix}{x}".format(prefix=EIDAS_NOTIFIED_LOA_PREFIX, x=x)
+    for x in ["low", "substantial", "high"]
+]
 
 
 class ConfigurationError(SAMLError):
@@ -485,6 +503,9 @@ class Config(object):
                 res[endp] = (service, binding)
         return res
 
+    def validate(self):
+        pass
+
 
 class SPConfig(Config):
     def_context = "sp"
@@ -514,11 +535,193 @@ class SPConfig(Config):
         return None
 
 
+class eIDASConfig(Config):
+    def get_endpoint_element(self, element):
+        pass
+
+    def get_protocol_version(self):
+        pass
+
+    def get_application_identifier(self):
+        pass
+
+    def get_node_country(self):
+        pass
+
+    @staticmethod
+    def validate_node_country_format(node_country):
+        try:
+            return countries.get(node_country).alpha2 == node_country
+        except KeyError:
+            return False
+
+    @staticmethod
+    def validate_application_identifier_format(application_identifier):
+        pattern_match = re.search(r"([a-zA-Z0-9])+:([a-zA-Z0-9():_\-])+:([0-9])+"
+                                  r"(\.([0-9])+){1,2}", application_identifier)
+        if not application_identifier or pattern_match:
+            return True
+        return False
+
+    @staticmethod
+    def get_type_contact_person(contacts, ctype):
+        return [contact for contact in contacts
+                if contact.get("contact_type") == ctype]
+
+    @staticmethod
+    def contact_has_email_address(contact):
+        return not_empty(contact.get("email_address"))
+
+    @property
+    def warning_validators(self):
+        return {
+            "single_logout_service SHOULD NOT be declared":
+                self.get_endpoint_element("single_logout_service") is None,
+            "artifact_resolution_service SHOULD NOT be declared":
+                self.get_endpoint_element("artifact_resolution_service") is None,
+            "manage_name_id_service SHOULD NOT be declared":
+                self.get_endpoint_element("manage_name_id_service") is None,
+            "application_identifier SHOULD be declared":
+                not_empty(self.get_application_identifier()),
+            "protocol_version SHOULD be declared":
+                not_empty(self.get_protocol_version()),
+            "minimal organization info (name/dname/url) SHOULD be declared":
+                not_empty(self.organization),
+            "contact_person with contact_type 'technical' and at least one "
+            "email_address SHOULD be declared":
+                any(filter(self.contact_has_email_address,
+                           self.get_type_contact_person(self.contact_person,
+                                                        ctype="technical"))),
+            "contact_person with contact_type 'support' and at least one "
+            "email_address SHOULD be declared":
+                any(filter(self.contact_has_email_address,
+                           self.get_type_contact_person(self.contact_person,
+                                                        ctype="support")))
+        }
+
+    @property
+    def error_validators(self):
+        return {
+            "KeyDescriptor MUST be declared":
+                not_empty(self.cert_file or self.encryption_keypairs),
+            "node_country MUST be declared in ISO 3166-1 alpha-2 format":
+                self.validate_node_country_format(self.get_node_country()),
+            "application_identifier MUST be in the form <vendor name>:<software "
+            "identifier>:<major-version>.<minor-version>[.<patch-version>]":
+                self.validate_application_identifier_format(
+                    self.get_application_identifier()),
+            "entityid MUST be an HTTPS URL pointing to the location of its published "
+            "metadata":
+                parse.urlparse(self.entityid).scheme == "https"
+        }
+
+    def validate(self):
+        if not all(self.warning_validators.values()):
+            logger.warning(
+                "Configuration validation warnings occurred: {}".format(
+                    [msg for msg, check in self.warning_validators.items()
+                     if check is not True]
+                )
+            )
+
+        if not all(self.error_validators.values()):
+            error = "Configuration validation errors occurred {}:".format(
+                [msg for msg, check in self.error_validators.items()
+                 if check is not True])
+            logger.error(error)
+            raise ConfigValidationError(error)
+
+
+class eIDASSPConfig(SPConfig, eIDASConfig):
+    def get_endpoint_element(self, element):
+        return getattr(self, "_sp_endpoints", {}).get(element, None)
+
+    def get_application_identifier(self):
+        return getattr(self, "_sp_application_identifier", None)
+
+    def get_protocol_version(self):
+        return getattr(self, "_sp_protocol_version", None)
+
+    def get_node_country(self):
+        return getattr(self, "_sp_node_country", None)
+
+    @property
+    def warning_validators(self):
+        sp_warning_validators = {
+            "hide_assertion_consumer_service SHOULD be set to True":
+                getattr(self, "_sp_hide_assertion_consumer_service", None) is True
+        }
+        return {**super().warning_validators, **sp_warning_validators}
+
+    @property
+    def error_validators(self):
+        sp_error_validators = {
+            "authn_requests_signed MUST be set to True":
+                getattr(self, "_sp_authn_requests_signed", None) is True,
+            "sp_type MUST be set to 'public' or 'private'":
+                getattr(self, "_sp_sp_type", None) in ("public", "private"),
+            "allow_unsolicited MUST be set to False":
+                getattr(self, "_sp_allow_unsolicited", None) is False
+        }
+        return {**super().error_validators, **sp_error_validators}
+
+
 class IdPConfig(Config):
     def_context = "idp"
 
     def __init__(self):
         Config.__init__(self)
+
+
+class eIDASIdPConfig(IdPConfig, eIDASConfig):
+    def get_endpoint_element(self, element):
+        return getattr(self, "_idp_endpoints", {}).get(element, None)
+
+    def get_application_identifier(self):
+        return getattr(self, "_idp_application_identifier", None)
+
+    def get_protocol_version(self):
+        return getattr(self, "_idp_protocol_version", None)
+
+    def get_node_country(self):
+        return getattr(self, "_idp_node_country", None)
+
+    def verify_non_notified_loa(self):
+        return not any(
+            x.startswith(EIDAS_NOTIFIED_LOA_PREFIX) and x not in EIDAS_NOTIFIED_LOA
+            for x in getattr(self, "assurance_certification", []))
+
+    def verify_notified_loa(self):
+        return any(
+            x in EIDAS_NOTIFIED_LOA
+            for x in getattr(self, "assurance_certification", [])
+        )
+
+    @property
+    def warning_validators(self):
+        idp_warning_validators = {}
+        return {**super().warning_validators, **idp_warning_validators}
+
+    @property
+    def error_validators(self):
+        idp_error_validators = {
+            "want_authn_requests_signed MUST be set to True":
+            getattr(self, "_idp_want_authn_requests_signed", None) is True,
+            "provided_attributes MUST be set to denote the supported attributes by "
+            "the IdP":
+            not_empty(getattr(self, "_idp_provided_attributes", None)),
+            "assurance_certification for non-notified eIDs MUST NOT use an "
+            "{} prefix".format(EIDAS_NOTIFIED_LOA_PREFIX):
+            self.verify_non_notified_loa(),
+            "assurance_certification for notified eID MUST be (at least) one of [{}]"
+                .format(", ".join(EIDAS_NOTIFIED_LOA)):
+            self.verify_notified_loa(),
+            "sign_response MUST be set to True":
+            getattr(self, "_idp_sign_response", None) is True,
+            "encrypt_assertion MUST be set to True":
+            getattr(self, "_idp_encrypt_assertion", None) is True,
+        }
+        return {**super().error_validators, **idp_error_validators}
 
 
 def config_factory(_type, config):
@@ -548,3 +751,7 @@ def config_factory(_type, config):
 
     conf.context = _type
     return conf
+
+
+class ConfigValidationError(Exception):
+    pass
