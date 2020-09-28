@@ -53,7 +53,7 @@ from saml2.samlp import ArtifactResponse
 from saml2.samlp import Artifact
 from saml2.samlp import LogoutRequest
 from saml2.samlp import AttributeQuery
-from saml2.mdstore import destinations
+from saml2.mdstore import destinations, response_destinations
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
@@ -250,7 +250,7 @@ class Entity(HTTPBase):
         return info
 
     def pick_binding(self, service, bindings=None, descr_type="", request=None,
-                     entity_id=""):
+                     entity_id="", response=False):
         if request and not entity_id:
             entity_id = request.issuer.text.strip()
 
@@ -284,7 +284,10 @@ class Entity(HTTPBase):
                             if srv["index"] == _index:
                                 return binding, srv["location"]
                     else:
-                        return binding, destinations(srvs)[0]
+                        if response:
+                            return binding, response_destinations(srvs)[0]
+                        else:
+                            return binding, destinations(srvs)[0]
             except UnsupportedBinding:
                 pass
 
@@ -351,7 +354,8 @@ class Entity(HTTPBase):
 
             binding, destination = self.pick_binding(rsrv, bindings,
                                                      descr_type=descr_type,
-                                                     request=message)
+                                                     request=message,
+                                                     response=True)
             info["binding"] = binding
             info["destination"] = destination
 

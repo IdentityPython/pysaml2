@@ -149,6 +149,15 @@ def metadata_modules():
     return _res
 
 
+def response_destinations(srvs):
+    _res = []
+    for s in srvs:
+        if "response_location" in s:
+            _res.append(s["response_location"])
+        else:
+            _res.append(s["location"])
+    return _res
+
 def destinations(srvs):
     return [s["location"] for s in srvs]
 
