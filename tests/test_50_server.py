@@ -2297,6 +2297,7 @@ def _logout_request(conf_file):
 
 
 class TestServerLogout():
+
     def test_1(self):
         with closing(Server("idp_slo_redirect_conf")) as server:
             req_id, request = _logout_request("sp_slo_redirect_conf")
@@ -2305,7 +2306,7 @@ class TestServerLogout():
             response = server.create_logout_response(request, bindings)
             binding, destination = server.pick_binding("single_logout_service",
                                                        bindings, "spsso",
-                                                       request)
+                                                       request, response=True)
 
             http_args = server.apply_binding(binding, "%s" % response, destination,
                                              "relay_state", response=True)
@@ -2313,7 +2314,25 @@ class TestServerLogout():
             assert len(http_args) == 4
             assert http_args["headers"][0][0] == "Location"
             assert http_args["data"] == []
+            assert http_args['url'] == 'http://lingon.catalogix.se:8087/sloresp'
 
+    def test_2(self):
+        with closing(Server("idp_slo_redirect_conf")) as server:
+            req_id, request = _logout_request("sp_slo_redirect_conf")
+            print(request)
+            bindings = [BINDING_HTTP_POST]
+            response = server.create_logout_response(request, bindings)
+            binding, destination = server.pick_binding("single_logout_service",
+                                                       bindings, "spsso",
+                                                       request, response=True)
+
+            http_args = server.apply_binding(binding, "%s" % response, destination,
+                                             "relay_state", response=True)
+
+            assert len(http_args) == 4
+            assert len(http_args["data"]) > 0
+            assert http_args["method"] == "POST"
+            assert http_args['url'] == 'http://lingon.catalogix.se:8087/slo'
 
 if __name__ == "__main__":
     ts = TestServer1()
