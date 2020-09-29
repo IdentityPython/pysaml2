@@ -1098,6 +1098,11 @@ class AttributeType_(SamlBase):
         self.name_format = name_format
         self.friendly_name = friendly_name
 
+    # when consuming such elements, default to NAME_FORMAT_UNSPECIFIED as NameFormat
+    def harvest_element_tree(self, tree):
+        tree.attrib.setdefault('NameFormat', NAME_FORMAT_UNSPECIFIED)
+        SamlBase.harvest_element_tree(self, tree)
+
 
 def attribute_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(AttributeType_, xml_string)
