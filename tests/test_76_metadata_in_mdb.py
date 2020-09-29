@@ -5,7 +5,7 @@ from saml2.attribute_converter import ac_factory
 from saml2.mongo_store import export_mdstore_to_mongo_db
 from saml2.mongo_store import MetadataMDB
 from saml2.mdstore import MetadataStore
-from saml2.mdstore import destinations
+from saml2.mdstore import locations
 from saml2.mdstore import name
 from saml2 import config
 from pathutils import full_path
@@ -46,7 +46,7 @@ def test_metadata():
         assert idps.keys()
         idpsso = mds.single_sign_on_service(umu_idp)
         assert len(idpsso) == 1
-        assert destinations(idpsso) == [
+        assert list(locations(idpsso)) == [
             'https://idp.umu.se/saml2/idp/SSOService.php']
 
         _name = name(mds[umu_idp])
