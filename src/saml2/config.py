@@ -7,6 +7,7 @@ import logging.handlers
 import os
 import re
 import sys
+from logging.config import dictConfig as configure_logging_by_dict
 
 import six
 
@@ -30,6 +31,7 @@ __author__ = 'rolandh'
 
 
 COMMON_ARGS = [
+    "logging",
     "debug",
     "entityid",
     "xmlsec_binary",
@@ -141,24 +143,6 @@ SPEC = {
     "aq": COMMON_ARGS + COMPLEX_ARGS + AQ_ARGS,
 }
 
-# --------------- Logging stuff ---------------
-
-LOG_LEVEL = {
-    'debug': logging.DEBUG,
-    'info': logging.INFO,
-    'warning': logging.WARNING,
-    'error': logging.ERROR,
-    'critical': logging.CRITICAL}
-
-LOG_HANDLER = {
-    "rotating": logging.handlers.RotatingFileHandler,
-    "syslog": logging.handlers.SysLogHandler,
-    "timerotate": logging.handlers.TimedRotatingFileHandler,
-    "memory": logging.handlers.MemoryHandler,
-}
-
-LOG_FORMAT = "%(asctime)s %(name)s:%(levelname)s %(message)s"
-
 _RPA = [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT]
 _PRA = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT, BINDING_HTTP_ARTIFACT]
 _SRPA = [BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST,
@@ -190,6 +174,7 @@ class Config(object):
     def_context = ""
 
     def __init__(self, homedir="."):
+        self.logging = None
         self._homedir = homedir
         self.entityid = None
         self.xmlsec_binary = None
@@ -361,6 +346,9 @@ class Config(object):
                 pass
             except TypeError:  # Something that can't be a string
                 setattr(self, arg, cnf[arg])
+
+        if self.logging is not None:
+            configure_logging_by_dict(self.logging)
 
         if not self.delete_tmpfiles:
             logger.warning(

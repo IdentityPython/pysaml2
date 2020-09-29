@@ -64,6 +64,55 @@ Configuration directives
 General directives
 ------------------
 
+logging
+^^^^^^^
+
+The logging configuration format is the python logging format.
+The configuration is passed to the python logging dictionary configuration handler,
+directly.
+
+Example::
+
+    "logging": {
+        "version": 1,
+        "formatters": {
+            "simple": {
+                "format": "[%(asctime)s] [%(levelname)s] [%(name)s.%(funcName)s] %(message)s",
+            },
+        },
+        "handlers": {
+            "stdout": {
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+                "level": "DEBUG",
+                "formatter": "simple",
+            },
+        },
+        "loggers": {
+            "saml2": {
+                "level": "DEBUG"
+            },
+        },
+        "root": {
+            "level": "DEBUG",
+            "handlers": [
+                "stdout",
+            ],
+        },
+    },
+
+The exapmle configuration above will enable DEBUG logging to stdout.
+
+
+debug
+^^^^^
+
+Example::
+
+    debug: 1
+
+Whether debug information should be sent to the log file.
+
 additional_cert_files
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -185,15 +234,6 @@ and **other**.::
             "type": "administrative",
         },
     ]
-
-debug
-^^^^^
-
-Example::
-
-    debug: 1
-
-Whether debug information should be sent to the log file.
 
 entityid
 ^^^^^^^^

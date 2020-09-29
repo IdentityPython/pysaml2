@@ -137,14 +137,33 @@ CONFIG = {
     # the identifier returned to a SP
     "xmlsec_binary": xmlsec_path,
     #"attribute_map_dir": "../attributemaps",
-    "logger": {
-        "rotating": {
-            "filename": "idp.log",
-            "maxBytes": 500000,
-            "backupCount": 5,
+    "logging": {
+        "version": 1,
+        "formatters": {
+            "simple": {
+                "format": "[%(asctime)s] [%(levelname)s] [%(name)s.%(funcName)s] %(message)s",
+            },
         },
-        "loglevel": "debug",
-    }
+        "handlers": {
+            "stdout": {
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+                "level": "DEBUG",
+                "formatter": "simple",
+            },
+        },
+        "loggers": {
+            "saml2": {
+                "level": "DEBUG"
+            },
+        },
+        "root": {
+            "level": "DEBUG",
+            "handlers": [
+                "stdout",
+            ],
+        },
+    },
 }
 
 # Authentication contexts
