@@ -270,7 +270,7 @@ class Config(object):
 
     def load_complex(self, cnf, typ="", metadata_construction=False):
         try:
-            self.setattr(typ, "policy", Policy(cnf["policy"]))
+            self.setattr(typ, "policy", Policy(cnf["policy"], config=self))
         except KeyError:
             pass
 
