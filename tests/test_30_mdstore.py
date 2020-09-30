@@ -152,6 +152,10 @@ METADATACONF = {
         "class": "saml2.mdstore.MetaDataFile",
         "metadata": [(full_path("uu.xml"),)],
     }],
+    "13": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("swamid-2.0.xml"),)],
+    }],
 }
 
 
@@ -558,6 +562,17 @@ def test_supported_algorithms():
     algs = mds.supported_algorithms(entity_id='http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php')
     assert 'http://www.w3.org/2001/04/xmlenc#sha256' in algs['digest_methods']
     assert 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256' in algs['signing_methods']
+
+
+def test_registration_info():
+    mds = MetadataStore(ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+    mds.imp(METADATACONF["13"])
+    registration_info = mds.registration_info(entity_id='https://aai-idp.unibe.ch/idp/shibboleth')
+    assert 'http://rr.aai.switch.ch/' == registration_info['registration_authority']
+    assert '2013-06-15T18:15:03Z' == registration_info['registration_instant']
+    assert 'https://www.switch.ch/aai/federation/switchaai/metadata-registration-practice-statement-20110711.txt' == \
+           registration_info['registration_policy']['en']
 
 
 def test_extension():
