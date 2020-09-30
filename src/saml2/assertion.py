@@ -320,37 +320,54 @@ def post_entity_categories(maps, **kwargs):
 class Policy(object):
     """ handles restrictions on assertions """
 
-    def __init__(self, restrictions=None):
-        if restrictions:
-            self.compile(restrictions)
-        else:
-            self._restrictions = None
+    def __init__(self, restrictions=None, config=None):
+        self._config = config
+        self._restrictions = self.setup_restrictions(restrictions)
+        logger.debug("policy restrictions: %s", self._restrictions)
         self.acs = []
 
-    def compile(self, restrictions):
+    def setup_restrictions(self, restrictions=None):
+        if restrictions is None:
+            return None
+
+        restrictions = copy.deepcopy(restrictions)
+        # TODO: Split policy config in service_providers and registration_authorities
+        # "policy": {
+        #     "service_providers": {
+        #         "default": ...,
+        #         "urn:mace:example.com:saml:roland:sp": ...,
+        #     },
+        #     "registration_authorities": {
+        #         "default": ...,
+        #         "http://www.swamid.se": ...,
+        #     },
+        # },
+        registration_authorities = restrictions.pop('registration_authorities', None)
+        restrictions = self.compile(restrictions)
+        if registration_authorities:
+            restrictions['registration_authorities'] = self.compile(registration_authorities)
+        return restrictions
+
+    @staticmethod
+    def compile(restrictions):
         """ This is only for IdPs or AAs, and it's about limiting what
         is returned to the SP.
         In the configuration file, restrictions on which values that
         can be returned are specified with the help of regular expressions.
         This function goes through and pre-compiles the regular expressions.
 
-        :param restrictions:
+        :param restrictions: policy configuration
         :return: The assertion with the string specification replaced with
             a compiled regular expression.
         """
-
-        self._restrictions = copy.deepcopy(restrictions)
-
-        for who, spec in self._restrictions.items():
+        for who, spec in restrictions.items():
             if spec is None:
                 continue
-            try:
-                items = spec["entity_categories"]
-            except KeyError:
-                pass
-            else:
+
+            entity_categories = spec.get("entity_categories")
+            if entity_categories is not None:
                 ecs = []
-                for cat in items:
+                for cat in entity_categories:
                     try:
                         _mod = importlib.import_module(cat)
                     except ImportError:
@@ -366,25 +383,27 @@ class Policy(object):
                         _ec[key] = (alist, _only_required)
                     ecs.append(_ec)
                 spec["entity_categories"] = ecs
-            try:
-                restr = spec["attribute_restrictions"]
-            except KeyError:
+
+            attribute_restrictions = spec.get("attribute_restrictions")
+            if attribute_restrictions is None:
                 continue
 
-            if restr is None:
-                continue
-
-            _are = {}
-            for key, values in restr.items():
+            _attribute_restrictions = {}
+            for key, values in attribute_restrictions.items():
                 if not values:
-                    _are[key.lower()] = None
+                    _attribute_restrictions[key.lower()] = None
                     continue
+                _attribute_restrictions[key.lower()] = [re.compile(value) for value in values]
 
-                _are[key.lower()] = [re.compile(value) for value in values]
-            spec["attribute_restrictions"] = _are
-        logger.debug("policy restrictions: %s", self._restrictions)
+            spec["attribute_restrictions"] = _attribute_restrictions
 
-        return self._restrictions
+        return restrictions
+
+    def _lookup_registry_authority(self, sp_entity_id):
+        if self._config and self._config.metadata:
+            registration_info = self._config.metadata.registration_info(sp_entity_id)
+            return registration_info.get('registration_authority')
+        return None
 
     def get(self, attribute, sp_entity_id, default=None, post_func=None,
             **kwargs):
@@ -399,16 +418,22 @@ class Policy(object):
         if not self._restrictions:
             return default
 
-        try:
-            try:
-                val = self._restrictions[sp_entity_id][attribute]
-            except KeyError:
-                try:
-                    val = self._restrictions["default"][attribute]
-                except KeyError:
-                    val = None
-        except KeyError:
-            val = None
+        registration_authority_name = self._lookup_registry_authority(sp_entity_id)
+        registration_authorities = self._restrictions.get("registration_authorities")
+
+        val = None
+        # Specific SP takes precedence
+        if sp_entity_id in self._restrictions:
+            val = self._restrictions[sp_entity_id].get(attribute)
+        # Second choice is if the SP is part of a configured registration authority
+        elif registration_authorities and registration_authority_name in registration_authorities:
+            val = registration_authorities[registration_authority_name].get(attribute)
+        # Third is to try default for registration authorities
+        elif registration_authorities and 'default' in registration_authorities:
+            val = registration_authorities['default'].get(attribute)
+        # Lastly we try default for SPs
+        elif 'default' in self._restrictions:
+            val = self._restrictions.get('default').get(attribute)
 
         if val is None:
             return default
@@ -422,8 +447,7 @@ class Policy(object):
         :param: The SP entity ID
         :retur: The format
         """
-        return self.get("nameid_format", sp_entity_id,
-                        saml.NAMEID_FORMAT_TRANSIENT)
+        return self.get("nameid_format", sp_entity_id, saml.NAMEID_FORMAT_TRANSIENT)
 
     def get_name_form(self, sp_entity_id):
         """ Get the NameFormat to used for the entity id
@@ -431,7 +455,7 @@ class Policy(object):
         :retur: The format
         """
 
-        return self.get("name_form", sp_entity_id, NAME_FORMAT_URI)
+        return self.get("name_form", sp_entity_id, default=NAME_FORMAT_URI)
 
     def get_lifetime(self, sp_entity_id):
         """ The lifetime of the assertion
@@ -458,32 +482,20 @@ class Policy(object):
         :return: The restrictions
         """
 
-        return self.get("fail_on_missing_requested", sp_entity_id, True)
-
-    def entity_category_attributes(self, ec):
-        if not self._restrictions:
-            return None
-
-        ec_maps = self._restrictions["default"]["entity_categories"]
-        for ec_map in ec_maps:
-            try:
-                return ec_map[ec]
-            except KeyError:
-                pass
-        return []
+        return self.get("fail_on_missing_requested", sp_entity_id, default=True)
 
     def get_entity_categories(self, sp_entity_id, mds, required):
         """
 
         :param sp_entity_id:
         :param mds: MetadataStore instance
+        :param required: required attributes
         :return: A dictionary with restrictions
         """
 
         kwargs = {"mds": mds, 'required': required}
 
-        return self.get("entity_categories", sp_entity_id, default={},
-                        post_func=post_entity_categories, **kwargs)
+        return self.get("entity_categories", sp_entity_id, default={}, post_func=post_entity_categories, **kwargs)
 
     def not_on_or_after(self, sp_entity_id):
         """ When the assertion stops being valid, should not be
@@ -494,6 +506,17 @@ class Policy(object):
         """
 
         return in_a_while(**self.get_lifetime(sp_entity_id))
+
+    def get_sign(self, sp_entity_id):
+        """
+        Possible choices
+        "sign": ["response", "assertion", "on_demand"]
+
+        :param sp_entity_id:
+        :return:
+        """
+
+        return self.get("sign", sp_entity_id, default=[])
 
     def filter(self, ava, sp_entity_id, mdstore, required=None, optional=None):
         """ What attribute and attribute values returns depends on what
@@ -568,16 +591,18 @@ class Policy(object):
                            audience=[factory(saml.Audience,
                                              text=sp_entity_id)])])
 
-    def get_sign(self, sp_entity_id):
-        """
-        Possible choices
-        "sign": ["response", "assertion", "on_demand"]
+    def entity_category_attributes(self, ec):
+        # TODO: Not used. Remove?
+        if not self._restrictions:
+            return None
 
-        :param sp_entity_id:
-        :return:
-        """
-
-        return self.get("sign", sp_entity_id, [])
+        ec_maps = self._restrictions["default"]["entity_categories"]
+        for ec_map in ec_maps:
+            try:
+                return ec_map[ec]
+            except KeyError:
+                pass
+        return []
 
 
 class EntityCategories(object):

@@ -530,13 +530,24 @@ An example might be::
                 "default": {
                     "lifetime": {"minutes":15},
                     "attribute_restrictions": None, # means all I have
-                    "name_form": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+                    "name_form": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                    "entity_categories": ["edugain"]
                 },
                 "urn:mace:example.com:saml:roland:sp": {
                     "lifetime": {"minutes": 5},
                     "attribute_restrictions": {
                         "givenName": None,
                         "surName": None,
+                    },
+                },
+                "registration_authorities": {
+                    "default" {
+                        "attribute_restrictions": None
+                    },
+                    "http://www.swamid.se/": {
+                        "attribute_restrictions": {
+                            "givenName": None,
+                        }
                     }
                 }
             }
@@ -561,6 +572,12 @@ An example might be::
     Using this information, the attribute name in the data source will be mapped to
     the friendly name, and the saml attribute name will be taken from the uri/oid
     defined in the attribute map.
+*nameid_format*
+    Which nameid format that should be used. Defaults to urn:oasis:names:tc:SAML:2.0:nameid-format:transient.
+*entity_categories*
+    Entity categories to apply.
+*sign*
+    Possible choices: "sign": ["response", "assertion", "on_demand"]
 
 If restrictions on values are deemed necessary, those are represented by
 regular expressions.::
