@@ -1,4 +1,7 @@
+import re
+
 from contextlib import closing
+
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.server import Server
 from saml2.sigver import pre_encryption_part, ASSERT_XPATH, EncryptError
@@ -9,7 +12,7 @@ from pathutils import full_path
 
 __author__ = 'roland'
 
-TMPL_NO_HEADER = """<ns0:EncryptedData xmlns:ns0="http://www.w3.org/2001/04/xmlenc#" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" Id="ED" Type="http://www.w3.org/2001/04/xmlenc#Element"><ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc" /><ns1:KeyInfo><ns0:EncryptedKey Id="EK"><ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5" /><ns1:KeyInfo><ns1:KeyName>my-rsa-key</ns1:KeyName></ns1:KeyInfo><ns0:CipherData><ns0:CipherValue /></ns0:CipherData></ns0:EncryptedKey></ns1:KeyInfo><ns0:CipherData><ns0:CipherValue /></ns0:CipherData></ns0:EncryptedData>"""
+TMPL_NO_HEADER = """<ns0:EncryptedData xmlns:ns0="http://www.w3.org/2001/04/xmlenc#" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" Id="{ed_id}" Type="http://www.w3.org/2001/04/xmlenc#Element"><ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc" /><ns1:KeyInfo><ns0:EncryptedKey Id="{ek_id}"><ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5" /><ns1:KeyInfo><ns1:KeyName>my-rsa-key</ns1:KeyName></ns1:KeyInfo><ns0:CipherData><ns0:CipherValue /></ns0:CipherData></ns0:EncryptedKey></ns1:KeyInfo><ns0:CipherData><ns0:CipherValue /></ns0:CipherData></ns0:EncryptedData>"""
 TMPL = "<?xml version='1.0' encoding='UTF-8'?>\n%s" % TMPL_NO_HEADER
 
 IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
@@ -24,10 +27,37 @@ AUTHN = {
 }
 
 
-def test_pre_enc():
+def test_pre_enc_key_format():
+    def the_xsd_ID_value_must_start_with_either_a_letter_or_underscore(id):
+        result = re.match(r"^[a-zA-Z_]", id[0])
+        return result
+
+    def the_xsd_ID_value_may_contain_only_letters_digits_underscores_hyphens_periods(id):
+        result = re.match(r"^[a-zA-Z0-9._-]*$", id[1:])
+        return result
+
+    tmpl = pre_encryption_part()
+    for id in (tmpl.id, tmpl.key_info.encrypted_key.id):
+        assert the_xsd_ID_value_must_start_with_either_a_letter_or_underscore(id)
+        assert the_xsd_ID_value_may_contain_only_letters_digits_underscores_hyphens_periods(id)
+
+
+def test_pre_enc_with_pregenerated_key():
     tmpl = pre_encryption_part(encrypted_key_id="EK", encrypted_data_id="ED")
-    print(tmpl)
-    assert "%s" % tmpl in (TMPL_NO_HEADER, TMPL)
+    expected = TMPL_NO_HEADER.format(
+        ed_id=tmpl.id,
+        ek_id=tmpl.key_info.encrypted_key.id,
+    )
+    assert str(tmpl) == expected
+
+
+def test_pre_enc_with_generated_key():
+    tmpl = pre_encryption_part()
+    expected = TMPL_NO_HEADER.format(
+        ed_id=tmpl.id,
+        ek_id=tmpl.key_info.encrypted_key.id,
+    )
+    assert str(tmpl) == expected
 
 
 def test_reshuffle_response():
@@ -41,7 +71,6 @@ def test_reshuffle_response():
 
     resp2 = pre_encrypt_assertion(resp_)
 
-    print(resp2)
     assert resp2.encrypted_assertion.extension_elements
 
 
@@ -74,7 +103,6 @@ def test_enc1():
     crypto = CryptoBackendXmlSec1(xmlsec_path)
     (_stdout, _stderr, output) = crypto._run_xmlsec(com_list, [tmpl])
 
-    print(output)
     assert _stderr == ""
     assert _stdout == ""
 
@@ -93,7 +121,6 @@ def test_enc2():
     enc_resp = crypto.encrypt_assertion(resp_, full_path("pubkey.pem"),
                                         pre_encryption_part())
 
-    print(enc_resp)
     assert enc_resp
 
 if __name__ == "__main__":

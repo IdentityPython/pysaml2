@@ -8,8 +8,8 @@ import hashlib
 import itertools
 import logging
 import os
-import uuid
 import six
+from uuid import uuid4 as gen_random_key
 
 from time import mktime
 import pytz
@@ -1840,17 +1840,16 @@ def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_1_5, key_name='my-rs
     :param key_name:
     :return:
     """
-    ek_id = encrypted_key_id or str(uuid.uuid4())
-    ed_id = encrypted_data_id or str(uuid.uuid4())
+    ek_id = encrypted_key_id or "EK_{id}".format(id=gen_random_key())
+    ed_id = encrypted_data_id or "ED_{id}".format(id=gen_random_key())
     msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
     key_encryption_method = EncryptionMethod(algorithm=key_enc)
     encrypted_key = EncryptedKey(
-            id=ek_id,
-            encryption_method=key_encryption_method,
-            key_info=ds.KeyInfo(
-                key_name=ds.KeyName(text=key_name)),
-            cipher_data=CipherData(
-                cipher_value=CipherValue(text='')))
+        id=ek_id,
+        encryption_method=key_encryption_method,
+        key_info=ds.KeyInfo(key_name=ds.KeyName(text=key_name)),
+        cipher_data=CipherData(cipher_value=CipherValue(text='')),
+    )
     key_info = ds.KeyInfo(encrypted_key=encrypted_key)
     encrypted_data = EncryptedData(
         id=ed_id,
