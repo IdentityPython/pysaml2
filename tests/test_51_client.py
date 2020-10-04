@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from base64 import encodebytes as b64encode
+from base64 import decodebytes as b64decode
 import uuid
 import six
 from six.moves.urllib import parse
@@ -50,7 +51,6 @@ AUTHN = {
     "class_ref": INTERNETPROTOCOLPASSWORD,
     "authn_auth": "http://www.example.com/login"
 }
-
 
 def generate_cert():
     sn = uuid.uuid4().urn
@@ -412,6 +412,36 @@ class TestClient:
                 self.client.config.metadata)
         except Exception:  # missing certificate
             self.client.sec.verify_signature(ar_str, node_name=class_name(ar))
+
+    def test_logout_response(self):
+        req_id, req = self.server.create_logout_request(
+            "http://localhost:8088/slo", "urn:mace:example.com:saml:roland:sp",
+            name_id=nid, reason="Tired", expire=in_a_while(minutes=15),
+            session_indexes=["_foo"])
+
+        info = self.client.apply_binding(
+            BINDING_HTTP_REDIRECT, req, destination="",
+            relay_state="relay2")
+        loc = info["headers"][0][1]
+        qs = parse.parse_qs(loc[1:])
+        samlreq = qs['SAMLRequest'][0]
+        resphttp = self.client.handle_logout_request(samlreq, nid,
+                BINDING_HTTP_REDIRECT)
+        _dic = unpack_form(resphttp['data'], "SAMLResponse")
+        xml = b64decode(_dic['SAMLResponse'].encode('UTF-8'))
+
+        # Signature found
+        assert xml.decode('UTF-8').find(r"Signature") > 0
+
+        # Try again with logout_responses_signed=False
+        self.client.logout_responses_signed = False
+        resphttp = self.client.handle_logout_request(samlreq, nid,
+                BINDING_HTTP_REDIRECT)
+        _dic = unpack_form(resphttp['data'], "SAMLResponse")
+        xml = b64decode(_dic['SAMLResponse'].encode('UTF-8'))
+
+        # Signature not found
+        assert xml.decode('UTF-8').find(r"Signature") < 0
 
     def test_create_logout_request(self):
         req_id, req = self.client.create_logout_request(
