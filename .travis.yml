@@ -64,11 +64,11 @@ jobs:
       script:
         - read -r CURRENT_VERSION <VERSION
         - printf -- '%s-%s\n' "${CURRENT_VERSION}" "${TRAVIS_BUILD_NUMBER}" >VERSION
-      skip_cleanup: true
       deploy:
         - provider: pypi
           distributions: sdist bdist_wheel
           server: "https://test.pypi.org/legacy/"
+          skip_cleanup: true
           username: "__token__"
           password: "$PYPI_PRE_RELEASE_TOKEN"
           on:
