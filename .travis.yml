@@ -57,17 +57,21 @@ jobs:
         TRAVIS_PULL_REQUEST_SLUG: $TRAVIS_PULL_REQUEST_SLUG
         EOF
 
-    - stage: Deploy new release on GitHub
-      if: type = push AND tag IS present
+    - stage: Deploy new pre-release on PyPI
+      if: type = push
       before_install: skip
       install: skip
-      script: skip
+      script:
+        - read -r CURRENT_VERSION <VERSION
+        - printf -- '%s-%s\n' "${CURRENT_VERSION}" "${TRAVIS_BUILD_NUMBER}" >VERSION
       deploy:
-        - provider: releases
-          token: "$GITHUB_RELEASE_TOKEN"
+        - provider: pypi
+          distributions: sdist bdist_wheel
+          server: "https://test.pypi.org/legacy/"
+          username: "__token__"
+          password: "$PYPI_PRE_RELEASE_TOKEN"
           on:
             repo: IdentityPython/pysaml2
-            tags: true
 
     - stage: Deploy new release on PyPI
       if: type = push AND tag IS present
@@ -79,6 +83,18 @@ jobs:
           distributions: sdist bdist_wheel
           username: "__token__"
           password: "$PYPI_RELEASE_TOKEN"
+          on:
+            repo: IdentityPython/pysaml2
+            tags: true
+
+    - stage: Deploy new release on GitHub
+      if: type = push AND tag IS present
+      before_install: skip
+      install: skip
+      script: skip
+      deploy:
+        - provider: releases
+          token: "$GITHUB_RELEASE_TOKEN"
           on:
             repo: IdentityPython/pysaml2
             tags: true
