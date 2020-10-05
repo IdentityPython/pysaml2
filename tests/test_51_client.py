@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import base64
+from base64 import encodebytes as b64encode
 import uuid
 import six
 from six.moves.urllib import parse
@@ -50,8 +50,6 @@ AUTHN = {
     "class_ref": INTERNETPROTOCOLPASSWORD,
     "authn_auth": "http://www.example.com/login"
 }
-
-encode_fn = getattr(base64, 'encodebytes', base64.encodestring)
 
 
 def generate_cert():
@@ -449,7 +447,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -491,7 +489,7 @@ class TestClient:
             userid="also0001@example.com",
             authn=AUTHN)
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -540,7 +538,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -575,7 +573,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -610,7 +608,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -654,7 +652,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -707,7 +705,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -743,7 +741,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -786,7 +784,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -837,7 +835,7 @@ class TestClient:
 
         # Cast the response to a string and encode it to mock up the payload
         # the SP client is expected to receive via HTTP POST binding.
-        resp_str = encode_fn(str(resp).encode())
+        resp_str = b64encode(str(resp).encode())
 
         # We do not need the client to verify a signature for this test.
         client.want_assertions_signed = False
@@ -1014,7 +1012,7 @@ class TestClient:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = encode_fn(enctext.encode())
+        resp_str = b64encode(enctext.encode())
         # Now over to the client side
         # Explicitely allow unsigned responses for this and the following 2 tests
         self.client.want_response_signed = False
@@ -1117,7 +1115,7 @@ class TestClient:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = encode_fn(enctext.encode())
+        resp_str = b64encode(enctext.encode())
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -1402,7 +1400,7 @@ class TestClient:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = encode_fn(str(response).encode())
+        resp_str = b64encode(str(response).encode())
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -1566,7 +1564,7 @@ class TestClient:
         outstanding = {"id1": "http://foo.example.com/service"}
 
         def create_authn_response(**kwargs):
-            return encode_fn(
+            return b64encode(
                     str(self.server.create_authn_response(**kwargs)).encode())
 
         def parse_authn_response(response):
@@ -1955,7 +1953,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode('utf-8'))
+        resp_str = b64encode(resp_str.encode('utf-8'))
 
         authn_response = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -1995,7 +1993,7 @@ class TestClientNonAsciiAva:
             userid="also0001@example.com",
             authn=AUTHN)
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2044,7 +2042,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2079,7 +2077,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2114,7 +2112,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2158,7 +2156,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2211,7 +2209,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2247,7 +2245,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2290,7 +2288,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2347,9 +2345,9 @@ class TestClientNonAsciiAva:
         # Cast the response to a string and encode it to mock up the payload
         # the SP client is expected to receive via HTTP POST binding.
         if six.PY2:
-            resp_str = encode_fn(str(resp))
+            resp_str = b64encode(str(resp))
         else:
-            resp_str = encode_fn(bytes(str(resp), 'utf-8'))
+            resp_str = b64encode(bytes(str(resp), 'utf-8'))
 
 
         # We do not need the client to verify a signature for this test.
@@ -2381,9 +2379,9 @@ class TestClientNonAsciiAva:
         # Cast the response to a string and encode it to mock up the payload
         # the SP client is expected to receive via HTTP POST binding.
         if six.PY2:
-            resp_str = encode_fn(str(resp))
+            resp_str = b64encode(str(resp))
         else:
-            resp_str = encode_fn(bytes(str(resp), 'utf-8'))
+            resp_str = b64encode(bytes(str(resp), 'utf-8'))
 
         # We do not need the client to verify a signature for this test.
         client.want_assertions_signed = False
@@ -2412,9 +2410,9 @@ class TestClientNonAsciiAva:
         # Cast the response to a string and encode it to mock up the payload
         # the SP client is expected to receive via HTTP POST binding.
         if six.PY2:
-            resp_str = encode_fn(str(resp))
+            resp_str = b64encode(str(resp))
         else:
-            resp_str = encode_fn(bytes(str(resp), 'utf-8'))
+            resp_str = b64encode(bytes(str(resp), 'utf-8'))
 
         # We do not need the client to verify a signature for this test.
         client.want_assertions_signed = False
@@ -2589,7 +2587,7 @@ class TestClientNonAsciiAva:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = encode_fn(enctext.encode())
+        resp_str = b64encode(enctext.encode())
         # Now over to the client side
         # Explicitely allow unsigned responses for this and the following 2 tests
         self.client.want_response_signed = False
@@ -2693,9 +2691,9 @@ class TestClientNonAsciiAva:
         # seresp = samlp.response_from_string(enctext)
 
         if six.PY2:
-            resp_str = encode_fn(enctext.encode('utf-8'))
+            resp_str = b64encode(enctext.encode('utf-8'))
         else:
-            resp_str = encode_fn(bytes(enctext, 'utf-8'))
+            resp_str = b64encode(bytes(enctext, 'utf-8'))
 
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
@@ -2978,7 +2976,7 @@ class TestClientNonAsciiAva:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = encode_fn(response.to_string())
+        resp_str = b64encode(response.to_string())
 
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
