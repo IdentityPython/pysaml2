@@ -1,5 +1,23 @@
 # Changelog
 
+
+## 6.2.0 (2020-10-05)
+
+- Fix the generated xsd:ID format for EncryptedData and EncryptedKey elements
+- Set the default value for the NameFormat attribute to unspecified when parsing
+- Support arbitrary entity attributes
+- Replace all asserts with proper checks
+- Allow request signing in artifact2message
+- Support logging configuration through the python logger
+- Fix wrong identifiers for ecdsa algos
+- Fix automatic inversion of attribute map files
+- Factor out common codepaths in attribute_converter
+- Remove uneeded exception logging
+- Docs: Update configuration options documentation
+- Examples: Support both str and bytes in SAML requests on the example idp
+- Examples: Update to key generation to 2048 bits
+
+
 ## 6.1.0 (2020-07-10)
 
 - Fix signed logout requests flag
@@ -11,6 +29,7 @@
   - Users using `name_id_format` to set the `<NameIDPolicy Format="...">` attribute now
     need to use the new configuration option `name_id_policy_format`.
 - Fix documentation formatting
+
 
 ## 5.4.0 (2020-07-10)
 
