@@ -347,9 +347,9 @@ class Server(Entity):
         ast = Assertion(identity)
         ast.acs = self.config.getattr("attribute_converters")
         if policy is None:
-            policy = Policy()
+            policy = Policy(mds=self.metadata)
         try:
-            ast.apply_policy(sp_entity_id, policy, self.metadata)
+            ast.apply_policy(sp_entity_id, policy)
         except MissingValue as exc:
             if not best_effort:
                 return self.create_error_response(in_response_to, consumer_url,
@@ -537,9 +537,9 @@ class Server(Entity):
             _issuer = self._issuer(issuer)
             ast = Assertion(identity)
             if policy:
-                ast.apply_policy(sp_entity_id, policy, self.metadata)
+                ast.apply_policy(sp_entity_id, policy)
             else:
-                policy = Policy()
+                policy = Policy(mds=self.metadata)
 
             if attributes:
                 restr = restriction_from_attribute_spec(attributes)
