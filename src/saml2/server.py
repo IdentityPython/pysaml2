@@ -345,7 +345,7 @@ class Server(Entity):
         """
 
         ast = Assertion(identity)
-        ast.acs = self.config.getattr("attribute_converters", "idp")
+        ast.acs = self.config.getattr("attribute_converters")
         if policy is None:
             policy = Policy()
         try:

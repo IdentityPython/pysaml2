@@ -133,22 +133,20 @@ AQ_ARGS = ["endpoints"]
 AA_ARGS = ["attribute", "attribute_profile"]
 
 COMPLEX_ARGS = ["attribute_converters", "metadata", "policy"]
-ALL = set(COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS +
-          AA_ARGS)
+ALL = set(COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS + AA_ARGS)
 
 SPEC = {
-    "": COMMON_ARGS + COMPLEX_ARGS,
-    "sp": COMMON_ARGS + COMPLEX_ARGS + SP_ARGS,
+    "":    COMMON_ARGS + COMPLEX_ARGS,
+    "sp":  COMMON_ARGS + COMPLEX_ARGS + SP_ARGS,
     "idp": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
-    "aa": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS + AA_ARGS,
+    "aa":  COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS + AA_ARGS,
     "pdp": COMMON_ARGS + COMPLEX_ARGS + PDP_ARGS,
-    "aq": COMMON_ARGS + COMPLEX_ARGS + AQ_ARGS,
+    "aq":  COMMON_ARGS + COMPLEX_ARGS + AQ_ARGS,
 }
 
 _RPA = [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT]
 _PRA = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT, BINDING_HTTP_ARTIFACT]
-_SRPA = [BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST,
-         BINDING_HTTP_ARTIFACT]
+_SRPA = [BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT]
 
 PREFERRED_BINDING = {
     "single_logout_service": _SRPA,
@@ -251,7 +249,7 @@ class Config(object):
         else:
             return getattr(self, "_%s_%s" % (context, attr), None)
 
-    def load_special(self, cnf, typ, metadata_construction=False):
+    def load_special(self, cnf, typ):
         for arg in SPEC[typ]:
             try:
                 _val = cnf[arg]
@@ -265,10 +263,10 @@ class Config(object):
                 self.setattr(typ, arg, _val)
 
         self.context = typ
-        self.load_complex(cnf, typ, metadata_construction=metadata_construction)
+        self.load_complex(cnf, typ)
         self.context = self.def_context
 
-    def load_complex(self, cnf, typ="", metadata_construction=False):
+    def load_complex(self, cnf, typ=""):
         try:
             self.setattr(typ, "policy", Policy(cnf["policy"], config=self))
         except KeyError:
@@ -280,32 +278,6 @@ class Config(object):
         #                      Policy(cnf["service"][srv]["policy"]))
         #     except KeyError:
         #         pass
-
-        try:
-            try:
-                acs = ac_factory(cnf["attribute_map_dir"])
-            except KeyError:
-                acs = ac_factory()
-
-            if not acs:
-                raise ConfigurationError(
-                    "No attribute converters, something is wrong!!")
-
-            _acs = self.getattr("attribute_converters", typ)
-            if _acs:
-                _acs.extend(acs)
-            else:
-                self.setattr(typ, "attribute_converters", acs)
-
-        except KeyError:
-            pass
-
-        if not metadata_construction:
-            try:
-                self.setattr(typ, "metadata",
-                             self.load_metadata(cnf["metadata"]))
-            except KeyError:
-                pass
 
     def unicode_convert(self, item):
         try:
@@ -364,9 +336,7 @@ class Config(object):
         if "service" in cnf:
             for typ in ["aa", "idp", "sp", "pdp", "aq"]:
                 try:
-                    self.load_special(
-                        cnf["service"][typ], typ,
-                        metadata_construction=metadata_construction)
+                    self.load_special(cnf["service"][typ], typ)
                     self.serves.append(typ)
                 except KeyError:
                     pass
@@ -374,7 +344,17 @@ class Config(object):
         if "extensions" in cnf:
             self.do_extensions(cnf["extensions"])
 
-        self.load_complex(cnf, metadata_construction=metadata_construction)
+        acs = ac_factory(cnf.get("attribute_map_dir"))
+        if not acs:
+            raise ConfigurationError("No attribute converters, something is wrong!!")
+        self.setattr("", "attribute_converters", acs)
+
+        try:
+            self.setattr("", "metadata", self.load_metadata(cnf["metadata"]))
+        except KeyError:
+            pass
+
+        self.load_complex(cnf)
         self.context = self.def_context
 
         return self
@@ -400,10 +380,8 @@ class Config(object):
         """ Loads metadata into an internal structure """
 
         acs = self.attribute_converters
-
         if acs is None:
-            raise ConfigurationError(
-                "Missing attribute converter specification")
+            raise ConfigurationError("Missing attribute converter specification")
 
         try:
             ca_certs = self.ca_certs
