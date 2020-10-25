@@ -709,11 +709,10 @@ def authn_statement(authn_class=None, authn_auth=None,
     return res
 
 
-def do_subject_confirmation(policy, sp_entity_id, key_info=None, **treeargs):
+def do_subject_confirmation(not_on_or_after, key_info=None, **treeargs):
     """
 
-    :param policy: Policy instance
-    :param sp_entity_id: The entityid of the SP
+    :param not_on_or_after: not_on_or_after policy
     :param subject_confirmation_method: How was the subject confirmed
     :param address: The network address/location from which an attesting entity
         can present the assertion.
@@ -730,7 +729,7 @@ def do_subject_confirmation(policy, sp_entity_id, key_info=None, **treeargs):
     _sc = factory(saml.SubjectConfirmation, **treeargs)
 
     _scd = _sc.subject_confirmation_data
-    _scd.not_on_or_after = policy.not_on_or_after(sp_entity_id)
+    _scd.not_on_or_after = not_on_or_after
 
     if _sc.method == saml.SCM_HOLDER_OF_KEY:
         _scd.add_extension_element(key_info)
@@ -738,13 +737,13 @@ def do_subject_confirmation(policy, sp_entity_id, key_info=None, **treeargs):
     return _sc
 
 
-def do_subject(policy, sp_entity_id, name_id, **farg):
+def do_subject(not_on_or_after, name_id, **farg):
     specs = farg['subject_confirmation']
 
     if isinstance(specs, list):
-        res = [do_subject_confirmation(policy, sp_entity_id, **s) for s in specs]
+        res = [do_subject_confirmation(not_on_or_after, **s) for s in specs]
     else:
-        res = [do_subject_confirmation(policy, sp_entity_id, **specs)]
+        res = [do_subject_confirmation(not_on_or_after, **specs)]
 
     return factory(saml.Subject, name_id=name_id, subject_confirmation=res)
 
@@ -784,13 +783,11 @@ class Assertion(dict):
         :return: An Assertion instance
         """
 
-        if policy:
-            _name_format = policy.get_name_form(sp_entity_id)
-        else:
-            _name_format = NAME_FORMAT_URI
+        _name_format = policy.get_name_form(sp_entity_id)
 
-        attr_statement = saml.AttributeStatement(attribute=from_local(
-            attrconvs, self, _name_format))
+        attr_statement = saml.AttributeStatement(
+            attribute=from_local(attrconvs, self, _name_format)
+        )
 
         if encrypt == "attributes":
             for attr in attr_statement.attribute:
@@ -816,11 +813,10 @@ class Assertion(dict):
         else:
             _authn_statement = None
 
-        subject = do_subject(policy, sp_entity_id, name_id,
-                             **farg['subject'])
-
-        _ass = assertion_factory(issuer=issuer, conditions=conds,
-                                 subject=subject)
+        subject = do_subject(
+            policy.not_on_or_after(sp_entity_id), name_id, **farg['subject']
+        )
+        _ass = assertion_factory(issuer=issuer, conditions=conds, subject=subject)
 
         if _authn_statement:
             _ass.authn_statement = [_authn_statement]
