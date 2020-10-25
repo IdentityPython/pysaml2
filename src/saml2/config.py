@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import copy
 import importlib
 import logging
@@ -165,9 +163,6 @@ PREFERRED_BINDING = {
 
 class ConfigurationError(SAMLError):
     pass
-
-
-# -----------------------------------------------------------------
 
 
 class Config(object):
