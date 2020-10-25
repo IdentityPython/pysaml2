@@ -266,6 +266,15 @@ class Config(object):
             raise ConfigurationError("No attribute converters, something is wrong!!")
         self.setattr("", "attribute_converters", acs)
 
+        try:
+            self.setattr("", "metadata", self.load_metadata(cnf["metadata"]))
+        except KeyError:
+            pass
+
+        for srv, spec in cnf.get("service", {}).items():
+            policy_conf = spec.get("policy")
+            self.setattr(srv, "policy", Policy(policy_conf, self.metadata))
+
     def load(self, cnf, metadata_construction=False):
         """ The base load method, loads the configuration
 
