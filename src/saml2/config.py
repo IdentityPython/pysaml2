@@ -266,20 +266,6 @@ class Config(object):
             raise ConfigurationError("No attribute converters, something is wrong!!")
         self.setattr("", "attribute_converters", acs)
 
-    def unicode_convert(self, item):
-        try:
-            return six.text_type(item, "utf-8")
-        except TypeError:
-            _uc = self.unicode_convert
-            if isinstance(item, dict):
-                return dict([(key, _uc(val)) for key, val in item.items()])
-            elif isinstance(item, list):
-                return [_uc(v) for v in item]
-            elif isinstance(item, tuple):
-                return tuple([_uc(v) for v in item])
-            else:
-                return item
-
     def load(self, cnf, metadata_construction=False):
         """ The base load method, loads the configuration
 
@@ -288,7 +274,7 @@ class Config(object):
             metadata. If so some things can be left out.
         :return: The Configuration instance
         """
-        _uc = self.unicode_convert
+
         for arg in COMMON_ARGS:
             if arg == "virtual_organization":
                 if "virtual_organization" in cnf:
@@ -303,7 +289,7 @@ class Config(object):
                         self.extension_schema[_mod.NAMESPACE] = _mod
 
             try:
-                setattr(self, arg, _uc(cnf[arg]))
+                setattr(self, arg, cnf[arg])
             except KeyError:
                 pass
             except TypeError:  # Something that can't be a string
