@@ -258,21 +258,13 @@ class Config(object):
                 self.setattr(typ, arg, _val)
 
         self.context = typ
-        self.load_complex(cnf, typ)
         self.context = self.def_context
 
-    def load_complex(self, cnf, typ=""):
-        try:
-            self.setattr(typ, "policy", Policy(cnf["policy"], config=self))
-        except KeyError:
-            pass
-
-        # for srv, spec in cnf["service"].items():
-        #     try:
-        #         self.setattr(srv, "policy",
-        #                      Policy(cnf["service"][srv]["policy"]))
-        #     except KeyError:
-        #         pass
+    def load_complex(self, cnf):
+        acs = ac_factory(cnf.get("attribute_map_dir"))
+        if not acs:
+            raise ConfigurationError("No attribute converters, something is wrong!!")
+        self.setattr("", "attribute_converters", acs)
 
     def unicode_convert(self, item):
         try:
@@ -338,16 +330,6 @@ class Config(object):
 
         if "extensions" in cnf:
             self.do_extensions(cnf["extensions"])
-
-        acs = ac_factory(cnf.get("attribute_map_dir"))
-        if not acs:
-            raise ConfigurationError("No attribute converters, something is wrong!!")
-        self.setattr("", "attribute_converters", acs)
-
-        try:
-            self.setattr("", "metadata", self.load_metadata(cnf["metadata"]))
-        except KeyError:
-            pass
 
         self.load_complex(cnf)
         self.context = self.def_context
