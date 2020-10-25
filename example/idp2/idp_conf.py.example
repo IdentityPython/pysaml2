@@ -154,7 +154,7 @@ CONFIG = {
         },
         "loggers": {
             "saml2": {
-                "level": "DEBUG"
+                "level": "INFO"
             },
         },
         "root": {
