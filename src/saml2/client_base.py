@@ -162,6 +162,7 @@ class Base(Entity):
 
         attribute_defaults = {
             "logout_requests_signed": False,
+            "logout_responses_signed": False,
             "allow_unsolicited": False,
             "authn_requests_signed": False,
             "want_assertions_signed": False,

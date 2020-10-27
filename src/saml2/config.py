@@ -95,6 +95,7 @@ SP_ARGS = [
     "name_id_policy_format",
     "name_id_format_allow_create",
     "logout_requests_signed",
+    "logout_responses_signed",
     "requested_attribute_name_format",
     "hide_assertion_consumer_service",
     "force_authn",
@@ -201,6 +202,7 @@ class Config(object):
         self.virtual_organization = None
         self.only_use_keys_in_metadata = True
         self.logout_requests_signed = None
+        self.logout_responses_signed = None
         self.disable_ssl_certificate_validation = None
         self.context = ""
         self.attribute_converters = None

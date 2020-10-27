@@ -987,6 +987,24 @@ Example::
         }
     }
 
+logout_responses_signed
+"""""""""""""""""""""""
+
+Indicates if this entity will sign the Logout Responses while processing
+a Logout Request.
+
+This can be overridden by application code when calling ``handle_logout_request``.
+
+Valid values are True or False. Default value is False.
+
+Example::
+
+    "service": {
+        "sp": {
+            "logout_responses_signed": False,
+        }
+    }
+
 subject_data
 """"""""""""
 
