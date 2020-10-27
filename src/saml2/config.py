@@ -8,6 +8,7 @@ import os
 import re
 import sys
 from logging.config import dictConfig as configure_logging_by_dict
+from warnings import warn as _warn
 
 import six
 
@@ -353,10 +354,12 @@ class Config(object):
             configure_logging_by_dict(self.logging)
 
         if not self.delete_tmpfiles:
-            logger.warning(
-                "delete_tmpfiles is set to False; "
-                "temporary files will not be deleted."
+            warn_msg = (
+                "Configuration option `delete_tmpfiles` is set to False; "
+                "consider setting this to True to have temporary files deleted."
             )
+            logger.warning(warn_msg)
+            _warn(warn_msg)
 
         if "service" in cnf:
             for typ in ["aa", "idp", "sp", "pdp", "aq"]:

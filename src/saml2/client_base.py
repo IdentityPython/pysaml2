@@ -9,6 +9,7 @@ import threading
 import six
 import time
 import logging
+from warnings import warn as _warn
 
 from saml2.entity import Entity
 
@@ -189,10 +190,12 @@ class Base(Entity):
                 self.want_assertions_or_response_signed,
             ]
         ):
-            logger.warning(
+            warn_msg = (
                 "The SAML service provider accepts unsigned SAML Responses "
                 "and Assertions. This configuration is insecure."
             )
+            logger.warning(warn_msg)
+            _warn(warn_msg)
 
         self.artifact2response = {}
 
