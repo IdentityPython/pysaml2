@@ -12,7 +12,7 @@ import logging
 
 from saml2.entity import Entity
 
-from saml2.mdstore import destinations
+from saml2.mdstore import locations
 from saml2.profile import paos, ecp
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
@@ -212,7 +212,7 @@ class Base(Entity):
             # verify that it's in the metadata
             srvs = self.metadata.single_sign_on_service(entityid, binding)
             if srvs:
-                return destinations(srvs)[0]
+                return next(locations(srvs), None)
             else:
                 logger.info("_sso_location: %s, %s", entityid, binding)
                 raise IdpUnspecified("No IdP to send to given the premises")
@@ -224,9 +224,8 @@ class Base(Entity):
             raise IdpUnspecified("Too many IdPs to choose from: %s" % eids)
 
         try:
-            srvs = self.metadata.single_sign_on_service(list(eids.keys())[0],
-                                                        binding)
-            return destinations(srvs)[0]
+            srvs = self.metadata.single_sign_on_service(list(eids.keys())[0], binding)
+            return next(locations(srvs), None)
         except IndexError:
             raise IdpUnspecified("No IdP to send to given the premises")
 

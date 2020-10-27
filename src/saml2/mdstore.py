@@ -5,6 +5,8 @@ import json
 import logging
 import os
 import sys
+from itertools import chain
+from warnings import warn as _warn
 
 from hashlib import sha1
 from os.path import isfile
@@ -26,7 +28,11 @@ from saml2 import BINDING_SOAP
 from saml2.httpbase import HTTPBase
 from saml2.extension.idpdisc import BINDING_DISCO
 from saml2.extension.idpdisc import DiscoveryResponse
+from saml2.md import NAMESPACE as NS_MD
 from saml2.md import EntitiesDescriptor
+from saml2.md import ArtifactResolutionService
+from saml2.md import NameIDMappingService
+from saml2.md import SingleSignOnService
 from saml2.mdie import to_dict
 from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import UnknownSystemEntity
@@ -70,6 +76,9 @@ classnames = {
         ns=NS_MDUI, tag=PrivacyStatementURL.c_tag
     ),
     "mdui_uiinfo_logo": "{ns}&{tag}".format(ns=NS_MDUI, tag=Logo.c_tag),
+    "service_artifact_resolution": "{ns}&{tag}".format(ns=NS_MD, tag=ArtifactResolutionService.c_tag),
+    "service_single_sign_on": "{ns}&{tag}".format(ns=NS_MD, tag=SingleSignOnService.c_tag),
+    "service_nameid_mapping": "{ns}&{tag}".format(ns=NS_MD, tag=NameIDMappingService.c_tag),
 }
 
 ENTITY_CATEGORY = "http://macedir.org/entity-category"
@@ -78,8 +87,6 @@ ASSURANCE_CERTIFICATION = "urn:oasis:names:tc:SAML:attribute:assurance-certifica
 
 SAML_METADATA_CONTENT_TYPE = "application/samlmetadata+xml"
 DEFAULT_FRESHNESS_PERIOD = "P0Y0M0DT12H0M0S"
-
-
 
 REQ2SRV = {
     # IDP
@@ -149,8 +156,54 @@ def metadata_modules():
     return _res
 
 
+def response_locations(srvs):
+    """
+    Return the ResponseLocation attributes mapped to the services.
+
+    ArtifactResolutionService, SingleSignOnService and NameIDMappingService MUST omit
+    the ResponseLocation attribute. This is enforced here, but metadata with such
+    service declarations and such attributes should not have been part of the metadata
+    store in the first place.
+    """
+    values = (
+        s["response_location"]
+        for s in srvs
+        if "response_location" in s
+        if s["__class__"] not in [
+            classnames["service_artifact_resolution"],
+            classnames["service_single_sign_on"],
+            classnames["service_nameid_mapping"],
+        ]
+    )
+    return values
+
+
+def locations(srvs):
+    values = (
+        s["location"]
+        for s in srvs
+        if "location" in s
+    )
+    return values
+
+
 def destinations(srvs):
-    return [s["location"] for s in srvs]
+    warn_msg = (
+        "`saml2.mdstore.destinations` function is deprecated; "
+        "instead, use `saml2.mdstore.locations` or `saml2.mdstore.all_locations`."
+    )
+    logger.warning(warn_msg)
+    _warn(warn_msg)
+    values = list(locations(srvs))
+    return values
+
+
+def all_locations(srvs):
+    values = chain(
+        response_locations(srvs),
+        locations(srvs),
+    )
+    return values
 
 
 def attribute_requirement(entity, index=None):
