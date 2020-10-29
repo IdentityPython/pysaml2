@@ -191,8 +191,11 @@ class Base(Entity):
             ]
         ):
             warn_msg = (
-                "The SAML service provider accepts unsigned SAML Responses "
-                "and Assertions. This configuration is insecure."
+                "The SAML service provider accepts "
+                "unsigned SAML Responses and Assertions. "
+                "This configuration is insecure. "
+                "Consider setting want_assertions_signed, want_response_signed "
+                "or want_assertions_or_response_signed configuration options."
             )
             logger.warning(warn_msg)
             _warn(warn_msg)

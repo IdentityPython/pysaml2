@@ -7,7 +7,6 @@ or attribute authority (AA) may use to conclude its tasks.
 """
 import logging
 import os
-from warnings import warn as _warn
 
 import importlib
 import dbm
@@ -525,11 +524,8 @@ class Server(Entity):
 
         if not name_id and userid:
             try:
-                name_id = self.ident.construct_nameid(userid, policy,
-                                                      sp_entity_id)
-                warn_msg = "Unspecified NameID format"
-                logger.warning(warn_msg)
-                _warn(warn_msg)
+                name_id = self.ident.construct_nameid(userid, policy, sp_entity_id)
+                logger.warning("Unspecified NameID format")
             except Exception:
                 pass
 

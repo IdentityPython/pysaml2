@@ -193,7 +193,7 @@ def destinations(srvs):
         "instead, use `saml2.mdstore.locations` or `saml2.mdstore.all_locations`."
     )
     logger.warning(warn_msg)
-    _warn(warn_msg)
+    _warn(warn_msg, DeprecationWarning)
     values = list(locations(srvs))
     return values
 
