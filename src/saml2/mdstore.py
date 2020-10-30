@@ -56,6 +56,9 @@ from saml2.extension.mdui import Description
 from saml2.extension.mdui import InformationURL
 from saml2.extension.mdui import PrivacyStatementURL
 from saml2.extension.mdui import Logo
+from saml2.extension.mdrpi import NAMESPACE as NS_MDRPI
+from saml2.extension.mdrpi import RegistrationInfo
+from saml2.extension.mdrpi import RegistrationPolicy
 
 
 logger = logging.getLogger(__name__)
@@ -79,6 +82,8 @@ classnames = {
     "service_artifact_resolution": "{ns}&{tag}".format(ns=NS_MD, tag=ArtifactResolutionService.c_tag),
     "service_single_sign_on": "{ns}&{tag}".format(ns=NS_MD, tag=SingleSignOnService.c_tag),
     "service_nameid_mapping": "{ns}&{tag}".format(ns=NS_MD, tag=NameIDMappingService.c_tag),
+    "mdrpi_registration_info": "{ns}&{tag}".format(ns=NS_MDRPI, tag=RegistrationInfo.c_tag),
+    "mdrpi_registration_policy": "{ns}&{tag}".format(ns=NS_MDRPI, tag=RegistrationPolicy.c_tag),
 }
 
 ENTITY_CATEGORY = "http://macedir.org/entity-category"
@@ -1404,6 +1409,45 @@ class MetadataStore(MetaData):
                 res['digest_methods'].append(elem['algorithm'])
             elif elem["__class__"] == classnames["algsupport_signing_method"]:
                 res['signing_methods'].append(elem['algorithm'])
+        return res
+
+    def registration_info(self, entity_id):
+        """
+        Get all registration info for an entry in the metadata.
+
+        Example return data:
+
+        res = {
+            'registration_authority': 'http://www.example.com',
+            'registration_instant': '2013-06-15T18:15:03Z',
+            'registration_policy': {
+                'en': 'http://www.example.com/policy.html',
+                'sv': 'http://www.example.com/sv/policy.html',
+            }
+        }
+
+        :param entity_id: Entity id
+        :return: dict with keys and value-lists from metadata
+
+        :type entity_id: string
+        :rtype: dict
+        """
+        res = {
+            'registration_authority': None,
+            'registration_instant': None,
+            'registration_policy': {}
+        }
+        try:
+            ext = self.__getitem__(entity_id)["extensions"]
+        except KeyError:
+            return res
+        for elem in ext["extension_elements"]:
+            if elem["__class__"] == classnames["mdrpi_registration_info"]:
+                res["registration_authority"] = elem["registration_authority"]
+                res["registration_instant"] = elem.get("registration_instant")
+                for policy in elem.get('registration_policy'):
+                    if policy["__class__"] == classnames["mdrpi_registration_policy"]:
+                        res['registration_policy'][policy["lang"]] = policy["text"]
         return res
 
     def _lookup_elements_by_cls(self, root, cls):

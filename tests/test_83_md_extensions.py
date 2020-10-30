@@ -9,7 +9,7 @@ from saml2.metadata import entity_descriptor
 class TestMDExt():
     def test_sp_type_true(self):
         fil = "sp_mdext_conf.py"
-        cnf = Config().load_file(fil, metadata_construction=True)
+        cnf = Config().load_file(fil)
         ed = entity_descriptor(cnf)
 
         assert ed.spsso_descriptor.extensions
@@ -20,7 +20,7 @@ class TestMDExt():
 
     def test_sp_type_false(self):
         fil = "sp_mdext_conf.py"
-        cnf = Config().load_file(fil, metadata_construction=True)
+        cnf = Config().load_file(fil)
         cnf.setattr('sp', 'sp_type_in_metadata', False)
         ed = entity_descriptor(cnf)
 
@@ -28,7 +28,7 @@ class TestMDExt():
 
     def test_entity_attributes(self):
         fil = "sp_mdext_conf.py"
-        cnf = Config().load_file(fil, metadata_construction=True)
+        cnf = Config().load_file(fil)
         ed = entity_descriptor(cnf)
 
         entity_attributes = next(

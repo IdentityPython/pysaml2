@@ -517,28 +517,47 @@ policy
 """"""
 
 If the server is an IdP and/or an AA, then there might be reasons to do things
-differently depending on who is asking; this is where that is specified.
-The keys are 'default' and SP entity identifiers.  Default is used whenever
-there is no entry for a specific SP. The reasoning is also that if there is
-no default and only SP entity identifiers as keys, then the server will only
-accept connections from the specified SPs.
+differently depending on who is asking (which is the requesting service); the
+policy is where this behaviour is specified.
+
+The keys are SP entity identifiers, Registration Authority names, or 'default'.
+First, the policy for the requesting service is looked up using the SP entityID.
+If no such policy is found, and if the SP metadata includes a Registration
+Authority then a policy for the registration authority is looked up using the
+Registration Authority name. If no policy is found, then the 'default' is looked
+up. If there is no default and only SP entity identifiers as keys, then the
+server will only accept connections from the specified SPs.
+
 An example might be::
 
     "service": {
         "idp": {
             "policy": {
-                "default": {
-                    "lifetime": {"minutes":15},
-                    "attribute_restrictions": None, # means all I have
-                    "name_form": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
-                },
+                # a policy for a service
                 "urn:mace:example.com:saml:roland:sp": {
                     "lifetime": {"minutes": 5},
                     "attribute_restrictions": {
                         "givenName": None,
                         "surName": None,
-                    }
-                }
+                    },
+                },
+
+                # a policy for a registration authority
+                "http://www.swamid.se/": {
+                    "attribute_restrictions": {
+                        "givenName": None,
+                    },
+                },
+
+                # the policy for all other services
+                "default": {
+                    "lifetime": {"minutes":15},
+                    "attribute_restrictions": None, # means all I have
+                    "name_form": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                    "entity_categories": [
+                        "edugain",
+                    ],
+                },
             }
         }
     }
@@ -561,6 +580,13 @@ An example might be::
     Using this information, the attribute name in the data source will be mapped to
     the friendly name, and the saml attribute name will be taken from the uri/oid
     defined in the attribute map.
+*nameid_format*
+    Which nameid format that should be used. Defaults to
+    `urn:oasis:names:tc:SAML:2.0:nameid-format:transient`.
+*entity_categories*
+    Entity categories to apply.
+*sign*
+    Possible choices: "response", "assertion", "on_demand"
 
 If restrictions on values are deemed necessary, those are represented by
 regular expressions.::

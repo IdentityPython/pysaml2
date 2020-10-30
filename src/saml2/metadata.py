@@ -89,7 +89,7 @@ def create_metadata_string(configfile, config=None, valid=None, cert=None,
     if config is None:
         if configfile.endswith(".py"):
             configfile = configfile[:-3]
-        config = Config().load_file(configfile, metadata_construction=True)
+        config = Config().load_file(configfile)
     eds.append(entity_descriptor(config))
 
     conf = Config()

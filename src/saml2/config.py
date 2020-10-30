@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import copy
 import importlib
 import logging
@@ -74,6 +72,10 @@ COMMON_ARGS = [
     "allow_unknown_attributes",
     "crypto_backend",
     "delete_tmpfiles",
+    "endpoints",
+    "metadata",
+    "ui_info",
+    "name_id_format",
 ]
 
 SP_ARGS = [
@@ -87,12 +89,9 @@ SP_ARGS = [
     "want_assertions_or_response_signed",
     "authn_requests_signed",
     "name_form",
-    "endpoints",
-    "ui_info",
     "discovery_response",
     "allow_unsolicited",
     "ecp",
-    "name_id_format",
     "name_id_policy_format",
     "name_id_format_allow_create",
     "logout_requests_signed",
@@ -117,10 +116,6 @@ AA_IDP_ARGS = [
     "subject_data",
     "sp",
     "scope",
-    "endpoints",
-    "metadata",
-    "ui_info",
-    "name_id_format",
     "domain",
     "name_qualifier",
     "edu_person_targeted_id",
@@ -133,22 +128,20 @@ AQ_ARGS = ["endpoints"]
 AA_ARGS = ["attribute", "attribute_profile"]
 
 COMPLEX_ARGS = ["attribute_converters", "metadata", "policy"]
-ALL = set(COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS +
-          AA_ARGS)
+ALL = set(COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS + AA_ARGS)
 
 SPEC = {
-    "": COMMON_ARGS + COMPLEX_ARGS,
-    "sp": COMMON_ARGS + COMPLEX_ARGS + SP_ARGS,
+    "":    COMMON_ARGS + COMPLEX_ARGS,
+    "sp":  COMMON_ARGS + COMPLEX_ARGS + SP_ARGS,
     "idp": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
-    "aa": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS + AA_ARGS,
+    "aa":  COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS + AA_ARGS,
     "pdp": COMMON_ARGS + COMPLEX_ARGS + PDP_ARGS,
-    "aq": COMMON_ARGS + COMPLEX_ARGS + AQ_ARGS,
+    "aq":  COMMON_ARGS + COMPLEX_ARGS + AQ_ARGS,
 }
 
 _RPA = [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT]
 _PRA = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT, BINDING_HTTP_ARTIFACT]
-_SRPA = [BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST,
-         BINDING_HTTP_ARTIFACT]
+_SRPA = [BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT]
 
 PREFERRED_BINDING = {
     "single_logout_service": _SRPA,
@@ -167,9 +160,6 @@ PREFERRED_BINDING = {
 
 class ConfigurationError(SAMLError):
     pass
-
-
-# -----------------------------------------------------------------
 
 
 class Config(object):
@@ -251,7 +241,7 @@ class Config(object):
         else:
             return getattr(self, "_%s_%s" % (context, attr), None)
 
-    def load_special(self, cnf, typ, metadata_construction=False):
+    def load_special(self, cnf, typ):
         for arg in SPEC[typ]:
             try:
                 _val = cnf[arg]
@@ -265,71 +255,39 @@ class Config(object):
                 self.setattr(typ, arg, _val)
 
         self.context = typ
-        self.load_complex(cnf, typ, metadata_construction=metadata_construction)
         self.context = self.def_context
 
-    def load_complex(self, cnf, typ="", metadata_construction=False):
+    def load_complex(self, cnf):
+        acs = ac_factory(cnf.get("attribute_map_dir"))
+        if not acs:
+            raise ConfigurationError("No attribute converters, something is wrong!!")
+        self.setattr("", "attribute_converters", acs)
+
         try:
-            self.setattr(typ, "policy", Policy(cnf["policy"]))
+            self.setattr("", "metadata", self.load_metadata(cnf["metadata"]))
         except KeyError:
             pass
 
-        # for srv, spec in cnf["service"].items():
-        #     try:
-        #         self.setattr(srv, "policy",
-        #                      Policy(cnf["service"][srv]["policy"]))
-        #     except KeyError:
-        #         pass
+        for srv, spec in cnf.get("service", {}).items():
+            policy_conf = spec.get("policy")
+            self.setattr(srv, "policy", Policy(policy_conf, self.metadata))
 
-        try:
-            try:
-                acs = ac_factory(cnf["attribute_map_dir"])
-            except KeyError:
-                acs = ac_factory()
-
-            if not acs:
-                raise ConfigurationError(
-                    "No attribute converters, something is wrong!!")
-
-            _acs = self.getattr("attribute_converters", typ)
-            if _acs:
-                _acs.extend(acs)
-            else:
-                self.setattr(typ, "attribute_converters", acs)
-
-        except KeyError:
-            pass
-
-        if not metadata_construction:
-            try:
-                self.setattr(typ, "metadata",
-                             self.load_metadata(cnf["metadata"]))
-            except KeyError:
-                pass
-
-    def unicode_convert(self, item):
-        try:
-            return six.text_type(item, "utf-8")
-        except TypeError:
-            _uc = self.unicode_convert
-            if isinstance(item, dict):
-                return dict([(key, _uc(val)) for key, val in item.items()])
-            elif isinstance(item, list):
-                return [_uc(v) for v in item]
-            elif isinstance(item, tuple):
-                return tuple([_uc(v) for v in item])
-            else:
-                return item
-
-    def load(self, cnf, metadata_construction=False):
+    def load(self, cnf, metadata_construction=None):
         """ The base load method, loads the configuration
 
         :param cnf: The configuration as a dictionary
-        :param metadata_construction: Is this only to be able to construct
-            metadata. If so some things can be left out.
         :return: The Configuration instance
         """
-        _uc = self.unicode_convert
+
+        if metadata_construction is not None:
+            warn_msg = (
+                "The metadata_construction parameter for saml2.config.Config.load "
+                "is deprecated and ignored; "
+                "instead, initialize the Policy object setting the mds param."
+            )
+            logger.warning(warn_msg)
+            _warn(warn_msg, DeprecationWarning)
+
         for arg in COMMON_ARGS:
             if arg == "virtual_organization":
                 if "virtual_organization" in cnf:
@@ -344,7 +302,7 @@ class Config(object):
                         self.extension_schema[_mod.NAMESPACE] = _mod
 
             try:
-                setattr(self, arg, _uc(cnf[arg]))
+                setattr(self, arg, cnf[arg])
             except KeyError:
                 pass
             except TypeError:  # Something that can't be a string
@@ -364,9 +322,7 @@ class Config(object):
         if "service" in cnf:
             for typ in ["aa", "idp", "sp", "pdp", "aq"]:
                 try:
-                    self.load_special(
-                        cnf["service"][typ], typ,
-                        metadata_construction=metadata_construction)
+                    self.load_special(cnf["service"][typ], typ)
                     self.serves.append(typ)
                 except KeyError:
                     pass
@@ -374,7 +330,7 @@ class Config(object):
         if "extensions" in cnf:
             self.do_extensions(cnf["extensions"])
 
-        self.load_complex(cnf, metadata_construction=metadata_construction)
+        self.load_complex(cnf)
         self.context = self.def_context
 
         return self
@@ -389,21 +345,28 @@ class Config(object):
 
         return importlib.import_module(tail)
 
-    def load_file(self, config_filename, metadata_construction=False):
+    def load_file(self, config_filename, metadata_construction=None):
+        if metadata_construction is not None:
+            warn_msg = (
+                "The metadata_construction parameter for saml2.config.Config.load_file "
+                "is deprecated and ignored; "
+                "instead, initialize the Policy object setting the mds param."
+            )
+            logger.warning(warn_msg)
+            _warn(warn_msg, DeprecationWarning)
+
         if config_filename.endswith(".py"):
             config_filename = config_filename[:-3]
 
         mod = self._load(config_filename)
-        return self.load(copy.deepcopy(mod.CONFIG), metadata_construction)
+        return self.load(copy.deepcopy(mod.CONFIG))
 
     def load_metadata(self, metadata_conf):
         """ Loads metadata into an internal structure """
 
         acs = self.attribute_converters
-
         if acs is None:
-            raise ConfigurationError(
-                "Missing attribute converter specification")
+            raise ConfigurationError("Missing attribute converter specification")
 
         try:
             ca_certs = self.ca_certs
