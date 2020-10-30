@@ -1,6 +1,27 @@
 # Changelog
 
 
+## 6.3.0 (2020-10-30)
+
+- Allow to specify policy configurations based on the registration authority.
+- Add new configuration option `logout_responses_signed` to sign logout responses.
+- When available and appropriate return the ResponseLocation along with the Location
+  attribute.
+- Always use base64.encodebytes; base64.encodestring has been dropped.
+- Examples: fix IdP example that was outputing debug statements on stdout that became
+  part of its metadata.
+- CI/CD: Use Ubuntu bionic as the host to run the CI/CD process.
+- CI/CD: Pre-releases are now available on [test.pypi.org][pypi.test.pysaml2]. Each
+  commit/merge on the master branch autotically creates a new pre-release. To install a
+  prelease, run:
+
+  ```sh
+  $ pip install -U -i https://test.pypi.org/simple --extra-index-url https://pypi.org/simple pysaml2
+  ```
+
+  [pypi.test.pysaml2]: https://test.pypi.org/project/pysaml2/#history
+
+
 ## 6.2.0 (2020-10-05)
 
 - Fix the generated xsd:ID format for EncryptedData and EncryptedKey elements
