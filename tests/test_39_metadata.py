@@ -30,7 +30,7 @@ sp_conf = {
 
 
 def test_requested_attribute_name_format():
-    cnf = SPConfig().load(sp_conf, metadata_construction=True)
+    cnf = SPConfig().load(sp_conf)
     ed = entity_descriptor(cnf)
 
     assert len(ed.spsso_descriptor.attribute_consuming_service) == 1
@@ -42,7 +42,7 @@ def test_requested_attribute_name_format():
     sp2 = copy.copy(sp_conf)
     sp2["service"]["sp"]["requested_attribute_name_format"] = NAME_FORMAT_BASIC
 
-    cnf2 = SPConfig().load(sp2, metadata_construction=True)
+    cnf2 = SPConfig().load(sp2)
     ed = entity_descriptor(cnf2)
     acs = ed.spsso_descriptor.attribute_consuming_service[0]
     assert len(acs.requested_attribute) == 4
@@ -56,7 +56,7 @@ def test_signed_metadata_proper_str_bytes_handling():
     sp_conf_2['cert_file'] = full_path("inc-md-cert.pem")
     # requires xmlsec binaries per https://pysaml2.readthedocs.io/en/latest/examples/sp.html
     sp_conf_2['xmlsec_binary'] = sigver.get_xmlsec_binary(["/opt/local/bin"])
-    cnf = SPConfig().load(sp_conf_2, metadata_construction=True)
+    cnf = SPConfig().load(sp_conf_2)
 
     # This will raise TypeError if string/bytes handling is not correct
     sp_metadata = create_metadata_string('', config=cnf, sign=True)
