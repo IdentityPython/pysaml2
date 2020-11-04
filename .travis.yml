@@ -68,7 +68,7 @@ jobs:
         - provider: pypi
           distributions: sdist bdist_wheel
           server: "https://test.pypi.org/legacy/"
-          cleanup: false
+          skip_cleanup: true
           username: "__token__"
           password: "$PYPI_PRE_RELEASE_TOKEN"
           on:
