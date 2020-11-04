@@ -1445,7 +1445,7 @@ class MetadataStore(MetaData):
             if elem["__class__"] == classnames["mdrpi_registration_info"]:
                 res["registration_authority"] = elem["registration_authority"]
                 res["registration_instant"] = elem.get("registration_instant")
-                for policy in elem.get('registration_policy'):
+                for policy in elem.get('registration_policy', list()):
                     if policy["__class__"] == classnames["mdrpi_registration_policy"]:
                         res['registration_policy'][policy["lang"]] = policy["text"]
         return res

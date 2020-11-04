@@ -575,6 +575,16 @@ def test_registration_info():
            registration_info['registration_policy']['en']
 
 
+def test_registration_info_no_policy():
+    mds = MetadataStore(ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+    mds.imp(METADATACONF["13"])
+    registration_info = mds.registration_info(entity_id='https://idp.szie.hu/idp/shibboleth')
+    assert 'http://eduid.hu' == registration_info['registration_authority']
+    assert registration_info['registration_instant'] is None
+    assert registration_info['registration_policy'] == {}
+
+
 def test_extension():
     mds = MetadataStore(ATTRCONV, None)
     # use ordered dict to force expected entity to be last
