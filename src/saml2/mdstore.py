@@ -1432,22 +1432,29 @@ class MetadataStore(MetaData):
         :type entity_id: string
         :rtype: dict
         """
-        res = {
-            'registration_authority': None,
-            'registration_instant': None,
-            'registration_policy': {}
-        }
         try:
-            ext = self.__getitem__(entity_id)["extensions"]
+            ext = self.__getitem__(entity_id)
         except KeyError:
-            return res
-        for elem in ext["extension_elements"]:
-            if elem["__class__"] == classnames["mdrpi_registration_info"]:
-                res["registration_authority"] = elem["registration_authority"]
-                res["registration_instant"] = elem.get("registration_instant")
-                for policy in elem.get('registration_policy', []):
-                    if policy["__class__"] == classnames["mdrpi_registration_policy"]:
-                        res['registration_policy'][policy["lang"]] = policy["text"]
+            ext = {}
+
+        ext_elems = ext.get("extensions", {}).get("extension_elements", [])
+        reg_info = next(
+            (
+                elem
+                for elem in ext_elems
+                if elem["__class__"] == classnames["mdrpi_registration_info"]
+            ),
+            {},
+        )
+        res = {
+            "registration_authority": reg_info.get("registration_authority"),
+            "registration_instant": reg_info.get("registration_instant"),
+            "registration_policy": {
+                policy["lang"]: policy["text"]
+                for policy in reg_info.get("registration_policy", [])
+                if policy["__class__"] == classnames["mdrpi_registration_policy"]
+            },
+        }
         return res
 
     def _lookup_elements_by_cls(self, root, cls):
