@@ -186,6 +186,10 @@ class Base(Entity):
 
             setattr(self, attr, val)
 
+        # signing and digest algs
+        self.signing_algorithm = self.config.getattr('signing_algorithm', "sp")
+        self.digest_algorithm = self.config.getattr('digest_algorithm', "sp")
+
         if self.entity_type == "sp" and not any(
             [
                 self.want_assertions_signed,
@@ -234,8 +238,10 @@ class Base(Entity):
             raise IdpUnspecified("Too many IdPs to choose from: %s" % eids)
 
         try:
-            srvs = self.metadata.single_sign_on_service(list(eids.keys())[0], binding)
+            srvs = self.metadata.single_sign_on_service(list(eids.keys())[0], 
+                                                        binding)
             return next(locations(srvs), None)
+
         except IndexError:
             raise IdpUnspecified("No IdP to send to given the premises")
 

@@ -524,7 +524,8 @@ class Server(Entity):
 
         if not name_id and userid:
             try:
-                name_id = self.ident.construct_nameid(userid, policy, sp_entity_id)
+                name_id = self.ident.construct_nameid(userid, policy,
+                                                      sp_entity_id)
                 logger.warning("Unspecified NameID format")
             except Exception:
                 pass
@@ -593,7 +594,11 @@ class Server(Entity):
             args['best_effort'] = kwargs["best_effort"]
         except KeyError:
             args['best_effort'] = False
-
+        
+        # signing and digest algs
+        self.signing_algorithm = self.config.getattr('signing_algorithm', "idp")
+        self.digest_algorithm = self.config.getattr('digest_algorithm', "idp")
+        
         for param in ['sign_assertion', 'sign_response', 'encrypt_assertion',
                       'encrypt_assertion_self_contained',
                       'encrypted_advice_attributes', 'encrypt_cert_advice',

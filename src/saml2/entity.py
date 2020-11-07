@@ -453,6 +453,10 @@ class Entity(HTTPBase):
         sign_alg=None,
         digest_alg=None,
     ):
+        # sign adn digest algs
+        sign_alg = sign_alg or self.signing_algorithm
+        digest_alg = digest_alg or self.digest_algorithm
+
         if msg.signature is None:
             msg.signature = pre_signature_part(
                 msg.id, self.sec.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg
