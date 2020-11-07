@@ -53,7 +53,7 @@ for filespec in args.config:
         sys.path.insert(0, bas)
     if fil.endswith(".py"):
         fil = fil[:-3]
-    cnf = Config().load_file(fil, metadata_construction=True)
+    cnf = Config().load_file(fil)
     if valid_for:
         cnf.valid_for = valid_for
     eds.append(entity_descriptor(cnf))

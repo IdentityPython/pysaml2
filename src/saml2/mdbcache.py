@@ -9,7 +9,7 @@ import time
 from datetime import datetime
 
 from saml2 import time_util
-from saml2.cache import ToOld
+from saml2.cache import TooOld
 from saml2.time_util import TIME_FORMAT
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class Cache(object):
             for item in self._cache.find({"subject_id": subject_id}):
                 try:
                     info = self._get_info(item, check_not_on_or_after)
-                except ToOld:
+                except TooOld:
                     oldees.append(item["entity_id"])
                     continue
 
@@ -66,7 +66,7 @@ class Cache(object):
                 try:
                     info = self.get(subject_id, entity_id,
                                     check_not_on_or_after)
-                except ToOld:
+                except TooOld:
                     oldees.append(entity_id)
                     continue
 
@@ -89,7 +89,7 @@ class Cache(object):
         timestamp = item["timestamp"]
 
         if check_not_on_or_after and not time_util.not_on_or_after(timestamp):
-            raise ToOld()
+            raise TooOld()
 
         try:
             return item["info"]
@@ -119,12 +119,14 @@ class Cache(object):
                                                          time.struct_time):
             timestamp = time.strftime(TIME_FORMAT, timestamp)
 
-        doc = {"subject_id": subject_id,
-               "entity_id": entity_id,
-               "info": info,
-               "timestamp": timestamp}
+        doc = {
+            "subject_id": subject_id,
+            "entity_id": entity_id,
+            "info": info,
+            "timestamp": timestamp,
+        }
 
-        _ = self._cache.insert(doc)
+        _ = self._cache.insert_one(doc)
 
     def reset(self, subject_id, entity_id):
         """ Scrap the assertions received from a IdP or an AA about a special
@@ -168,7 +170,7 @@ class Cache(object):
                                      "entity_id": entity_id})
         try:
             return time_util.not_on_or_after(item["timestamp"])
-        except ToOld:
+        except TooOld:
             return False
 
     def subjects(self):

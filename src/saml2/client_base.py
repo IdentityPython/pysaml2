@@ -9,13 +9,13 @@ import threading
 import six
 import time
 import logging
+from warnings import warn as _warn
 
 from saml2.entity import Entity
 
-import saml2.attributemaps as attributemaps
-
-from saml2.mdstore import destinations
+from saml2.mdstore import locations
 from saml2.profile import paos, ecp
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import AuthnQuery, RequestedAuthnContext
 from saml2.samlp import NameIDMappingRequest
@@ -24,7 +24,8 @@ from saml2.samlp import AuthzDecisionQuery
 from saml2.samlp import AuthnRequest
 from saml2.samlp import Extensions
 from saml2.extension import sp_type
-from saml2.extension import requested_attributes
+from saml2.extension.requested_attributes import RequestedAttribute
+from saml2.extension.requested_attributes import RequestedAttributes
 
 import saml2
 from saml2.soap import make_soap_enveloped_saml_thingy
@@ -91,6 +92,52 @@ class NoServiceDefined(SAMLError):
     pass
 
 
+def create_requested_attribute_node(requested_attrs, attribute_converters):
+    items = []
+    for attr in requested_attrs:
+        friendly_name = attr.get('friendly_name')
+        name = attr.get('name')
+        name_format = attr.get('name_format')
+        is_required = str(attr.get('required', False)).lower()
+
+        if not name and not friendly_name:
+            raise ValueError("Missing required attribute: 'name' or 'friendly_name'")
+
+        if not name:
+            for converter in attribute_converters:
+                try:
+                    name = converter._to[friendly_name.lower()]
+                except KeyError:
+                    continue
+                else:
+                    if not name_format:
+                        name_format = converter.name_format
+                    break
+
+        if not friendly_name:
+            for converter in attribute_converters:
+                try:
+                    friendly_name = converter._fro[name.lower()]
+                except KeyError:
+                    continue
+                else:
+                    if not name_format:
+                        name_format = converter.name_format
+                    break
+
+        items.append(
+            RequestedAttribute(
+                is_required=is_required,
+                name_format=name_format,
+                friendly_name=friendly_name,
+                name=name,
+            )
+        )
+
+    node = RequestedAttributes(extension_elements=items)
+    return node
+
+
 class Base(Entity):
     """ The basic pySAML2 service provider class """
 
@@ -116,6 +163,7 @@ class Base(Entity):
 
         attribute_defaults = {
             "logout_requests_signed": False,
+            "logout_responses_signed": False,
             "allow_unsolicited": False,
             "authn_requests_signed": False,
             "want_assertions_signed": False,
@@ -142,10 +190,15 @@ class Base(Entity):
                 self.want_assertions_or_response_signed,
             ]
         ):
-            logger.warning(
-                "The SAML service provider accepts unsigned SAML Responses "
-                "and Assertions. This configuration is insecure."
+            warn_msg = (
+                "The SAML service provider accepts "
+                "unsigned SAML Responses and Assertions. "
+                "This configuration is insecure. "
+                "Consider setting want_assertions_signed, want_response_signed "
+                "or want_assertions_or_response_signed configuration options."
             )
+            logger.warning(warn_msg)
+            _warn(warn_msg)
 
         self.artifact2response = {}
 
@@ -166,7 +219,7 @@ class Base(Entity):
             # verify that it's in the metadata
             srvs = self.metadata.single_sign_on_service(entityid, binding)
             if srvs:
-                return destinations(srvs)[0]
+                return next(locations(srvs), None)
             else:
                 logger.info("_sso_location: %s, %s", entityid, binding)
                 raise IdpUnspecified("No IdP to send to given the premises")
@@ -178,9 +231,8 @@ class Base(Entity):
             raise IdpUnspecified("Too many IdPs to choose from: %s" % eids)
 
         try:
-            srvs = self.metadata.single_sign_on_service(list(eids.keys())[0],
-                                                        binding)
-            return destinations(srvs)[0]
+            srvs = self.metadata.single_sign_on_service(list(eids.keys())[0], binding)
+            return next(locations(srvs), None)
         except IndexError:
             raise IdpUnspecified("No IdP to send to given the premises")
 
@@ -235,14 +287,14 @@ class Base(Entity):
             service_url_binding=None, message_id=0,
             consent=None, extensions=None, sign=None,
             allow_create=None, sign_prepare=False, sign_alg=None,
-            digest_alg=None, **kwargs):
+            digest_alg=None, requested_attributes=None, **kwargs):
         """ Creates an authentication request.
 
         :param destination: Where the request should be sent.
         :param vorg: The virtual organization the service belongs to.
         :param scoping: The scope of the request
         :param binding: The protocol to use for the Response !!
-        :param nameid_format: Format of the NameID
+        :param nameid_format: Format of the NameIDPolicy
         :param service_url_binding: Where the reply should be sent dependent
             on reply binding.
         :param message_id: The identifier for this request
@@ -253,124 +305,92 @@ class Base(Entity):
         :param allow_create: If the identity provider is allowed, in the course
             of fulfilling the request, to create a new identifier to represent
             the principal.
+        :param requested_attributes: A list of dicts which define attributes to
+            be used as eIDAS Requested Attributes for this request. If not
+            defined the configuration option requested_attributes will be used,
+            if defined. The format is the same as the requested_attributes
+            configuration option.
         :param kwargs: Extra key word arguments
         :return: either a tuple of request ID and <samlp:AuthnRequest> instance
                  or a tuple of request ID and str when sign is set to True
         """
-        client_crt = None
-        if "client_crt" in kwargs:
-            client_crt = kwargs["client_crt"]
-
         args = {}
 
-        if self.config.getattr('hide_assertion_consumer_service', 'sp'):
+        # AssertionConsumerServiceURL
+        # AssertionConsumerServiceIndex
+        hide_assertion_consumer_service = self.config.getattr('hide_assertion_consumer_service', 'sp')
+        assertion_consumer_service_url = (
+            kwargs.pop("assertion_consumer_service_urls", [None])[0]
+            or kwargs.pop("assertion_consumer_service_url", None)
+        )
+        assertion_consumer_service_index = kwargs.pop("assertion_consumer_service_index", None)
+        service_url = (self.service_urls(service_url_binding or binding) or [None])[0]
+        if hide_assertion_consumer_service:
             args["assertion_consumer_service_url"] = None
             binding = None
-        else:
-            try:
-                args["assertion_consumer_service_url"] = kwargs[
-                    "assertion_consumer_service_urls"][0]
-                del kwargs["assertion_consumer_service_urls"]
-            except KeyError:
-                try:
-                    args["assertion_consumer_service_url"] = kwargs[
-                        "assertion_consumer_service_url"]
-                    del kwargs["assertion_consumer_service_url"]
-                except KeyError:
-                    try:
-                        args["assertion_consumer_service_index"] = str(
-                            kwargs["assertion_consumer_service_index"])
-                        del kwargs["assertion_consumer_service_index"]
-                    except KeyError:
-                        if service_url_binding is None:
-                            service_urls = self.service_urls(binding)
-                        else:
-                            service_urls = self.service_urls(service_url_binding)
-                        args["assertion_consumer_service_url"] = service_urls[0]
+        elif assertion_consumer_service_url:
+            args["assertion_consumer_service_url"] = assertion_consumer_service_url
+        elif assertion_consumer_service_index:
+            args["assertion_consumer_service_index"] = assertion_consumer_service_index
+        elif service_url:
+            args["assertion_consumer_service_url"] = service_url
 
-        try:
-            args["provider_name"] = kwargs["provider_name"]
-        except KeyError:
-            if binding == BINDING_PAOS:
-                pass
-            else:
-                args["provider_name"] = self._my_name()
+        # ProviderName
+        provider_name = kwargs.get("provider_name")
+        if not provider_name and binding != BINDING_PAOS:
+            provider_name = self._my_name()
+        args["provider_name"] = provider_name
 
         # Allow argument values either as class instances or as dictionaries
         # all of these have cardinality 0..1
         _msg = AuthnRequest()
-        for param in ["scoping", "requested_authn_context", "conditions",
-                      "subject"]:
-            try:
-                _item = kwargs[param]
-            except KeyError:
-                pass
+        for param in ["scoping", "requested_authn_context", "conditions", "subject"]:
+            _item = kwargs.pop(param, None)
+            if not _item:
+                continue
+
+            if isinstance(_item, _msg.child_class(param)):
+                args[param] = _item
+            elif isinstance(_item, dict):
+                args[param] = RequestedAuthnContext(**_item)
             else:
-                del kwargs[param]
-                # either class instance or argument dictionary
-                if isinstance(_item, _msg.child_class(param)):
-                    args[param] = _item
-                elif isinstance(_item, dict):
-                    args[param] = RequestedAuthnContext(**_item)
-                else:
-                    raise ValueError("%s or wrong type expected %s" % (_item,
-                                                                       param))
+                raise ValueError("Wrong type for param {name}".format(name=param))
 
-        try:
-            args["name_id_policy"] = kwargs["name_id_policy"]
-            del kwargs["name_id_policy"]
-        except KeyError:
-            if allow_create is None:
-                allow_create = self.config.getattr("name_id_format_allow_create", "sp")
-                if allow_create is None:
-                    allow_create = "false"
-                else:
-                    if allow_create is True:
-                        allow_create = "true"
-                    else:
-                        allow_create = "false"
+        # NameIDPolicy
+        nameid_policy_format_config = self.config.getattr("name_id_policy_format", "sp")
+        nameid_policy_format = (
+            nameid_format
+            or nameid_policy_format_config
+            or None
+        )
 
-            if nameid_format == "":
-                name_id_policy = None
-            else:
-                if nameid_format is None:
-                    nameid_format = self.config.getattr("name_id_format", "sp")
+        allow_create_config = self.config.getattr("name_id_format_allow_create", "sp")
+        allow_create = (
+            None
+            # SAML 2.0 errata says AllowCreate MUST NOT be used for transient ids
+            if nameid_policy_format == NAMEID_FORMAT_TRANSIENT
+            else allow_create
+            if allow_create
+            else str(bool(allow_create_config)).lower()
+        )
 
-                    # If no nameid_format has been set in the configuration
-                    # or passed in then transient is the default.
-                    if nameid_format is None:
-                        # SAML 2.0 errata says AllowCreate MUST NOT be used for
-                        # transient ids - to make a conservative change this is
-                        # only applied for the default cause
-                        allow_create = None
-                        nameid_format = NAMEID_FORMAT_TRANSIENT
+        name_id_policy = (
+            kwargs.pop("name_id_policy", None)
+            if "name_id_policy" in kwargs
+            else None
+            if not nameid_policy_format
+            else samlp.NameIDPolicy(
+                allow_create=allow_create, format=nameid_policy_format
+            )
+        )
 
-                    # If a list has been configured or passed in choose the
-                    # first since NameIDPolicy can only have one format specified.
-                    elif isinstance(nameid_format, list):
-                        nameid_format = nameid_format[0]
+        if name_id_policy and vorg:
+            name_id_policy.sp_name_qualifier = vorg
+            name_id_policy.format = nameid_policy_format or NAMEID_FORMAT_PERSISTENT
 
-                    # Allow a deployer to signal that no format should be specified
-                    # in the NameIDPolicy by passing in or configuring the string 'None'.
-                    elif nameid_format == 'None':
-                        nameid_format = None
+        args["name_id_policy"] = name_id_policy
 
-                name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
-                                                    format=nameid_format)
-
-            if name_id_policy and vorg:
-                try:
-                    name_id_policy.sp_name_qualifier = vorg
-                    name_id_policy.format = saml.NAMEID_FORMAT_PERSISTENT
-                except KeyError:
-                    pass
-            args["name_id_policy"] = name_id_policy
-
-        try:
-            nsprefix = kwargs["nsprefix"]
-        except KeyError:
-            nsprefix = None
-
+        # eIDAS SPType
         conf_sp_type = self.config.getattr('sp_type', 'sp')
         conf_sp_type_in_md = self.config.getattr('sp_type_in_metadata', 'sp')
         if conf_sp_type and conf_sp_type_in_md is False:
@@ -379,59 +399,21 @@ class Base(Entity):
             item = sp_type.SPType(text=conf_sp_type)
             extensions.add_extension_element(item)
 
-        requested_attrs = self.config.getattr('requested_attributes', 'sp')
+        # eIDAS RequestedAttributes
+        requested_attrs = (
+            requested_attributes
+            or self.config.getattr('requested_attributes', 'sp')
+            or []
+        )
         if requested_attrs:
+            req_attrs_node = create_requested_attribute_node(
+                requested_attrs, self.config.attribute_converters
+            )
             if not extensions:
                 extensions = Extensions()
+            extensions.add_extension_element(req_attrs_node)
 
-            attributemapsmods = []
-            for modname in attributemaps.__all__:
-                attributemapsmods.append(getattr(attributemaps, modname))
-
-            items = []
-            for attr in requested_attrs:
-                friendly_name = attr.get('friendly_name')
-                name = attr.get('name')
-                name_format = attr.get('name_format')
-                is_required = str(attr.get('required', False)).lower()
-
-                if not name and not friendly_name:
-                    raise ValueError(
-                        "Missing required attribute: '{}' or '{}'".format(
-                            'name', 'friendly_name'))
-
-                if not name:
-                    for mod in attributemapsmods:
-                        try:
-                            name = mod.MAP['to'][friendly_name]
-                        except KeyError:
-                            continue
-                        else:
-                            if not name_format:
-                                name_format = mod.MAP['identifier']
-                            break
-
-                if not friendly_name:
-                    for mod in attributemapsmods:
-                        try:
-                            friendly_name = mod.MAP['fro'][name]
-                        except KeyError:
-                            continue
-                        else:
-                            if not name_format:
-                                name_format = mod.MAP['identifier']
-                            break
-
-                items.append(requested_attributes.RequestedAttribute(
-                    is_required=is_required,
-                    name_format=name_format,
-                    friendly_name=friendly_name,
-                    name=name))
-
-            item = requested_attributes.RequestedAttributes(
-                extension_elements=items)
-            extensions.add_extension_element(item)
-
+        # ForceAuthn
         force_authn = str(
             kwargs.pop("force_authn", None)
             or self.config.getattr("force_authn", "sp")
@@ -444,29 +426,50 @@ class Base(Entity):
                 AuthnRequest(), extensions, **kwargs
             )
             args.update(_args)
-
         args.pop("id", None)
 
-        if sign is None:
-            sign = self.authn_requests_signed
+        client_crt = kwargs.get("client_crt")
+        nsprefix = kwargs.get("nsprefix")
+        sign = self.authn_requests_signed if sign is None else sign
 
-        if (sign and self.sec.cert_handler.generate_cert()) or \
-                        client_crt is not None:
+        if (sign and self.sec.cert_handler.generate_cert()) or client_crt is not None:
             with self.lock:
                 self.sec.cert_handler.update_cert(True, client_crt)
                 if client_crt is not None:
                     sign_prepare = True
-                return self._message(AuthnRequest, destination, message_id,
-                                     consent, extensions, sign, sign_prepare,
-                                     protocol_binding=binding,
-                                     scoping=scoping, nsprefix=nsprefix,
-                                     sign_alg=sign_alg, digest_alg=digest_alg,
-                                     **args)
-        return self._message(AuthnRequest, destination, message_id, consent,
-                             extensions, sign, sign_prepare,
-                             protocol_binding=binding,
-                             scoping=scoping, nsprefix=nsprefix,
-                             sign_alg=sign_alg, digest_alg=digest_alg, **args)
+                msg = self._message(
+                    AuthnRequest,
+                    destination,
+                    message_id,
+                    consent,
+                    extensions,
+                    sign,
+                    sign_prepare,
+                    protocol_binding=binding,
+                    scoping=scoping,
+                    nsprefix=nsprefix,
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg,
+                    **args,
+                )
+        else:
+            msg = self._message(
+                AuthnRequest,
+                destination,
+                message_id,
+                consent,
+                extensions,
+                sign,
+                sign_prepare,
+                protocol_binding=binding,
+                scoping=scoping,
+                nsprefix=nsprefix,
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
+                **args,
+            )
+
+        return msg
 
     def create_attribute_query(self, destination, name_id=None,
             attribute=None, message_id=0, consent=None,
@@ -649,8 +652,10 @@ class Base(Entity):
         :return:
         """
 
-        # One of them must be present
-        assert name_id or base_id or encrypted_id
+        if not name_id and not base_id and not encrypted_id:
+            raise ValueError(
+                "At least one of name_id, base_id or encrypted_id must be present."
+            )
 
         if name_id:
             return self._message(NameIDMappingRequest, destination, message_id,
@@ -925,7 +930,11 @@ class Base(Entity):
         }
 
         params = urlencode({k: v for k, v in args.items() if v})
-        return "%s?%s" % (url, params)
+        # url can already contain some parameters
+        if '?' in url:
+            return "%s&%s" % (url, params)
+        else:
+            return "%s?%s" % (url, params)
 
     @staticmethod
     def parse_discovery_service_response(url="", query="",

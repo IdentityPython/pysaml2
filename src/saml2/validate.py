@@ -4,6 +4,9 @@ import re
 import struct
 import base64
 import time
+from ipaddress import AddressValueError
+from ipaddress import IPv4Address
+from ipaddress import IPv6Address
 
 from saml2 import time_util
 
@@ -38,7 +41,7 @@ class ToEarly(Exception):
 # --------------------- validators -------------------------------------
 #
 
-NCNAME = re.compile("(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
+NCNAME = re.compile(r"(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
 
 
 def valid_ncname(name):
@@ -77,7 +80,7 @@ def valid_date_time(item):
 
 def valid_url(url):
     try:
-        _ = urlparse.urlparse(url)
+        _ = urlparse(url)
     except Exception:
         raise NotValid("URL")
 
@@ -112,55 +115,30 @@ def validate_before(not_before, slack):
 
 
 def valid_address(address):
+    """Validate IPv4/IPv6 addresses."""
     if not (valid_ipv4(address) or valid_ipv6(address)):
         raise NotValid("address")
     return True
 
 
 def valid_ipv4(address):
-    parts = address.split(".")
-    if len(parts) != 4:
+    """Validate IPv4 addresses."""
+    try:
+        IPv4Address(address)
+    except AddressValueError:
         return False
-    for item in parts:
-        try:
-            if not 0 <= int(item) <= 255:
-                raise NotValid("ipv4")
-        except ValueError:
-            return False
     return True
-
-#
-IPV6_PATTERN = re.compile(r"""
-    ^
-    \s*                         # Leading whitespace
-    (?!.*::.*::)                # Only a single wildcard allowed
-    (?:(?!:)|:(?=:))            # Colon iff it would be part of a wildcard
-    (?:                         # Repeat 6 times:
-        [0-9a-f]{0,4}           #   A group of at most four hexadecimal digits
-        (?:(?<=::)|(?<!::):)    #   Colon unless preceeded by wildcard
-    ){6}                        #
-    (?:                         # Either
-        [0-9a-f]{0,4}           #   Another group
-        (?:(?<=::)|(?<!::):)    #   Colon unless preceeded by wildcard
-        [0-9a-f]{0,4}           #   Last group
-        (?: (?<=::)             #   Colon iff preceeded by exacly one colon
-         |  (?<!:)              #
-         |  (?<=:) (?<!::) :    #
-         )                      # OR
-     |                          #   A v4 address with NO leading zeros
-        (?:25[0-4]|2[0-4]\d|1\d\d|[1-9]?\d)
-        (?: \.
-            (?:25[0-4]|2[0-4]\d|1\d\d|[1-9]?\d)
-        ){3}
-    )
-    \s*                         # Trailing whitespace
-    $
-""", re.VERBOSE | re.IGNORECASE | re.DOTALL)
 
 
 def valid_ipv6(address):
-    """Validates IPv6 addresses. """
-    return IPV6_PATTERN.match(address) is not None
+    """Validate IPv6 addresses."""
+    is_enclosed_in_brackets = address.startswith("[") and address.endswith("]")
+    address_raw = address[1:-1] if is_enclosed_in_brackets else address
+    try:
+        IPv6Address(address_raw)
+    except AddressValueError:
+        return False
+    return True
 
 
 def valid_boolean(val):
@@ -447,18 +425,12 @@ def valid_instance(instance):
                     "Class '%s' instance cardinality error: %s" % (
                         class_name, "too few values on %s" % name))
 
-#    if not _has_val:
-#        if class_name != "RequestedAttribute":
-#            # Not allow unless xsi:nil="true"
-#            assert instance.extension_attributes
-#            assert instance.extension_attributes[XSI_NIL] == "true"
-
     return True
 
 
 def valid_domain_name(dns_name):
     m = re.match(
-        "^[a-z0-9]+([-.]{ 1 }[a-z0-9]+).[a-z]{2,5}(:[0-9]{1,5})?(\/.)?$",
+        r"^[a-z0-9]+([-.]{ 1 }[a-z0-9]+).[a-z]{2,5}(:[0-9]{1,5})?(\/.)?$",
         dns_name, re.I)
     if not m:
         raise ValueError("Not a proper domain name")

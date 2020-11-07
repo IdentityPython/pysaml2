@@ -18,7 +18,7 @@ import six
 
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 TIME_FORMAT_WITH_FRAGMENT = re.compile(
-    "^(\d{4,4}-\d{2,2}-\d{2,2}T\d{2,2}:\d{2,2}:\d{2,2})(\.\d*)?Z?$")
+    r"^(\d{4,4}-\d{2,2}-\d{2,2}T\d{2,2}:\d{2,2}:\d{2,2})(\.\d*)?Z?$")
 
 # ---------------------------------------------------------------------------
 # I'm sure this is implemented somewhere else can't find it now though, so I
@@ -67,7 +67,8 @@ def parse_duration(duration):
         index += 1
     else:
         sign = '+'
-    assert duration[index] == "P"
+    if duration[index] != "P":
+        raise ValueError('Parse Duration is not valid.')
     index += 1
 
     dic = dict([(typ, 0) for (code, typ) in D_FORMAT if typ])
@@ -76,14 +77,14 @@ def parse_duration(duration):
     for code, typ in D_FORMAT:
         #print(duration[index:], code)
         if duration[index] == '-':
-            raise Exception("Negation not allowed on individual items")
+            raise ValueError("Negation not allowed on individual items")
         if code == "T":
             if duration[index] == "T":
                 index += 1
                 if index == len(duration):
-                    raise Exception("Not allowed to end with 'T'")
+                    raise ValueError("Not allowed to end with 'T'")
             else:
-                raise Exception("Missing T")
+                raise ValueError("Missing T")
         elif duration[index] == "T":
             continue
         else:
@@ -140,19 +141,20 @@ def add_duration(tid, duration):
         carry = f_quotient(temp, 60)
         # hours
         temp = tid.tm_hour + dur["tm_hour"] + carry
-        hour = modulo(temp, 60)
-        carry = f_quotient(temp, 60)
+        hour = modulo(temp, 24)
+        carry = f_quotient(temp, 24)
         # days
-        if dur["tm_mday"] > maximum_day_in_month_for(year, month):
+        if tid.tm_mday > maximum_day_in_month_for(year, month):
             temp_days = maximum_day_in_month_for(year, month)
-        elif dur["tm_mday"] < 1:
+        elif tid.tm_mday < 1:
             temp_days = 1
         else:
-            temp_days = dur["tm_mday"]
-        days = temp_days + tid.tm_mday + carry
+            temp_days = tid.tm_mday
+        days = temp_days + dur["tm_mday"] + carry
         while True:
             if days < 1:
-                pass
+                days = days + maximum_day_in_month_for(year, month - 1)
+                carry = -1
             elif days > maximum_day_in_month_for(year, month):
                 days -= maximum_day_in_month_for(year, month)
                 carry = 1

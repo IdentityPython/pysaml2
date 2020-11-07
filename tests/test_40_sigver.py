@@ -128,6 +128,7 @@ class FakeConfig():
     tmp_cert_file = None
     tmp_key_file = None
     validate_certificate = False
+    delete_tmpfiles = True
 
     def getattr(self, attr, default):
         return getattr(self, attr, default)
@@ -195,10 +196,8 @@ class TestSecurity():
     def test_multiple_signatures_assertion(self):
         ass = self._assertion
         # basic test with two of the same
-        to_sign = [(ass, ass.id, ''),
-                   (ass, ass.id, '')
-        ]
-        sign_ass = self.sec.multiple_signatures("%s" % ass, to_sign)
+        to_sign = [(ass, ass.id), (ass, ass.id)]
+        sign_ass = self.sec.multiple_signatures(str(ass), to_sign)
         sass = saml.assertion_from_string(sign_ass)
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
                                    'version', 'signature', 'id'])
@@ -222,10 +221,8 @@ class TestSecurity():
 
         # order is important, we can't validate if the signatures are made
         # in the reverse order
-        to_sign = [(self._assertion, self._assertion.id, ''),
-                   (response, response.id, '')]
-
-        s_response = self.sec.multiple_signatures("%s" % response, to_sign)
+        to_sign = [(self._assertion, self._assertion.id), (response, response.id)]
+        s_response = self.sec.multiple_signatures(str(response), to_sign)
         assert s_response is not None
         response = response_from_string(s_response)
 
@@ -490,10 +487,8 @@ class TestSecurityNonAsciiAva():
     def test_multiple_signatures_assertion(self):
         ass = self._assertion
         # basic test with two of the same
-        to_sign = [(ass, ass.id, ''),
-                   (ass, ass.id, '')
-        ]
-        sign_ass = self.sec.multiple_signatures("%s" % ass, to_sign)
+        to_sign = [(ass, ass.id), (ass, ass.id)]
+        sign_ass = self.sec.multiple_signatures(str(ass), to_sign)
         sass = saml.assertion_from_string(sign_ass)
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
                                    'version', 'signature', 'id'])
@@ -517,10 +512,8 @@ class TestSecurityNonAsciiAva():
 
         # order is important, we can't validate if the signatures are made
         # in the reverse order
-        to_sign = [(self._assertion, self._assertion.id, ''),
-                   (response, response.id, '')]
-
-        s_response = self.sec.multiple_signatures("%s" % response, to_sign)
+        to_sign = [(self._assertion, self._assertion.id), (response, response.id)]
+        s_response = self.sec.multiple_signatures(str(response), to_sign)
         assert s_response is not None
         response = response_from_string(s_response)
 
@@ -798,13 +791,13 @@ def test_xbox():
     encrypted_assertion = EncryptedAssertion()
     encrypted_assertion.add_extension_element(_ass0)
 
-    _, pre = make_temp(
+    tmp = make_temp(
         str(pre_encryption_part()).encode('utf-8'), decode=False
     )
     enctext = sec.crypto.encrypt(
         str(encrypted_assertion),
         conf.cert_file,
-        pre,
+        tmp.name,
         "des-192",
         '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]',
     )
@@ -860,13 +853,13 @@ def test_xbox_non_ascii_ava():
     encrypted_assertion = EncryptedAssertion()
     encrypted_assertion.add_extension_element(_ass0)
 
-    _, pre = make_temp(
+    tmp = make_temp(
         str(pre_encryption_part()).encode('utf-8'), decode=False
     )
     enctext = sec.crypto.encrypt(
         str(encrypted_assertion),
         conf.cert_file,
-        pre,
+        tmp.name,
         "des-192",
         '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]',
     )

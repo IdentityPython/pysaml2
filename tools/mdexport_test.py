@@ -1,25 +1,14 @@
 #!/usr/bin/env python
-import sys
-
-from saml2 import saml
-from saml2 import md
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import dri
-from saml2.extension import mdattr
-from saml2.extension import ui
-from saml2.extension import shibmd
-from saml2 import xmldsig
-from saml2 import xmlenc
-
-from saml2.mdstore import MetaDataFile, MetaDataExtern
-
-__author__ = 'rolandh'
 
 """
 A script that imports and verifies metadata and then dumps it in a basic
 dictionary format.
 """
+
+import sys
+
+from saml2.mdstore import MetaDataExtern
+from saml2.mdstore import MetaDataFile
 
 
 MDIMPORT = {

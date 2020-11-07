@@ -6,14 +6,20 @@ library. Reference: https://cryptography.io/en/latest/fernet/
 
 import base64 as _base64
 import os as _os
-import warnings as _warnings
+import logging
+from warnings import warn as _warn
 
 import cryptography.fernet as _fernet
 import cryptography.hazmat.backends as _backends
 import cryptography.hazmat.primitives.ciphers as _ciphers
 
+from .errors import SymmetricCryptographyError
 
-class Default(object):
+
+logger = logging.getLogger(__name__)
+
+
+class Fernet(object):
     """The default symmetric cryptography method."""
 
     @staticmethod
@@ -30,25 +36,68 @@ class Default(object):
 
         :param key: byte data representing the encyption/decryption key
         """
-        self._symmetric = _fernet.Fernet(key or self.__class__.generate_key())
+        if key:
+            fernet_key_error = SymmetricCryptographyError(
+                "Fernet key must be 32 url-safe base64-encoded bytes."
+            )
+            try:
+                raw_key = _base64.b64decode(key)
+            except Exception as e:
+                raise fernet_key_error from e
+            else:
+                if len(raw_key) != 32:
+                    raise fernet_key_error
+        else:
+            key = self.__class__.generate_key()
 
-    def encrypt(self, plaintext):
+        self._symmetric = _fernet.Fernet(key)
+
+    def encrypt(self, plaintext, *args, **kwargs):
         """Encrypt the given plaintext.
 
         :param plaintext: byte data representing the plaintext
         :return: byte data representing the ciphertext
         """
+        if args or kwargs:
+            _deprecation_msg = (
+                "The '.encrypt' method does not take into account any arguements, "
+                "other than the 'ciphertext' param. "
+                "Remove any other arguements. "
+                "In the next version, this method will not allow them."
+            )
+            logger.warning(_deprecation_msg)
+            _warn(_deprecation_msg, DeprecationWarning)
+
         ciphertext = self._symmetric.encrypt(plaintext)
         return ciphertext
 
-    def decrypt(self, ciphertext):
+    def decrypt(self, ciphertext, *args, **kwargs):
         """Decrypt the given ciphertext.
 
         :param ciphertext: byte data representing the ciphertext
         :return: byte data representing the plaintext
         """
+        if args or kwargs:
+            _deprecation_msg = (
+                "The '.decrypt' method does not take into account any arguements, "
+                "other than the 'ciphertext' param. "
+                "Remove any other arguements. "
+                "In the next version, this method will not allow them."
+            )
+            logger.warning(_deprecation_msg)
+            _warn(_deprecation_msg, DeprecationWarning)
+
         plaintext = self._symmetric.decrypt(ciphertext)
         return plaintext
+
+    def build_cipher(self, *args, **kwargs):
+        _deprecation_msg = (
+            "The 'Fernet' class does not need a build_cipher method."
+            "Remove any calls to this method. "
+            "In the next version, this method will be removed."
+        )
+        logger.warning(_deprecation_msg)
+        _warn(_deprecation_msg, DeprecationWarning)
 
 
 class AESCipher(object):
@@ -70,9 +119,12 @@ class AESCipher(object):
         _deprecation_msg = (
             '{name} {type} is deprecated. '
             'It will be removed in the next version. '
-            'Use saml2.cryptography.symmetric instead.'
+            'Use saml2.cryptography.symmetric.Default '
+            'or saml2.cryptography.symmetric.Fernet '
+            'instead.'
         ).format(name=cls.__name__, type=type(cls).__name__)
-        _warnings.warn(_deprecation_msg, DeprecationWarning)
+        logger.warning(_deprecation_msg)
+        _warn(_deprecation_msg, DeprecationWarning)
 
     def __init__(self, key):
         """
@@ -164,3 +216,7 @@ class AESCipher(object):
             idx = bytearray(res)[-1]
             res = res[:-idx]
         return res
+
+
+class Default(Fernet):
+    """Default class is saml2.cryptography.symmetric.Fernet"""

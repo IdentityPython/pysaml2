@@ -31,11 +31,11 @@ DIGEST_AVAIL_ALG = DIGEST_ALLOWED_ALG + (('DIGEST_MD5', DIGEST_MD5),)
 
 SIG_DSA_SHA1 = 'http://www.w3.org/2000/09/xmldsig#dsa-sha1'
 SIG_DSA_SHA256 = 'http://www.w3.org/2009/xmldsig11#dsa-sha256'
-SIG_ECDSA_SHA1 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha1'
-SIG_ECDSA_SHA224 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha224'
-SIG_ECDSA_SHA256 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha256'
-SIG_ECDSA_SHA384 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha384'
-SIG_ECDSA_SHA512 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha512'
+SIG_ECDSA_SHA1 = 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha1'
+SIG_ECDSA_SHA224 = 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha224'
+SIG_ECDSA_SHA256 = 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256'
+SIG_ECDSA_SHA384 = 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha384'
+SIG_ECDSA_SHA512 = 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha512'
 SIG_RSA_MD5 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-md5'  # test framework
 SIG_RSA_SHA1 = 'http://www.w3.org/2000/09/xmldsig#rsa-sha1'
 SIG_RSA_SHA224 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha224'

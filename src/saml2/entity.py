@@ -53,7 +53,7 @@ from saml2.samlp import ArtifactResponse
 from saml2.samlp import Artifact
 from saml2.samlp import LogoutRequest
 from saml2.samlp import AttributeQuery
-from saml2.mdstore import destinations
+from saml2.mdstore import all_locations
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
@@ -144,8 +144,8 @@ class Entity(HTTPBase):
             if _val.startswith("http"):
                 r = requests.request("GET", _val)
                 if r.status_code == 200:
-                    _, filename = make_temp(r.text, ".pem", False)
-                    setattr(self.config, item, filename)
+                    tmp = make_temp(r.text, ".pem", False, self.config.delete_tmpfiles)
+                    setattr(self.config, item, tmp.name)
                 else:
                     raise Exception(
                         "Could not fetch certificate from %s" % _val)
@@ -159,7 +159,6 @@ class Entity(HTTPBase):
                 vo.sp = self
 
         self.metadata = self.config.metadata
-        self.config.setup_logger()
         self.debug = self.config.debug
 
         self.sec = security_context(self.config)
@@ -250,8 +249,9 @@ class Entity(HTTPBase):
 
         return info
 
-    def pick_binding(self, service, bindings=None, descr_type="", request=None,
-                     entity_id=""):
+    def pick_binding(
+        self, service, bindings=None, descr_type="", request=None, entity_id=""
+    ):
         if request and not entity_id:
             entity_id = request.issuer.text.strip()
 
@@ -269,16 +269,8 @@ class Entity(HTTPBase):
             else:
                 descr_type = "spsso"
 
-        _url = _index = None
-        if request:
-            try:
-                _url = getattr(request, "%s_url" % service)
-            except AttributeError:
-                _url = None
-                try:
-                    _index = getattr(request, "%s_index" % service)
-                except AttributeError:
-                    pass
+        _url = getattr(request, "%s_url" % service, None)
+        _index = getattr(request, "%s_index" % service, None)
 
         for binding in bindings:
             try:
@@ -293,7 +285,8 @@ class Entity(HTTPBase):
                             if srv["index"] == _index:
                                 return binding, srv["location"]
                     else:
-                        return binding, destinations(srvs)[0]
+                        destination = next(all_locations(srvs), None)
+                        return binding, destination
             except UnsupportedBinding:
                 pass
 
@@ -358,9 +351,9 @@ class Entity(HTTPBase):
                 else:
                     descr_type = "spsso"
 
-            binding, destination = self.pick_binding(rsrv, bindings,
-                                                     descr_type=descr_type,
-                                                     request=message)
+            binding, destination = self.pick_binding(
+                rsrv, bindings, descr_type=descr_type, request=message
+            )
             info["binding"] = binding
             info["destination"] = destination
 
@@ -568,8 +561,10 @@ class Entity(HTTPBase):
                     _cert = "%s%s" % (begin_cert, _cert)
                 if end_cert not in _cert:
                     _cert = "%s%s" % (_cert, end_cert)
-                _, cert_file = make_temp(_cert.encode('ascii'), decode=False)
-                response = self.sec.encrypt_assertion(response, cert_file,
+                tmp = make_temp(_cert.encode('ascii'),
+                                decode=False,
+                                delete_tmpfiles=self.config.delete_tmpfiles)
+                response = self.sec.encrypt_assertion(response, tmp.name,
                                                       pre_encryption_part(),
                                                       node_xpath=node_xpath)
                 return response
@@ -855,7 +850,7 @@ class Entity(HTTPBase):
         _log_debug("Loaded request")
 
         if _request:
-            _request = _request.verify()
+            _request.verify()
             _log_debug("Verified request")
 
         if not _request:
@@ -1199,14 +1194,14 @@ class Entity(HTTPBase):
             response.require_signature = True
             # Verify that the assertion is syntactically correct and the
             # signature on the assertion is correct if present.
-            response = response.verify(keys)
+            response.verify(keys)
         except SignatureError as err:
             if require_signature:
                 logger.error("Signature Error: %s", err)
                 raise
             else:
                 response.require_signature = require_signature
-                response = response.verify(keys)
+                response.verify(keys)
         else:
             assertions_are_signed = True
         finally:
@@ -1267,7 +1262,13 @@ class Entity(HTTPBase):
 
         _art = base64.b64decode(artifact)
 
-        assert _art[:2] == ARTIFACT_TYPECODE
+        typecode = _art[:2]
+        if typecode != ARTIFACT_TYPECODE:
+            raise ValueError(
+                "Invalid artifact typecode '{invalid}' should be {valid}".format(
+                    invalid=typecode, valid=ARTIFACT_TYPECODE
+                )
+            )
 
         try:
             endpoint_index = str(int(_art[2:4]))
@@ -1284,11 +1285,12 @@ class Entity(HTTPBase):
 
         return destination
 
-    def artifact2message(self, artifact, descriptor):
+    def artifact2message(self, artifact, descriptor, sign=False):
         """
 
         :param artifact: The Base64 encoded SAML artifact as sent over the net
         :param descriptor: The type of entity on the other side
+        :param sign: Whether ArtifactResolve should be signed or not
         :return: A SAML message (request/response)
         """
 
@@ -1298,7 +1300,12 @@ class Entity(HTTPBase):
             raise SAMLError("Missing endpoint location")
 
         _sid = sid()
-        mid, msg = self.create_artifact_resolve(artifact, destination, _sid)
+        mid, msg = self.create_artifact_resolve(
+            artifact,
+            destination,
+            _sid,
+            sign=sign,
+        )
         return self.send_using_soap(msg, destination)
 
     def parse_artifact_resolve(self, txt, **kwargs):

@@ -14,7 +14,7 @@ CONFIG = {
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],
             "idp": ["urn:mace:example.com:saml:roland:idp"],
-            "name_id_format": "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+            "name_id_policy_format": "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
             "name_id_format_allow_create": "true"
         }
     },

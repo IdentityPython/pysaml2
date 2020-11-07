@@ -8,7 +8,7 @@ from saml2.mdstore import MetadataStore, name
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP, BINDING_HTTP_POST
 from saml2.config import SPConfig, IdPConfig, Config
 
-from saml2 import root_logger
+from saml2 import logger
 
 from pathutils import dotname, full_path
 from saml2.sigver import security_context, CryptoBackendXMLSecurity
@@ -297,57 +297,12 @@ def test_wayf():
     assert name(ent) == 'Example Co.'
     assert name(ent, "se") == 'Exempel AB'
 
-    c.setup_logger()
-
-    assert root_logger.level != logging.NOTSET
-    assert root_logger.level == logging.INFO
-    assert len(root_logger.handlers) == 1
-    assert isinstance(root_logger.handlers[0],
-                      logging.handlers.RotatingFileHandler)
-    handler = root_logger.handlers[0]
-    assert handler.backupCount == 5
-    try:
-        assert handler.maxBytes == 100000
-    except AssertionError:
-        assert handler.maxBytes == 500000
-    assert handler.mode == "a"
-    assert root_logger.name == "saml2"
-    assert root_logger.level == 20
-
 
 def test_conf_syslog():
     c = SPConfig().load_file("server_conf_syslog")
     c.context = "sp"
 
-    # otherwise the logger setting is not changed
-    root_logger.level = logging.NOTSET
-    while root_logger.handlers:
-        handler = root_logger.handlers[-1]
-        root_logger.removeHandler(handler)
-        handler.flush()
-        handler.close()
 
-    print(c.logger)
-    c.setup_logger()
-
-    assert root_logger.level != logging.NOTSET
-    assert root_logger.level == logging.INFO
-    assert len(root_logger.handlers) == 1
-    assert isinstance(root_logger.handlers[0],
-                      logging.handlers.SysLogHandler)
-    handler = root_logger.handlers[0]
-    print(handler.__dict__)
-    assert handler.facility == "local3"
-    assert handler.address == ('localhost', 514)
-    if ((sys.version_info.major == 2 and sys.version_info.minor >= 7) or
-        sys.version_info.major > 2):
-        assert handler.socktype == 2
-    else:
-        pass
-    assert root_logger.name == "saml2"
-    assert root_logger.level == 20
-
-#noinspection PyUnresolvedReferences
 def test_3():
     cnf = Config()
     cnf.load_file(dotname("sp_1_conf"))

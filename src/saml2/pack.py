@@ -179,7 +179,10 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
 
     if signer:
         # sigalgs, should be one defined in xmldsig
-        assert sigalg in [b for a, b in SIG_ALLOWED_ALG]
+        if sigalg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
+            raise Exception(
+                "Signature algo not in allowed list: {algo}".format(algo=sigalg)
+            )
         args["SigAlg"] = sigalg
 
         string = "&".join([urlencode({k: args[k]})
@@ -269,7 +272,14 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
     :return: header parts and body as saml.samlbase instances
     """
     envelope = defusedxml.ElementTree.fromstring(text)
-    assert envelope.tag == '{%s}Envelope' % NAMESPACE
+
+    envelope_tag = "{%s}Envelope" % NAMESPACE
+    if envelope.tag != envelope_tag:
+        raise ValueError(
+            "Invalid envelope tag '{invalid}' should be '{valid}'".format(
+                invalid=envelope.tag, valid=envelope_tag
+            )
+        )
 
     # print(len(envelope))
     body = None

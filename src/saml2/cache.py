@@ -17,6 +17,10 @@ class ToOld(SAMLError):
     pass
 
 
+class TooOld(ToOld):
+    pass
+
+
 class CacheError(SAMLError):
     pass
 
@@ -67,7 +71,7 @@ class Cache(object):
         for entity_id in entities:
             try:
                 info = self.get(name_id, entity_id, check_not_on_or_after)
-            except ToOld:
+            except TooOld:
                 oldees.append(entity_id)
                 continue
 
@@ -98,7 +102,7 @@ class Cache(object):
         (timestamp, info) = self._db[cni][entity_id]
         info = info.copy()
         if check_not_on_or_after and time_util.after(timestamp):
-            raise ToOld("past %s" % str(timestamp))
+            raise TooOld("past %s" % str(timestamp))
 
         if 'name_id' in info and isinstance(info['name_id'], six.string_types):
             info['name_id'] = decode(info['name_id'])

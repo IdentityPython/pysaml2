@@ -54,10 +54,10 @@ class SessionStorageMDB(object):
             "name_id_key": nkey,
             "assertion_id": assertion.id,
             "assertion": to_dict(assertion, MMODS, True),
-            "to_sign": to_sign
+            "to_sign": to_sign,
         }
 
-        _ = self.assertion.insert(doc)
+        _ = self.assertion.insert_one(doc)
 
     def get_assertion(self, cid):
         res = []
@@ -215,7 +215,7 @@ class MDB(object):
         # Add timestamp to all documents to allow external garbage collecting
         if "created_at" not in doc:
             doc["created_at"] = datetime.datetime.utcnow()
-        _ = self.db.insert(doc)
+        _ = self.db.insert_one(doc)
 
     def get(self, value=None, **kwargs):
         if value is not None:
@@ -321,7 +321,7 @@ class EptidMDB(Eptid):
             raise CorruptDatabase("Found more than one EPTID document")
 
     def __setitem__(self, key, value):
-        _ = self.mdb.store(key, **{"eptid": value})
+        self.mdb.store(key, **{"eptid": value})
 
 
 #------------------------------------------------------------------------------

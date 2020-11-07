@@ -3,7 +3,7 @@ import logging
 
 import memcache
 from saml2 import time_util
-from saml2.cache import ToOld, CacheError
+from saml2.cache import TooOld, CacheError
 
 # The assumption is that any subject may consist of data
 # gathered from several different sources, all with their own
@@ -56,7 +56,7 @@ class Cache(object):
                                                     subject_id+'_').items():
             try:
                 info = self.get_info(item)
-            except ToOld:
+            except TooOld:
                 oldees.append(entity_id)
                 continue
             for key, vals in info["ava"].items():
@@ -77,10 +77,10 @@ class Cache(object):
         try:
             (timestamp, info) = item
         except ValueError:
-            raise ToOld()
+            raise TooOld()
 
         if check_not_on_or_after and not time_util.not_on_or_after(timestamp):
-            raise ToOld()
+            raise TooOld()
 
         return info or None
 
@@ -170,7 +170,7 @@ class Cache(object):
 
         try:
             return time_util.not_on_or_after(timestamp)
-        except ToOld:
+        except TooOld:
             return False
 
     def subjects(self):

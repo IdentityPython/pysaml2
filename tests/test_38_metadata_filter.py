@@ -1,19 +1,10 @@
-from saml2 import md
-from saml2 import saml
-from saml2 import config
-from saml2 import xmldsig
-from saml2 import xmlenc
+from pathutils import full_path
 
+from saml2 import config
 from saml2.filter import AllowDescriptor
 from saml2.mdstore import MetadataStore
 from saml2.attribute_converter import ac_factory
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import dri
-from saml2.extension import mdattr
-from saml2.extension import ui
 
-from pathutils import full_path
 
 __author__ = 'roland'
 

@@ -87,10 +87,6 @@ XSD = "xs"
 NS_SOAP_ENC = "http://schemas.xmlsoap.org/soap/encoding/"
 
 
-_b64_decode_fn = getattr(base64, 'decodebytes', base64.decodestring)
-_b64_encode_fn = getattr(base64, 'encodebytes', base64.encodestring)
-
-
 class AttributeValueBase(SamlBase):
     def __init__(self,
                  text=None,
@@ -120,8 +116,14 @@ class AttributeValueBase(SamlBase):
 
     def verify(self):
         if not self.text:
-            assert self.extension_attributes
-            assert self.extension_attributes[XSI_NIL] == "true"
+            if not self.extension_attributes:
+                raise Exception(
+                    "Attribute value base should not have extension attributes"
+                )
+            if self.extension_attributes[XSI_NIL] != "true":
+                raise Exception(
+                    "Attribute value base should not have extension attributes"
+                )
             return True
         else:
             SamlBase.verify(self)
@@ -164,17 +166,16 @@ class AttributeValueBase(SamlBase):
 
     def set_text(self, value, base64encode=False):
         def _wrong_type_value(xsd, value):
-            msg = _str('Type and value do not match: {xsd}:{type}:{value}')
+            msg = 'Type and value do not match: {xsd}:{type}:{value}'
             msg = msg.format(xsd=xsd, type=type(value), value=value)
             raise ValueError(msg)
 
         # only work with six.string_types
-        _str = unicode if six.PY2 else str
         if isinstance(value, six.binary_type):
             value = value.decode('utf-8')
 
         type_to_xsd = {
-            _str:       'string',
+            str:        'string',
             int:        'integer',
             float:      'float',
             bool:       'boolean',
@@ -187,55 +188,54 @@ class AttributeValueBase(SamlBase):
         # - a function to turn that type into a text-value
         xsd_types_props = {
             'string': {
-                'type': _str,
-                'to_type': _str,
-                'to_text': _str,
+                'type': str,
+                'to_type': str,
+                'to_text': str,
             },
             'integer': {
                 'type': int,
                 'to_type': int,
-                'to_text': _str,
+                'to_text': str,
             },
             'short': {
                 'type': int,
                 'to_type': int,
-                'to_text': _str,
+                'to_text': str,
             },
             'int': {
                 'type': int,
                 'to_type': int,
-                'to_text': _str,
+                'to_text': str,
             },
             'long': {
                 'type': int,
                 'to_type': int,
-                'to_text': _str,
+                'to_text': str,
             },
             'float': {
                 'type': float,
                 'to_type': float,
-                'to_text': _str,
+                'to_text': str,
             },
             'double': {
                 'type': float,
                 'to_type': float,
-                'to_text': _str,
+                'to_text': str,
             },
             'boolean': {
                 'type': bool,
                 'to_type': lambda x: {
                     'true': True,
                     'false': False,
-                }[_str(x).lower()],
-                'to_text': lambda x: _str(x).lower(),
+                }[str(x).lower()],
+                'to_text': lambda x: str(x).lower(),
             },
             'base64Binary': {
-                'type': _str,
-                'to_type': _str,
-                'to_text': lambda x:
-                    _b64_encode_fn(x.encode())
-                    if base64encode
-                    else x,
+                'type': str,
+                'to_type': str,
+                'to_text': (
+                    lambda x: base64.encodebytes(x.encode()) if base64encode else x
+                ),
             },
             'anyType': {
                 'type': type(value),
@@ -256,7 +256,7 @@ class AttributeValueBase(SamlBase):
 
         xsd_ns, xsd_type = (
             ['', type(None)] if xsd_string is None
-            else ['', ''] if xsd_string is ''
+            else ['', ''] if xsd_string == ''
             else [
                 XSD if xsd_string in xsd_types_props else '',
                 xsd_string
@@ -269,7 +269,7 @@ class AttributeValueBase(SamlBase):
         to_text = xsd_type_props.get('to_text', str)
 
         # cast to correct type before type-checking
-        if type(value) is _str and valid_type is not _str:
+        if type(value) is str and valid_type is not str:
             try:
                 value = to_type(value)
             except (TypeError, ValueError, KeyError) as e:
@@ -1035,12 +1035,11 @@ class AuthnContextType_(SamlBase):
         self.authenticating_authority = authenticating_authority or []
 
     def verify(self):
-        # either <AuthnContextDecl> or <AuthnContextDeclRef> not both
-        if self.authn_context_decl:
-            assert self.authn_context_decl_ref is None
-        elif self.authn_context_decl_ref:
-            assert self.authn_context_decl is None
-
+        if self.authn_context_decl and self.authn_context_decl_ref:
+            raise Exception(
+                "Invalid Response: "
+                "Cannot have both <AuthnContextDecl> and <AuthnContextDeclRef>"
+            )
         return SamlBase.verify(self)
 
 
@@ -1098,6 +1097,11 @@ class AttributeType_(SamlBase):
         self.name = name
         self.name_format = name_format
         self.friendly_name = friendly_name
+
+    # when consuming such elements, default to NAME_FORMAT_UNSPECIFIED as NameFormat
+    def harvest_element_tree(self, tree):
+        tree.attrib.setdefault('NameFormat', NAME_FORMAT_UNSPECIFIED)
+        SamlBase.harvest_element_tree(self, tree)
 
 
 def attribute_type__from_string(xml_string):
@@ -1270,9 +1274,11 @@ class ConditionsType_(SamlBase):
 
     def verify(self):
         if self.one_time_use:
-            assert len(self.one_time_use) == 1
+            if len(self.one_time_use) != 1:
+                raise Exception("Cannot be used more than once")
         if self.proxy_restriction:
-            assert len(self.proxy_restriction) == 1
+            if len(self.proxy_restriction) != 1:
+                raise Exception("Cannot be used more than once")
 
         return SamlBase.verify(self)
 

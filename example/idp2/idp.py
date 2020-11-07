@@ -109,7 +109,12 @@ class Service(object):
             return None
 
     def unpack_post(self):
-        _dict = parse_qs(get_post(self.environ))
+        post_data = get_post(self.environ)
+        _dict = parse_qs(
+            post_data
+            if isinstance(post_data, str)
+            else post_data.decode('utf-8')
+        )
         logger.debug("unpack_post:: %s", _dict)
         try:
             return dict([(k, v[0]) for k, v in _dict.items()])

@@ -80,15 +80,21 @@ class Request(object):
         return issued_at > lower and issued_at < upper
 
     def _verify(self):
-        assert self.message.version == "2.0"
+        valid_version = "2.0"
+        if self.message.version != valid_version:
+            raise VersionMismatch(
+                "Invalid version {invalid} should be {valid}".format(
+                    invalid=self.message.version, valid=valid_version
+                )
+            )
+
         if self.message.destination and self.receiver_addrs and \
                 self.message.destination not in self.receiver_addrs:
-            logger.error("%s not in %s", self.message.destination,
-                                         self.receiver_addrs)
+            logger.error("%s not in %s", self.message.destination, self.receiver_addrs)
             raise OtherError("Not destined for me!")
 
-        assert self.issue_instant_ok()
-        return self
+        valid = self.issue_instant_ok()
+        return valid
 
     def loads(self, xmldata, binding, origdoc=None, must=None,
               only_valid_cert=False):

@@ -4,10 +4,10 @@ How sp_test works internally
 :Release: |release|
 :Date: |today|
 
-This are a few hints how sp_test works internally. It halps to extend it with
+Here are a few hints on how sp_test works internally. It helps to extend it with
 new test classes
 
-When you want to test a SAML2 entity with this tool you need following things:
+When you want to test a SAML2 entity with this tool, you need the following things:
 
 #. The Test Driver Configuration, an example can be found in tests/idp_test/config.py
 #. Attribute Maps mapping URNs, OIDs and friendly names
@@ -15,16 +15,16 @@ When you want to test a SAML2 entity with this tool you need following things:
 #. A metadata file representing the tool
 #. The Test Target Configuration file describes how to interact with the entity to be tested.  The metadata for the entity is part of this file. An example can be found in tests/idp_test/test_target_config.py.
 
-These files should be stored outside the saml2test package to have a clean separation between the package and a particular test configuration. To create a directory for the configuration files copy the saml2test/tests including its contents.
+These files should be stored outside the saml2test package to have a clean separation between the package and a particular test configuration. To create a directory for the configuration files, copy the saml2test/tests including its contents.
 
 
 (1) Class and Object Structure
 ::::::::::::::::::::::::::::::
 
 Client (sp_test/__init__.py)
-.........................
-Its life cycle is responsible for following activites:
- - read config files and command line argumants (the test driver's config is "json_config")
+............................
+Its life cycle is responsible for following activities:
+ - read config files and command line arguments (the test driver's config is "json_config")
  - initialize the test driver IDP
  - initialize a Conversation
  - start the Conversion with .do_sequence_and_tests()
@@ -49,15 +49,15 @@ Sequence
   - Example: see "sequence" item in operation dict
 
 Test (in the context of an operation)
-....
-  - class to be executed as part of an operation, either before ("pre") or after ("post") the sequence or inbetween a SAML request and response ("mid").
+.....................................
+  - class to be executed as part of an operation, either before ("pre") or after ("post") the sequence or in between a SAML request and response ("mid").
     There are standard tests with the Request class (VerifyAuthnRequest) and operation-specific tests.
   - Example for an operation-specific "mid" test: VerifyIfRequestIsSigned
   - A test may be specified together with an argument as a tuple.
 
 Flow
 ....
-  * A tuple of classes that together implement an SAML request-response pair between IDP and SP (and possible other actors, such as a discovery service or IDP-proxy). A class can be derived from Request, Response (or other), Check or Operation.
+  * A tuple of classes that together implement a SAML request-response pair between IDP and SP (and possibly other actors, such as a discovery service or IDP-proxy). A class can be derived from Request, Response (or other), Check or Operation.
   * A flow for a solicited authentication consists of 4 classes:
 
     * flow[0]: Operation (Handling a login flow such as discovery or WAYF - not implemented yet)
@@ -66,20 +66,20 @@ Flow
     * flow[3]: Check (optional - can be None. E.g. check the response if a correct error status was raised when sending a broken response)
 
 Check (and subclasses)
-.....
-  - an optional class that is executed on receiving the SP's HTTP response(s) after the SAML response. If there are redirects it will be called for each response.
-  - writes a structured test report to conv.test_output
-  - It can check for expected errors, which do not cause an exception but in contrary are reported as success
+......................
+  - An optional class that is executed on receiving the SP's HTTP response(s) after the SAML response. If there are redirects, it will be called for each response.
+  - Writes a structured test report to conv.test_output
+  - It can check for expected errors, which do not cause an exception but in contrary are reported as a success
 
 Interaction
 ...........
   - An interaction automates a human interaction. It searches a response from a test target for some constants, and if
     there is a match, it will create a response suitable response.
 
-(2) Simplyfied Flow
+(2) Simplified Flow
 :::::::::::::::::::
 
-The following pseudocode is an extract showing an overview of what is executed
+The following pseudo code is an extract showing an overview of what is executed
 for test sp-00::
 
     do_sequence_and_test(self, oper, test):
@@ -138,12 +138,12 @@ must be considered:
 
 #. An operation that was successful because the test target reports OK (e.g. HTTP 200)
 #. An operation that was successful because the test target reports NOK as expected, e.g. because of an invalid signature - HTTP 500 could be the correct response
-#. An errror in SAML2Test
-#. An errror in configuration of SAML2Test
+#. An error in SAML2Test
+#. An error in the configuration of SAML2Test
 
 Status values are defined in saml2test.check like this:
 INFORMATION = 0, OK = 1, WARNING = 2, ERROR = 3, CRITICAL = 4, INTERACTION = 5
 
 
-There are 2 targets to write output to:
+There are two targets to write output to:
 * Test_output is written to conv.test_output during the execution of the flows.

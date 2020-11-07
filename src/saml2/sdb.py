@@ -4,18 +4,6 @@ from hashlib import sha1
 
 from saml2.ident import code_binary
 
-from saml2 import md
-from saml2 import saml
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import dri
-from saml2.extension import mdattr
-from saml2.extension import ui
-from saml2 import xmldsig
-from saml2 import xmlenc
-
-
-__author__ = 'rolandh'
 
 logger = logging.getLogger(__name__)
 

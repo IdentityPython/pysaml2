@@ -24,10 +24,10 @@ class DiscoveryServer(Entity):
 
         # verify
 
-        for key in ["isPassive", "return", "returnIDParam", "policy",
-                    'entityID']:
+        for key in ["isPassive", "return", "returnIDParam", "policy", 'entityID']:
             try:
-                assert len(dsr[key]) == 1
+                if len(dsr[key]) != 1:
+                    raise Exception("Invalid DS request keys: {k}".format(k=key))
                 dsr[key] = dsr[key][0]
             except KeyError:
                 pass
@@ -37,9 +37,13 @@ class DiscoveryServer(Entity):
             if part.query:
                 qp = parse.parse_qs(part.query)
                 if "returnIDParam" in dsr:
-                    assert dsr["returnIDParam"] not in qp.keys()
+                    if dsr["returnIDParam"] in qp.keys():
+                        raise Exception(
+                            "returnIDParam value should not be in the query params"
+                        )
                 else:
-                    assert "entityID" not in qp.keys()
+                    if "entityID" in qp.keys():
+                        raise Exception("entityID should not be in the query params")
         else:
             # If metadata not used this is mandatory
             raise VerificationError("Missing mandatory parameter 'return'")
@@ -47,10 +51,13 @@ class DiscoveryServer(Entity):
         if "policy" not in dsr:
             dsr["policy"] = IDPDISC_POLICY
 
-        try:
-            assert dsr["isPassive"] in ["true", "false"]
-        except KeyError:
-            pass
+        is_passive = dsr.get("isPassive")
+        if is_passive not in ["true", "false"]:
+            raise ValueError(
+                "Invalid value '{v}' for attribute '{attr}'".format(
+                    v=is_passive, attr="isPassive"
+                )
+            )
 
         if "isPassive" in dsr and dsr["isPassive"] == "true":
             dsr["isPassive"] = True
@@ -93,10 +100,6 @@ class DiscoveryServer(Entity):
 
     def verify_return(self, entity_id, return_url):
         for endp in self.metadata.discovery_response(entity_id):
-            try:
-                assert return_url.startswith(endp["location"])
-            except AssertionError:
-                pass
-            else:
+            if not return_url.startswith(endp["location"]):
                 return True
         return False

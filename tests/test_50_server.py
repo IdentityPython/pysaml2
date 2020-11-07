@@ -251,7 +251,10 @@ class TestServer1():
 
     def test_parse_ok_request(self):
         req_id, authn_request = self.client.create_authn_request(
-            message_id="id1", destination="http://localhost:8088/sso")
+            message_id="id1",
+            destination="http://localhost:8088/sso",
+            nameid_format=saml.NAMEID_FORMAT_TRANSIENT,
+        )
 
         print(authn_request)
         binding = BINDING_HTTP_REDIRECT
@@ -468,15 +471,13 @@ class TestServer1():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=sresponse.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=sresponse.assertion[0].id)
         assert valid
 
         self.verify_assertion(sresponse.assertion)
@@ -497,8 +498,7 @@ class TestServer1():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         assert sresponse.assertion[0].signature == None
@@ -523,8 +523,7 @@ class TestServer1():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=sresponse.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=sresponse.assertion[0].id)
         assert valid
 
         self.verify_assertion(sresponse.assertion)
@@ -552,20 +551,21 @@ class TestServer1():
         valid = self.server.sec.verify_signature(
             signed_resp, self.server.config.cert_file,
             node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-            node_id=sresponse.id, id_attr="")
+            node_id=sresponse.id
+        )
 
         assert valid
 
         valid = self.server.sec.verify_signature(
             signed_resp, self.server.config.cert_file,
             node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-            node_id=sresponse.assertion[0].id, id_attr="")
+            node_id=sresponse.assertion[0].id
+        )
 
         assert valid
 
-        _, key_file = make_temp(cert_key_str, decode=False)
-
-        decr_text = self.server.sec.decrypt(signed_resp, key_file)
+        key_fd = make_temp(cert_key_str, decode=False)
+        decr_text = self.server.sec.decrypt(signed_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -584,8 +584,7 @@ class TestServer1():
         #valid = self.server.sec.verify_signature(decr_text,
         #                                         self.server.config.cert_file,
         #                                         node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-        #                                         node_id=assertion[0].id,
-        #                                         id_attr="")
+        #                                         node_id=assertion[0].id)
         assert valid
 
     def test_encrypted_signed_response_2(self):
@@ -608,8 +607,7 @@ class TestServer1():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         decr_text_old = copy.deepcopy("%s" % signed_resp)
@@ -654,13 +652,11 @@ class TestServer1():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
-        _, key_file = make_temp(cert_key_str, decode=False)
-
-        decr_text = self.server.sec.decrypt(signed_resp, key_file)
+        key_fd = make_temp(cert_key_str, decode=False)
+        decr_text = self.server.sec.decrypt(signed_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -669,8 +665,7 @@ class TestServer1():
         valid = self.server.sec.verify_signature(decr_text,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=resp.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=resp.assertion[0].id)
 
         assert valid
 
@@ -702,8 +697,7 @@ class TestServer1():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         decr_text = self.server.sec.decrypt(signed_resp, self.client.config.encryption_keypairs[1]["key_file"])
@@ -715,14 +709,12 @@ class TestServer1():
         valid = self.server.sec.verify_signature(decr_text,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=resp.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=resp.assertion[0].id)
 
         assert valid
 
-        _, key_file = make_temp(cert_key_str, decode=False)
-
-        decr_text = self.server.sec.decrypt(decr_text, key_file)
+        key_fd = make_temp(cert_key_str, decode=False)
+        decr_text = self.server.sec.decrypt(decr_text, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -736,8 +728,7 @@ class TestServer1():
         #valid = self.server.sec.verify_signature(decr_text,
         #                                         self.server.config.cert_file,
         #                                         node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-        #                                         node_id=assertion[0].id,
-        #                                         id_attr="")
+        #                                         node_id=assertion[0].id)
         assert valid
 
     def test_encrypted_response_1(self):
@@ -763,9 +754,8 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp(cert_key_str_advice, decode=False)
-
-        decr_text = self.server.sec.decrypt(_resp, key_file)
+        key_fd = make_temp(cert_key_str_advice, decode=False)
+        decr_text = self.server.sec.decrypt(_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -795,9 +785,8 @@ class TestServer1():
 
         decr_text_1 = self.server.sec.decrypt(_resp, self.client.config.encryption_keypairs[1]["key_file"])
 
-        _, key_file = make_temp(cert_key_str_advice, decode=False)
-
-        decr_text_2 = self.server.sec.decrypt(decr_text_1, key_file)
+        key_fd = make_temp(cert_key_str_advice, decode=False)
+        decr_text_2 = self.server.sec.decrypt(decr_text_1, key_fd.name)
 
         resp = samlp.response_from_string(decr_text_2)
 
@@ -826,9 +815,8 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp(cert_key_str_assertion, decode=False)
-
-        decr_text = self.server.sec.decrypt(_resp, key_file)
+        key_fd = make_temp(cert_key_str_assertion, decode=False)
+        decr_text = self.server.sec.decrypt(_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -918,13 +906,11 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp(cert_key_str_assertion, decode=False)
+        key_fd1 = make_temp(cert_key_str_assertion, decode=False)
+        decr_text_1 = _server.sec.decrypt(_resp, key_fd1.name)
 
-        decr_text_1 = _server.sec.decrypt(_resp, key_file)
-
-        _, key_file = make_temp(cert_key_str_advice, decode=False)
-
-        decr_text_2 = _server.sec.decrypt(decr_text_1, key_file)
+        key_fd2 = make_temp(cert_key_str_advice, decode=False)
+        decr_text_2 = _server.sec.decrypt(decr_text_1, key_fd2.name)
 
         resp = samlp.response_from_string(decr_text_2)
 
@@ -1325,7 +1311,10 @@ class TestServer1NonAsciiAva():
 
     def test_parse_ok_request(self):
         req_id, authn_request = self.client.create_authn_request(
-            message_id="id1", destination="http://localhost:8088/sso")
+            message_id="id1",
+            destination="http://localhost:8088/sso",
+            nameid_format=saml.NAMEID_FORMAT_TRANSIENT,
+        )
 
         print(authn_request)
         binding = BINDING_HTTP_REDIRECT
@@ -1542,15 +1531,13 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=sresponse.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=sresponse.assertion[0].id)
         assert valid
 
         self.verify_assertion(sresponse.assertion)
@@ -1571,8 +1558,7 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         assert sresponse.assertion[0].signature == None
@@ -1597,8 +1583,7 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=sresponse.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=sresponse.assertion[0].id)
         assert valid
 
         self.verify_assertion(sresponse.assertion)
@@ -1626,20 +1611,21 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(
             signed_resp, self.server.config.cert_file,
             node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-            node_id=sresponse.id, id_attr="")
+            node_id=sresponse.id,
+        )
 
         assert valid
 
         valid = self.server.sec.verify_signature(
             signed_resp, self.server.config.cert_file,
             node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-            node_id=sresponse.assertion[0].id, id_attr="")
+            node_id=sresponse.assertion[0].id,
+        )
 
         assert valid
 
-        _, key_file = make_temp(cert_key_str, decode=False)
-
-        decr_text = self.server.sec.decrypt(signed_resp, key_file)
+        key_fd = make_temp(cert_key_str, decode=False)
+        decr_text = self.server.sec.decrypt(signed_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -1658,8 +1644,7 @@ class TestServer1NonAsciiAva():
         #valid = self.server.sec.verify_signature(decr_text,
         #                                         self.server.config.cert_file,
         #                                         node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-        #                                         node_id=assertion[0].id,
-        #                                         id_attr="")
+        #                                         node_id=assertion[0].id)
         assert valid
 
     def test_encrypted_signed_response_2(self):
@@ -1682,8 +1667,7 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         decr_text_old = copy.deepcopy("%s" % signed_resp)
@@ -1728,13 +1712,11 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
-        _, key_file = make_temp(cert_key_str, decode=False)
-
-        decr_text = self.server.sec.decrypt(signed_resp, key_file)
+        key_fd = make_temp(cert_key_str, decode=False)
+        decr_text = self.server.sec.decrypt(signed_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -1743,8 +1725,7 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(decr_text,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=resp.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=resp.assertion[0].id)
 
         assert valid
 
@@ -1776,8 +1757,7 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         decr_text = self.server.sec.decrypt(signed_resp, self.client.config.encryption_keypairs[1]["key_file"])
@@ -1789,14 +1769,12 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(decr_text,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=resp.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=resp.assertion[0].id)
 
         assert valid
 
-        _, key_file = make_temp(cert_key_str, decode=False)
-
-        decr_text = self.server.sec.decrypt(decr_text, key_file)
+        key_fd = make_temp(cert_key_str, decode=False)
+        decr_text = self.server.sec.decrypt(decr_text, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -1810,8 +1788,7 @@ class TestServer1NonAsciiAva():
         #valid = self.server.sec.verify_signature(decr_text,
         #                                         self.server.config.cert_file,
         #                                         node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-        #                                         node_id=assertion[0].id,
-        #                                         id_attr="")
+        #                                         node_id=assertion[0].id)
         assert valid
 
     def test_encrypted_response_1(self):
@@ -1837,9 +1814,8 @@ class TestServer1NonAsciiAva():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp(cert_key_str_advice, decode=False)
-
-        decr_text = self.server.sec.decrypt(_resp, key_file)
+        key_fd = make_temp(cert_key_str_advice, decode=False)
+        decr_text = self.server.sec.decrypt(_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -1869,9 +1845,8 @@ class TestServer1NonAsciiAva():
 
         decr_text_1 = self.server.sec.decrypt(_resp, self.client.config.encryption_keypairs[1]["key_file"])
 
-        _, key_file = make_temp(cert_key_str_advice, decode=False)
-
-        decr_text_2 = self.server.sec.decrypt(decr_text_1, key_file)
+        key_fd = make_temp(cert_key_str_advice, decode=False)
+        decr_text_2 = self.server.sec.decrypt(decr_text_1, key_fd.name)
 
         resp = samlp.response_from_string(decr_text_2)
 
@@ -1900,9 +1875,8 @@ class TestServer1NonAsciiAva():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp(cert_key_str_assertion, decode=False)
-
-        decr_text = self.server.sec.decrypt(_resp, key_file)
+        key_fd = make_temp(cert_key_str_assertion, decode=False)
+        decr_text = self.server.sec.decrypt(_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -1992,13 +1966,11 @@ class TestServer1NonAsciiAva():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp(cert_key_str_assertion, decode=False)
+        key_fd1 = make_temp(cert_key_str_assertion, decode=False)
+        decr_text_1 = _server.sec.decrypt(_resp, key_fd1.name)
 
-        decr_text_1 = _server.sec.decrypt(_resp, key_file)
-
-        _, key_file = make_temp(cert_key_str_advice, decode=False)
-
-        decr_text_2 = _server.sec.decrypt(decr_text_1, key_file)
+        key_fd2 = make_temp(cert_key_str_advice, decode=False)
+        decr_text_2 = _server.sec.decrypt(decr_text_1, key_fd2.name)
 
         resp = samlp.response_from_string(decr_text_2)
 
@@ -2331,16 +2303,37 @@ class TestServerLogout():
             print(request)
             bindings = [BINDING_HTTP_REDIRECT]
             response = server.create_logout_response(request, bindings)
-            binding, destination = server.pick_binding("single_logout_service",
-                                                       bindings, "spsso",
-                                                       request)
 
-            http_args = server.apply_binding(binding, "%s" % response, destination,
-                                             "relay_state", response=True)
+            binding, destination = server.pick_binding(
+                "single_logout_service", bindings, "spsso", request
+            )
+            http_args = server.apply_binding(
+                binding, "%s" % response, destination, "relay_state", response=True
+            )
 
             assert len(http_args) == 4
             assert http_args["headers"][0][0] == "Location"
             assert http_args["data"] == []
+            assert http_args['url'] == 'http://lingon.catalogix.se:8087/sloresp'
+
+    def test_2(self):
+        with closing(Server("idp_slo_redirect_conf")) as server:
+            req_id, request = _logout_request("sp_slo_redirect_conf")
+            print(request)
+            bindings = [BINDING_HTTP_POST]
+            response = server.create_logout_response(request, bindings)
+
+            binding, destination = server.pick_binding(
+                "single_logout_service", bindings, "spsso", request
+            )
+            http_args = server.apply_binding(
+                binding, "%s" % response, destination, "relay_state", response=True
+            )
+
+            assert len(http_args) == 4
+            assert len(http_args["data"]) > 0
+            assert http_args["method"] == "POST"
+            assert http_args['url'] == 'http://lingon.catalogix.se:8087/slo'
 
 
 if __name__ == "__main__":

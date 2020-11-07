@@ -1,5 +1,129 @@
 # Changelog
 
+
+## 6.3.0 (2020-10-30)
+
+- Allow to specify policy configurations based on the registration authority.
+- Add new configuration option `logout_responses_signed` to sign logout responses.
+- When available and appropriate return the ResponseLocation along with the Location
+  attribute.
+- Always use base64.encodebytes; base64.encodestring has been dropped.
+- Examples: fix IdP example that was outputing debug statements on stdout that became
+  part of its metadata.
+- CI/CD: Use Ubuntu bionic as the host to run the CI/CD process.
+- CI/CD: Pre-releases are now available on [test.pypi.org][pypi.test.pysaml2]. Each
+  commit/merge on the master branch autotically creates a new pre-release. To install a
+  prelease, run:
+
+  ```sh
+  $ pip install -U -i https://test.pypi.org/simple --extra-index-url https://pypi.org/simple pysaml2
+  ```
+
+  [pypi.test.pysaml2]: https://test.pypi.org/project/pysaml2/#history
+
+
+## 6.2.0 (2020-10-05)
+
+- Fix the generated xsd:ID format for EncryptedData and EncryptedKey elements
+- Set the default value for the NameFormat attribute to unspecified when parsing
+- Support arbitrary entity attributes
+- Replace all asserts with proper checks
+- Allow request signing in artifact2message
+- Support logging configuration through the python logger
+- Fix wrong identifiers for ecdsa algos
+- Fix automatic inversion of attribute map files
+- Factor out common codepaths in attribute_converter
+- Remove uneeded exception logging
+- Docs: Update configuration options documentation
+- Examples: Support both str and bytes in SAML requests on the example idp
+- Examples: Update to key generation to 2048 bits
+
+
+## 6.1.0 (2020-07-10)
+
+- Fix signed logout requests flag
+
+
+## 6.0.0 (2020-07-10)
+
+- Differentiate between metadata NameIDFormat and AuthnRequest NameIDPolicy Format
+  - Users using `name_id_format` to set the `<NameIDPolicy Format="...">` attribute now
+    need to use the new configuration option `name_id_policy_format`.
+- Fix documentation formatting
+
+
+## 5.4.0 (2020-07-10)
+
+- Fix generation of signed metadata
+- Add attribute mappings used by SwedenConnect (DIGG, INERA and PKIX specifications)
+- Update SWAMID entity category
+- Document the `additional_cert_files` configuration option
+
+
+## 5.3.0 (2020-06-25)
+
+- Fix check for nameid_format set to the string "None" in the configuration
+
+
+## 5.2.0 (2020-06-23)
+
+- Fix presence of empty eIDAS RequestedAttributes element on AuthnRequest
+- Refactor create_authn_request method to be easier to reason about
+- Fix NameIDPolicy checks for allowed Format and allowCreate values
+
+
+## 5.1.0 (2020-06-09)
+
+- support eIDAS RequestedAttributes per AuthnRequest
+- fix xmlsec1 --id-attr configuration option value
+- do not remove existing disco URL query params
+- load attribute maps in predictable order
+- better error message when AudienceRestriction does not validate
+- always use base64.encodebytes instead of base64.encodestring
+- update the eIDAS attribute mapping for legal person
+- fix py_compile warnings
+- fix pylint errors and warnings
+- various small fixes
+- add Python3.8 as supported
+- tests: fix validity dates
+- docs: document default value for 'want_response_signed'
+
+
+## 5.0.0 (2020-01-13)
+
+- Fix XML Signature Wrapping (XSW) vulnerabilities - CVE-2020-5390
+- Add freshness period feature for MetaDataMDX
+- Fix bug in duration calculation in time_util library
+- Fix ipv6 validation to accommodate for addresses with brackets
+- Fix xmlsec temporary files deletions
+- Add method to get supported algorithms from metadata
+- Add mdstore method to extract assurance certifications
+- Add mdstore method to extract contact_person data
+- Add attribute mappings from the Swiss eduPerson Schema
+- Make AESCipher and Fernet interfaces compatible
+- Remove deprecated saml2.aes module
+- Remove deprecated saml2.extensions.ui module
+- Replace deprecated mongodb operations
+- Rename ToOld error to TooOld
+- Fix pytest warnings
+- Mock tests that need a network connection
+- Start dropping python2 support
+
+
+## 4.9.0 (2019-11-03)
+
+- Add mdstore methods to extract mdui uiinfo elements
+- Add attribute mapping for umbrellaID attributes
+- Fix logic error in pick_binding method for Entity class
+- Validate the audience of assertions regardless of a response being unsolicited
+- Fix PKCS_9 saml_url prefix
+- docs: Fix warnings from docs generation
+- docs: Update release instructions regarding branch releases
+- docs: Fix list formatting on IdP example page
+- docs: Update pysaml2 options doc with `name_id_format_allow_create`
+- misc: fix various typos
+
+
 ## 4.8.0 (2019-07-08)
 
 - Refactor the way ForceAuthn is set: check for "true" and "1"

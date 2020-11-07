@@ -29,7 +29,7 @@ from saml2.client_base import Base
 from saml2.client_base import SignOnError
 from saml2.client_base import LogoutError
 from saml2.client_base import NoServiceDefined
-from saml2.mdstore import destinations
+from saml2.mdstore import locations
 
 import logging
 
@@ -75,7 +75,12 @@ class Saml2Client(Base):
                 response_binding=response_binding,
                 **kwargs)
 
-        assert negotiated_binding == binding
+        if negotiated_binding != binding:
+            raise ValueError(
+                "Negotiated binding '{}' does not match binding to use '{}'".format(
+                    negotiated_binding, binding
+                )
+            )
 
         return reqid, info
 
@@ -204,7 +209,7 @@ class Saml2Client(Base):
                     logger.debug("No SLO '%s' service", binding)
                     continue
 
-                destination = destinations(srvs)[0]
+                destination = next(locations(srvs), None)
                 logger.info("destination to provider: %s", destination)
                 try:
                     session_info = self.users.get_info_from(name_id,
@@ -369,7 +374,7 @@ class Saml2Client(Base):
                                 name_qualifier=name_qualifier))
 
         srvs = self.metadata.authz_service(entity_id, BINDING_SOAP)
-        for dest in destinations(srvs):
+        for dest in locations(srvs):
             resp = self._use_soap(dest, "authz_decision_query",
                                   action=action, evidence=evidence,
                                   resource=resource, subject=subject)
@@ -392,7 +397,7 @@ class Saml2Client(Base):
 
         _id_refs = [AssertionIDRef(_id) for _id in assertion_ids]
 
-        for destination in destinations(srvs):
+        for destination in locations(srvs):
             res = self._use_soap(destination, "assertion_id_request",
                                  assertion_id_refs=_id_refs, consent=consent,
                                  extensions=extensions, sign=sign)
@@ -406,7 +411,7 @@ class Saml2Client(Base):
 
         srvs = self.metadata.authn_request_service(entity_id, BINDING_SOAP)
 
-        for destination in destinations(srvs):
+        for destination in locations(srvs):
             resp = self._use_soap(destination, "authn_query", consent=consent,
                                   extensions=extensions, sign=sign)
             if resp:
@@ -456,7 +461,7 @@ class Saml2Client(Base):
             if srvs is []:
                 raise SAMLError("No attribute service support at entity")
 
-            destination = destinations(srvs)[0]
+            destination = next(locations(srvs), None)
 
         if binding == BINDING_SOAP:
             return self._use_soap(destination, "attribute_query",
@@ -482,7 +487,7 @@ class Saml2Client(Base):
         else:
             raise SAMLError("Unsupported binding")
 
-    def handle_logout_request(self, request, name_id, binding, sign=False,
+    def handle_logout_request(self, request, name_id, binding, sign=None,
                               sign_alg=None, relay_state=""):
         """
         Deal with a LogoutRequest
@@ -523,11 +528,14 @@ class Saml2Client(Base):
 
         if binding == BINDING_SOAP:
             response_bindings = [BINDING_SOAP]
-        elif binding == BINDING_HTTP_POST or BINDING_HTTP_REDIRECT:
+        elif binding in [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]:
             response_bindings = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]
         else:
             response_bindings = self.config.preferred_binding[
                 "single_logout_service"]
+
+        if sign is None:
+            sign = self.logout_responses_signed
 
         response = self.create_logout_response(_req.message, response_bindings,
                                                status, sign, sign_alg=sign_alg)

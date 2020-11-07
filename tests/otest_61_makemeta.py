@@ -116,7 +116,7 @@ def test_org_3():
     org = metadata.do_organization_info(desc)
     assert _eq(org.keyswv(), ['organization_display_name'])
     assert len(org.organization_display_name) == 1
-                                                
+
 def test_contact_0():
     conf = [{
         "given_name":"Roland",
@@ -126,7 +126,7 @@ def test_contact_0():
         "contact_type": "technical"
         }]
     contact_person = metadata.do_contact_person_info(conf)
-    assert _eq(contact_person[0].keyswv(), ['given_name', 'sur_name', 
+    assert _eq(contact_person[0].keyswv(), ['given_name', 'sur_name',
                                             'contact_type', 'telephone_number',
                                             "email_address"])
     print(contact_person[0])
@@ -141,27 +141,27 @@ def test_contact_0():
     assert len(person.email_address) == 2
     assert isinstance(person.email_address[0], md.EmailAddress)
     assert person.email_address[0].text == "foo@eample.com"
-    
+
 def test_do_endpoints():
     eps = metadata.do_endpoints(SP["service"]["sp"]["endpoints"],
                                     metadata.ENDPOINTS["sp"])
     print(eps)
-    assert _eq(eps.keys(), ["assertion_consumer_service", 
+    assert _eq(eps.keys(), ["assertion_consumer_service",
                             "single_logout_service"])
-                            
+
     assert len(eps["single_logout_service"]) == 1
     sls = eps["single_logout_service"][0]
     assert sls.location == "http://localhost:8087/logout"
     assert sls.binding == BINDING_HTTP_POST
-    
+
     assert len(eps["assertion_consumer_service"]) == 1
     acs = eps["assertion_consumer_service"][0]
     assert acs.location == "http://localhost:8087/"
     assert acs.binding == BINDING_HTTP_POST
-    
+
     assert "artifact_resolution_service" not in eps
     assert "manage_name_id_service" not in eps
-    
+
 def test_required_attributes():
     attrconverters = ac_factory("../tests/attributemaps")
     ras = metadata.do_requested_attribute(
@@ -183,19 +183,19 @@ def test_optional_attributes():
     assert ras[0].name == 'urn:oid:2.5.4.12'
     assert ras[0].name_format == NAME_FORMAT_URI
     assert ras[0].is_required == "false"
-    
+
 def test_do_sp_sso_descriptor():
-    conf = SPConfig().load(SP, metadata_construction=True)
+    conf = SPConfig().load(SP)
     spsso = metadata.do_spsso_descriptor(conf)
-    
+
     assert isinstance(spsso, md.SPSSODescriptor)
-    assert _eq(spsso.keyswv(), ['authn_requests_signed', 
-                                'attribute_consuming_service', 
-                                'single_logout_service', 
-                                'protocol_support_enumeration', 
-                                'assertion_consumer_service', 
+    assert _eq(spsso.keyswv(), ['authn_requests_signed',
+                                'attribute_consuming_service',
+                                'single_logout_service',
+                                'protocol_support_enumeration',
+                                'assertion_consumer_service',
                                 'want_assertions_signed'])
-                                
+
     assert spsso.authn_requests_signed == "false"
     assert spsso.want_assertions_signed == "true"
     assert len (spsso.attribute_consuming_service) == 1
@@ -213,8 +213,8 @@ def test_do_sp_sso_descriptor():
 
 def test_do_sp_sso_descriptor_2():
     SP["service"]["sp"]["discovery_response"] = "http://example.com/sp/ds"
-    
-    conf = SPConfig().load(SP, metadata_construction=True)
+
+    conf = SPConfig().load(SP)
     spsso = metadata.do_spsso_descriptor(conf)
 
     assert isinstance(spsso, md.SPSSODescriptor)
@@ -251,12 +251,12 @@ def test_entity_description():
     assert entd.entity_id == "urn:mace:example.com:saml:roland:sp"
 
 def test_do_idp_sso_descriptor():
-    conf = IdPConfig().load(IDP, metadata_construction=True)
+    conf = IdPConfig().load(IDP)
     idpsso = metadata.do_idpsso_descriptor(conf)
 
     assert isinstance(idpsso, md.IDPSSODescriptor)
-    assert _eq(idpsso.keyswv(), ['protocol_support_enumeration', 
-                                'single_sign_on_service', 
+    assert _eq(idpsso.keyswv(), ['protocol_support_enumeration',
+                                'single_sign_on_service',
                                 'want_authn_requests_signed',
                                 "extensions"])
     exts = idpsso.extensions.extension_elements

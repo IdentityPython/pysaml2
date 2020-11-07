@@ -66,10 +66,10 @@ def metadata_tostring_fix(desc, nspair, xmlstring=""):
     if not xmlstring:
         xmlstring = desc.to_string(nspair)
 
-    if six.PY2:
+    try:
         if "\"xs:string\"" in xmlstring and XMLNSXS not in xmlstring:
             xmlstring = xmlstring.replace(MDNS, MDNS + XMLNSXS)
-    else:
+    except TypeError:
         if b"\"xs:string\"" in xmlstring and bXMLNSXS not in xmlstring:
             xmlstring = xmlstring.replace(bMDNS, bMDNS + bXMLNSXS)
 
@@ -89,7 +89,7 @@ def create_metadata_string(configfile, config=None, valid=None, cert=None,
     if config is None:
         if configfile.endswith(".py"):
             configfile = configfile[:-3]
-        config = Config().load_file(configfile, metadata_construction=True)
+        config = Config().load_file(configfile)
     eds.append(entity_descriptor(config))
 
     conf = Config()
@@ -379,13 +379,15 @@ def do_extensions(mname, item):
 
 
 def _do_nameid_format(cls, conf, typ):
-    namef = conf.getattr("name_id_format", typ)
-    if namef:
-        if isinstance(namef, six.string_types):
-            ids = [md.NameIDFormat(namef)]
-        else:
-            ids = [md.NameIDFormat(text=form) for form in namef]
-        setattr(cls, "name_id_format", ids)
+    name_id_format = conf.getattr("name_id_format", typ)
+    if not name_id_format:
+        return
+
+    if isinstance(name_id_format, six.string_types):
+        name_id_format = [name_id_format]
+
+    formats = [md.NameIDFormat(text=format) for format in name_id_format]
+    setattr(cls, "name_id_format", formats)
 
 
 def do_endpoints(conf, endpoints):
@@ -705,6 +707,24 @@ def entity_descriptor(confd):
         entd.organization = do_organization_info(confd.organization)
     if confd.contact_person is not None:
         entd.contact_person = do_contact_persons_info(confd.contact_person)
+
+    if confd.entity_attributes:
+        if not entd.extensions:
+            entd.extensions = md.Extensions()
+        attributes = [
+            Attribute(
+                name_format=attr.get("format"),
+                name=attr.get("name"),
+                friendly_name=attr.get("friendly_name"),
+                attribute_value=[
+                    AttributeValue(text=value)
+                    for value in attr.get("values", [])
+                ],
+            )
+            for attr in confd.entity_attributes
+        ]
+        for attribute in attributes:
+            _add_attr_to_entity_attributes(entd.extensions, attribute)
 
     if confd.assurance_certification:
         if not entd.extensions:
