@@ -111,7 +111,7 @@ def http_form_post_message(message, location, relay_state="",
         relay_state_input=relay_state_input,
         action=location)
 
-    return {"headers": [("Content-type", "text/html")], "data": response}
+    return {"headers": [("Content-type", "text/html")], "data": response, "status": 200}
 
 
 def http_post_message(message, relay_state="", typ="SAMLRequest", **kwargs):
@@ -137,7 +137,8 @@ def http_post_message(message, relay_state="", typ="SAMLRequest", **kwargs):
         part["RelayState"] = relay_state
 
     return {"headers": [("Content-type", 'application/x-www-form-urlencoded')],
-            "data": urlencode(part)}
+            "data": urlencode(part),
+            "status": 200}
 
 
 def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
@@ -197,7 +198,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     headers = [('Location', str(login_url))]
     body = []
 
-    return {"headers": headers, "data": body}
+    return {"headers": headers, "data": body, "status": 303}
 
 
 DUMMY_NAMESPACE = "http://example.org/"
@@ -257,12 +258,14 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
 
 def http_soap_message(message):
     return {"headers": [("Content-type", "application/soap+xml")],
-            "data": make_soap_enveloped_saml_thingy(message)}
+            "data": make_soap_enveloped_saml_thingy(message),
+            "status": 200}
 
 
 def http_paos(message, extra=None):
     return {"headers": [("Content-type", "application/soap+xml")],
-            "data": make_soap_enveloped_saml_thingy(message, extra)}
+            "data": make_soap_enveloped_saml_thingy(message, extra),
+            "status": 200}
 
 
 def parse_soap_enveloped_saml(text, body_class, header_class=None):
