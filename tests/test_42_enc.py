@@ -134,5 +134,6 @@ def test_enc2():
 
     assert enc_resp
 
+
 if __name__ == "__main__":
     test_enc1()

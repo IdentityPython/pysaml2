@@ -225,12 +225,13 @@ class TestSAMLBase:
     def test_to_string_nspair(self):
         foo = saml2.make_vals("lions", AttributeValue, part=True)
         txt = foo.to_string().decode('utf-8')
-        nsstr = foo.to_string({"saml": saml.NAMESPACE}).decode('utf-8')
+        nsstr = foo.to_string({"saml2": saml.NAMESPACE}).decode('utf-8')
         assert nsstr != txt
         print(txt)
         print(nsstr)
-        assert "saml:AttributeValue" in nsstr
-        assert "saml:AttributeValue" not in txt
+        assert "saml2:AttributeValue" in nsstr
+        assert "saml2:AttributeValue" not in txt
+        assert "saml:AttributeValue" in txt
 
     def test_set_text_empty(self):
         av = AttributeValue()
