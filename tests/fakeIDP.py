@@ -130,6 +130,7 @@ class FakeIDP(Server):
         _dict = pack.factory(_binding, response,
                              resp_args["destination"], relay_state,
                              "SAMLResponse")
+        _dict.pop('status')
         return DummyResponse(200, **_dict)
 
     def attribute_query_endpoint(self, xml_str, binding):

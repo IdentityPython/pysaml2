@@ -3167,9 +3167,10 @@ class TestClientWithDummy():
             binding=binding, response_binding=response_binding)
 
         assert isinstance(sid, six.string_types)
-        assert len(http_args) == 4
+        assert len(http_args) == 5
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
+        assert http_args["status"] == 303
         redirect_url = http_args["headers"][0][1]
         _, _, _, _, qs, _ = parse.urlparse(redirect_url)
         qs_dict = parse.parse_qs(qs)
@@ -3188,9 +3189,10 @@ class TestClientWithDummy():
 
         assert binding == auth_binding
         assert isinstance(sid, six.string_types)
-        assert len(http_args) == 4
+        assert len(http_args) == 5
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
+        assert http_args["status"] == 303
         redirect_url = http_args["headers"][0][1]
         _, _, _, _, qs, _ = parse.urlparse(redirect_url)
         qs_dict = parse.parse_qs(qs)
@@ -3247,6 +3249,7 @@ class TestClientWithDummy():
         # Here I fake what the client will do
         # create the form post
 
+        http_args.pop('status')
         http_args["data"] = parse.urlencode(_dic)
         http_args["method"] = "POST"
         http_args["dummy"] = _dic["SAMLRequest"]
@@ -3283,6 +3286,7 @@ class TestClientWithDummy():
         # Here I fake what the client will do
         # create the form post
 
+        http_args.pop('status')
         http_args["data"] = parse.urlencode(_dic)
         http_args["method"] = "POST"
         http_args["dummy"] = _dic["SAMLRequest"]
