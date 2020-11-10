@@ -2311,9 +2311,10 @@ class TestServerLogout():
                 binding, "%s" % response, destination, "relay_state", response=True
             )
 
-            assert len(http_args) == 4
+            assert len(http_args) == 5
             assert http_args["headers"][0][0] == "Location"
             assert http_args["data"] == []
+            assert http_args["status"] == 303
             assert http_args['url'] == 'http://lingon.catalogix.se:8087/sloresp'
 
     def test_2(self):
@@ -2330,10 +2331,11 @@ class TestServerLogout():
                 binding, "%s" % response, destination, "relay_state", response=True
             )
 
-            assert len(http_args) == 4
+            assert len(http_args) == 5
             assert len(http_args["data"]) > 0
             assert http_args["method"] == "POST"
             assert http_args['url'] == 'http://lingon.catalogix.se:8087/slo'
+            assert http_args['status'] == 200
 
 
 if __name__ == "__main__":

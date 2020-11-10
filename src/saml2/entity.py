@@ -241,7 +241,7 @@ class Entity(HTTPBase):
             if response:
                 info = self.use_http_artifact(msg_str, destination, relay_state)
                 info["method"] = "GET"
-                info["status"] = 302
+                info["status"] = 302  # TODO: should be 303 on >= HTTP/1.1
             else:
                 info = self.use_http_artifact(msg_str, destination, relay_state)
         else:

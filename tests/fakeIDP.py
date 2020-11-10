@@ -43,8 +43,8 @@ def unpack_form(_str, ver="SAMLRequest"):
 
 
 class DummyResponse(object):
-    def __init__(self, code, data, headers=None):
-        self.status_code = code
+    def __init__(self, status, data, headers=None):
+        self.status_code = status
         self.text = data
         self.headers = headers or []
         self.content = data
@@ -130,7 +130,7 @@ class FakeIDP(Server):
         _dict = pack.factory(_binding, response,
                              resp_args["destination"], relay_state,
                              "SAMLResponse")
-        return DummyResponse(200, **_dict)
+        return DummyResponse(**_dict)
 
     def attribute_query_endpoint(self, xml_str, binding):
         if binding == BINDING_SOAP:
@@ -160,7 +160,7 @@ class FakeIDP(Server):
         else:  # Just POST
             response = "%s" % attr_resp
 
-        return DummyResponse(200, response)
+        return DummyResponse(status=200, data=response)
 
     def logout_endpoint(self, xml_str, binding):
         if binding == BINDING_SOAP:
@@ -185,4 +185,4 @@ class FakeIDP(Server):
         else: # Just POST
             response = "%s" % _resp
 
-        return DummyResponse(200, response)
+        return DummyResponse(status=200, data=response)
