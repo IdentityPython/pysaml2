@@ -3249,7 +3249,6 @@ class TestClientWithDummy():
         # Here I fake what the client will do
         # create the form post
 
-        http_args.pop('status')
         http_args["data"] = parse.urlencode(_dic)
         http_args["method"] = "POST"
         http_args["dummy"] = _dic["SAMLRequest"]
@@ -3286,7 +3285,6 @@ class TestClientWithDummy():
         # Here I fake what the client will do
         # create the form post
 
-        http_args.pop('status')
         http_args["data"] = parse.urlencode(_dic)
         http_args["method"] = "POST"
         http_args["dummy"] = _dic["SAMLRequest"]
