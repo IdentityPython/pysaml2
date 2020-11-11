@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 6.3.1 (2020-11-11)
+
+- Fix extraction of RegistrationInfo when no information is available
+- Fix http_info struct to include status-code
+
+
 ## 6.3.0 (2020-10-30)
 
 - Allow to specify policy configurations based on the registration authority.
