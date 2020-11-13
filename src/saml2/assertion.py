@@ -115,7 +115,9 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
         try:
             res[_fn].extend(_filter_values(ava[_fn], values))
         except KeyError:
-            res[_fn] = _filter_values(ava[_fn], values)
+            # ignore duplicate RequestedAttribute entries
+            val = _filter_values(ava[_fn], values)
+            res[_fn] = val if val is not None else []
 
         return _filter_values(ava[_fn], values, must)
 
