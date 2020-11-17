@@ -281,13 +281,25 @@ class Base(Entity):
         else:
             return None
 
-    def create_authn_request(self, destination, vorg="", scoping=None,
-            binding=saml2.BINDING_HTTP_POST,
-            nameid_format=None,
-            service_url_binding=None, message_id=0,
-            consent=None, extensions=None, sign=None,
-            allow_create=None, sign_prepare=False, sign_alg=None,
-            digest_alg=None, requested_attributes=None, **kwargs):
+    def create_authn_request(
+        self,
+        destination,
+        vorg="",
+        scoping=None,
+        binding=BINDING_HTTP_POST,
+        nameid_format=None,
+        service_url_binding=None,
+        message_id=0,
+        consent=None,
+        extensions=None,
+        sign=None,
+        sign_prepare=False,
+        sign_alg=None,
+        digest_alg=None,
+        allow_create=None,
+        requested_attributes=None,
+        **kwargs,
+    ):
         """ Creates an authentication request.
 
         :param destination: Where the request should be sent.
@@ -302,6 +314,8 @@ class Base(Entity):
         :param extensions: Possible extensions
         :param sign: Whether the request should be signed or not.
         :param sign_prepare: Whether the signature should be prepared or not.
+        :param sign_alg: The request signature algorithm
+        :param digest_alg: The request digest algorithm
         :param allow_create: If the identity provider is allowed, in the course
             of fulfilling the request, to create a new identifier to represent
             the principal.
@@ -445,11 +459,11 @@ class Base(Entity):
                     extensions,
                     sign,
                     sign_prepare,
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg,
                     protocol_binding=binding,
                     scoping=scoping,
                     nsprefix=nsprefix,
-                    sign_alg=sign_alg,
-                    digest_alg=digest_alg,
                     **args,
                 )
         else:
@@ -461,11 +475,11 @@ class Base(Entity):
                 extensions,
                 sign,
                 sign_prepare,
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
                 protocol_binding=binding,
                 scoping=scoping,
                 nsprefix=nsprefix,
-                sign_alg=sign_alg,
-                digest_alg=digest_alg,
                 **args,
             )
 
@@ -843,10 +857,12 @@ class Base(Entity):
 
             # The IDP publishes support for ECP by using the SOAP binding on
             # SingleSignOnService
-            _, location = self.pick_binding("single_sign_on_service",
-                                            [_binding], entity_id=entityid)
+            _, location = self.pick_binding(
+                "single_sign_on_service", [_binding], entity_id=entityid
+            )
             req_id, authn_req = self.create_authn_request(
-                    location, service_url_binding=BINDING_PAOS, **kwargs)
+                location, service_url_binding=BINDING_PAOS, **kwargs
+            )
 
         # ----------------------------------------
         # The SOAP envelope

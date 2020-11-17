@@ -40,10 +40,18 @@ class Saml2Client(Base):
     """ The basic pySAML2 service provider class """
 
     def prepare_for_authenticate(
-            self, entityid=None, relay_state="",
-            binding=saml2.BINDING_HTTP_REDIRECT, vorg="", nameid_format=None,
-            scoping=None, consent=None, extensions=None, sign=None,
-            response_binding=saml2.BINDING_HTTP_POST, **kwargs):
+        self,
+        entityid=None,
+        relay_state="",
+        binding=saml2.BINDING_HTTP_REDIRECT,
+        vorg="",
+        nameid_format=None,
+        scoping=None,
+        consent=None, extensions=None,
+        sign=None,
+        response_binding=saml2.BINDING_HTTP_POST,
+        **kwargs,
+    ):
         """ Makes all necessary preparations for an authentication request.
 
         :param entityid: The entity ID of the IdP to send the request to
@@ -61,19 +69,19 @@ class Saml2Client(Base):
         :return: session id and AuthnRequest info
         """
 
-        reqid, negotiated_binding, info = \
-            self.prepare_for_negotiated_authenticate(
-                entityid=entityid,
-                relay_state=relay_state,
-                binding=binding,
-                vorg=vorg,
-                nameid_format=nameid_format,
-                scoping=scoping,
-                consent=consent,
-                extensions=extensions,
-                sign=sign,
-                response_binding=response_binding,
-                **kwargs)
+        reqid, negotiated_binding, info = self.prepare_for_negotiated_authenticate(
+            entityid=entityid,
+            relay_state=relay_state,
+            binding=binding,
+            vorg=vorg,
+            nameid_format=nameid_format,
+            scoping=scoping,
+            consent=consent,
+            extensions=extensions,
+            sign=sign,
+            response_binding=response_binding,
+            **kwargs,
+        )
 
         if negotiated_binding != binding:
             raise ValueError(
@@ -85,9 +93,19 @@ class Saml2Client(Base):
         return reqid, info
 
     def prepare_for_negotiated_authenticate(
-            self, entityid=None, relay_state="", binding=None, vorg="",
-            nameid_format=None, scoping=None, consent=None, extensions=None,
-            sign=None, response_binding=saml2.BINDING_HTTP_POST, **kwargs):
+        self,
+        entityid=None,
+        relay_state="",
+        binding=None,
+        vorg="",
+        nameid_format=None,
+        scoping=None,
+        consent=None,
+        extensions=None,
+        sign=None,
+        response_binding=saml2.BINDING_HTTP_POST,
+        **kwargs,
+    ):
         """ Makes all necessary preparations for an authentication request
         that negotiates which binding to use for authentication.
 
@@ -116,12 +134,18 @@ class Saml2Client(Base):
             logger.info("destination to provider: %s", destination)
 
             reqid, request = self.create_authn_request(
-                destination, vorg, scoping, response_binding, nameid_format,
-                consent=consent, extensions=extensions, sign=sign,
-                **kwargs)
+                destination,
+                vorg,
+                scoping,
+                response_binding,
+                nameid_format,
+                consent=consent,
+                extensions=extensions,
+                sign=sign,
+                **kwargs,
+            )
 
             _req_str = str(request)
-
             logger.info("AuthNReq: %s", _req_str)
 
             try:
@@ -129,13 +153,18 @@ class Saml2Client(Base):
             except KeyError:
                 args = {}
 
-            http_info = self.apply_binding(binding, _req_str, destination,
-                                           relay_state, sign=sign, **args)
+            http_info = self.apply_binding(
+                binding,
+                _req_str,
+                destination,
+                relay_state,
+                sign=sign,
+                **args,
+            )
 
             return reqid, binding, http_info
         else:
-            raise SignOnError(
-                "No supported bindings available for authentication")
+            raise SignOnError("No supported bindings available for authentication")
 
     def global_logout(self, name_id, reason="", expire=None, sign=None,
                       sign_alg=None, digest_alg=None):
@@ -232,43 +261,47 @@ class Saml2Client(Base):
                 sigalg = None
                 if sign:
                     if binding == BINDING_HTTP_REDIRECT:
-                        sigalg = kwargs.get(
-                            "sigalg", ds.DefaultSignature().get_sign_alg())
+                        sigalg = kwargs.get("sigalg", ds.DefaultSignature().get_sign_alg())
                         # key = kwargs.get("key", self.signkey)
                         srequest = str(request)
                     else:
-                        srequest = self.sign(request, sign_alg=sign_alg,
-                                             digest_alg=digest_alg)
+                        srequest = self.sign(
+                            request, sign_alg=sign_alg, digest_alg=digest_alg
+                        )
                 else:
                     srequest = str(request)
 
                 relay_state = self._relay_state(req_id)
 
-                http_info = self.apply_binding(binding, srequest, destination,
-                                               relay_state, sign=sign, sigalg=sigalg)
+                http_info = self.apply_binding(
+                    binding,
+                    srequest,
+                    destination,
+                    relay_state,
+                    sign=sign,
+                    sigalg=sigalg,
+                )
 
                 if binding == BINDING_SOAP:
                     response = self.send(**http_info)
-
                     if response and response.status_code == 200:
                         not_done.remove(entity_id)
                         response = response.text
                         logger.info("Response: %s", response)
-                        res = self.parse_logout_request_response(response,
-                                                                 binding)
+                        res = self.parse_logout_request_response(response, binding)
                         responses[entity_id] = res
                     else:
                         logger.info("NOT OK response from %s", destination)
-
                 else:
-                    self.state[req_id] = {"entity_id": entity_id,
-                                          "operation": "SLO",
-                                          "entity_ids": entity_ids,
-                                          "name_id": code(name_id),
-                                          "reason": reason,
-                                          "not_on_or_after": expire,
-                                          "sign": sign}
-
+                    self.state[req_id] = {
+                        "entity_id": entity_id,
+                        "operation": "SLO",
+                        "entity_ids": entity_ids,
+                        "name_id": code(name_id),
+                        "reason": reason,
+                        "not_on_or_after": expire,
+                        "sign": sign,
+                    }
                     responses[entity_id] = (binding, http_info)
                     not_done.remove(entity_id)
 

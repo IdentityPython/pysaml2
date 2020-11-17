@@ -186,13 +186,11 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
             )
         args["SigAlg"] = sigalg
 
-        string = "&".join([urlencode({k: args[k]})
-                           for k in _order if k in args]).encode('ascii')
-        args["Signature"] = base64.b64encode(signer.sign(string))
-        string = urlencode(args)
-    else:
-        string = urlencode(args)
+        string = "&".join(urlencode({k: args[k]}) for k in _order if k in args)
+        string_enc = string.encode('ascii')
+        args["Signature"] = base64.b64encode(signer.sign(string_enc))
 
+    string = urlencode(args)
     glue_char = "&" if urlparse(location).query else "?"
     login_url = glue_char.join([location, string])
     headers = [('Location', str(login_url))]

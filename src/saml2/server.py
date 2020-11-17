@@ -671,18 +671,30 @@ class Server(Entity):
 
         return args
 
-    def create_authn_response(self, identity, in_response_to, destination,
-                              sp_entity_id, name_id_policy=None, userid=None,
-                              name_id=None, authn=None, issuer=None,
-                              sign_response=None, sign_assertion=None,
-                              encrypt_cert_advice=None,
-                              encrypt_cert_assertion=None,
-                              encrypt_assertion=None,
-                              encrypt_assertion_self_contained=True,
-                              encrypted_advice_attributes=False, pefim=False,
-                              sign_alg=None, digest_alg=None,
-                              session_not_on_or_after=None,
-                              **kwargs):
+    def create_authn_response(
+        self,
+        identity,
+        in_response_to,
+        destination,
+        sp_entity_id,
+        name_id_policy=None,
+        userid=None,
+        name_id=None,
+        authn=None,
+        issuer=None,
+        sign_response=None,
+        sign_assertion=None,
+        encrypt_cert_advice=None,
+        encrypt_cert_assertion=None,
+        encrypt_assertion=None,
+        encrypt_assertion_self_contained=True,
+        encrypted_advice_attributes=False,
+        pefim=False,
+        sign_alg=None,
+        digest_alg=None,
+        session_not_on_or_after=None,
+        **kwargs
+    ):
         """ Constructs an AuthenticationResponse
 
         :param identity: Information about an user
