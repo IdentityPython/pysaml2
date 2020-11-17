@@ -49,6 +49,7 @@ class Saml2Client(Base):
         scoping=None,
         consent=None, extensions=None,
         sign=None,
+        sigalg=None,
         response_binding=saml2.BINDING_HTTP_POST,
         **kwargs,
     ):
@@ -79,6 +80,7 @@ class Saml2Client(Base):
             consent=consent,
             extensions=extensions,
             sign=sign,
+            sigalg=sigalg,
             response_binding=response_binding,
             **kwargs,
         )
@@ -104,6 +106,7 @@ class Saml2Client(Base):
         extensions=None,
         sign=None,
         response_binding=saml2.BINDING_HTTP_POST,
+        sigalg=None,
         **kwargs,
     ):
         """ Makes all necessary preparations for an authentication request
@@ -133,6 +136,13 @@ class Saml2Client(Base):
             destination = self._sso_location(entityid, binding)
             logger.info("destination to provider: %s", destination)
 
+            # XXX - sign_post will embed the signature to the xml doc
+            # XXX   ^through self.create_authn_request(...)
+            # XXX - sign_redirect will add the signature to the query params
+            # XXX   ^through self.apply_binding(...)
+            sign_post = (binding == BINDING_HTTP_POST and sign)
+            sign_redirect = (binding == BINDING_HTTP_REDIRECT and sign)
+
             reqid, request = self.create_authn_request(
                 destination,
                 vorg,
@@ -141,25 +151,21 @@ class Saml2Client(Base):
                 nameid_format,
                 consent=consent,
                 extensions=extensions,
-                sign=sign,
+                sign=sign_post,
+                sign_alg=sigalg,
                 **kwargs,
             )
 
             _req_str = str(request)
             logger.info("AuthNReq: %s", _req_str)
 
-            try:
-                args = {'sigalg': kwargs["sigalg"]}
-            except KeyError:
-                args = {}
-
             http_info = self.apply_binding(
                 binding,
                 _req_str,
                 destination,
                 relay_state,
-                sign=sign,
-                **args,
+                sign=sign_redirect,
+                sigalg=sigalg,
             )
 
             return reqid, binding, http_info
@@ -258,11 +264,16 @@ class Saml2Client(Base):
                 if sign is None:
                     sign = self.logout_requests_signed
 
-                sigalg = None
+                def_sig = ds.DefaultSignature()
+                sign_alg = def_sig.get_sign_alg() if sign_alg is None else sign_alg
+                digest_alg = (
+                    def_sig.get_digest_alg()
+                    if digest_alg is None
+                    else digest_alg
+                )
+
                 if sign:
                     if binding == BINDING_HTTP_REDIRECT:
-                        sigalg = kwargs.get("sigalg", ds.DefaultSignature().get_sign_alg())
-                        # key = kwargs.get("key", self.signkey)
                         srequest = str(request)
                     else:
                         srequest = self.sign(
@@ -279,7 +290,7 @@ class Saml2Client(Base):
                     destination,
                     relay_state,
                     sign=sign,
-                    sigalg=sigalg,
+                    sigalg=sign_alg,
                 )
 
                 if binding == BINDING_SOAP:

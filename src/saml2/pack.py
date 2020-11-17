@@ -178,7 +178,12 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     if relay_state:
         args["RelayState"] = relay_state
 
+    # XXX !should not depend on signer, but on sign
+    # XXX if both signalg and signer are here they have to match
+    # XXX now we allow them to differ
+    # XXX signer should be created here; not passed in
     if signer:
+        # XXX check for allowed algo -- should do the same for POST binding
         # sigalgs, should be one defined in xmldsig
         if sigalg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
             raise Exception(

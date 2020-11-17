@@ -72,6 +72,9 @@ from saml2.sigver import pre_encrypt_assertion
 from saml2.sigver import signed_instance_factory
 from saml2.virtual_org import VirtualOrg
 
+import saml2.xmldsig as ds
+
+
 logger = logging.getLogger(__name__)
 
 __author__ = 'rolandh'
@@ -198,6 +201,7 @@ class Entity(HTTPBase):
         relay_state="",
         response=False,
         sign=None,
+        sigalg=None,
         **kwargs,
     ):
         """
@@ -212,6 +216,22 @@ class Entity(HTTPBase):
         :param kwargs: response type specific arguments
         :return: A dictionary
         """
+
+        # XXX authn_requests_signed (obj property) applies only to an SP
+        # XXX sign_response (config option) applies to idp/aa
+        # XXX Looking into sp/idp/aa properties should be done in the same way
+        # XXX ^this discrepancy should be fixed
+        sign_config = (
+            self.authn_requests_signed
+            if self.config.context == "sp"
+            else self.config.getattr("sign_response")
+            if self.config.context == "idp"
+            else None
+        )
+        sign = sign_config if sign is None else sign
+        def_sig = ds.DefaultSignature()
+        sigalg = sigalg or def_sig.get_sign_alg()
+
         # unless if BINDING_HTTP_ARTIFACT
         if response:
             typ = "SAMLResponse"
@@ -231,7 +251,6 @@ class Entity(HTTPBase):
             info["method"] = "POST"
         elif binding == BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
-            sigalg = kwargs.get("sigalg")
             signer = (
                 self.sec.sec_backend.get_signer(sigalg)
                 if sign and sigalg
@@ -243,12 +262,15 @@ class Entity(HTTPBase):
                 relay_state,
                 typ,
                 signer=signer,
+                sigalg=sigalg,
                 **kwargs,
             )
             info["url"] = str(destination)
             info["method"] = "GET"
         elif binding == BINDING_SOAP or binding == BINDING_PAOS:
-            info = self.use_soap(msg_str, destination, sign=sign, **kwargs)
+            info = self.use_soap(
+                msg_str, destination, sign=sign, sigalg=sigalg, **kwargs
+            )
         elif binding == BINDING_URI:
             info = self.use_http_uri(msg_str, typ, destination)
         elif binding == BINDING_HTTP_ARTIFACT:

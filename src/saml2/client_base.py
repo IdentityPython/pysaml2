@@ -54,6 +54,8 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_PAOS
 
+import saml2.xmldsig as ds
+
 
 logger = logging.getLogger(__name__)
 
@@ -444,7 +446,13 @@ class Base(Entity):
 
         client_crt = kwargs.get("client_crt")
         nsprefix = kwargs.get("nsprefix")
+
+        # XXX will be used to embed the signature to the xml doc - ie, POST binding
+        # XXX always called by the SP, no need to check the context
         sign = self.authn_requests_signed if sign is None else sign
+        def_sig = ds.DefaultSignature()
+        sign_alg = sign_alg or def_sig.get_sign_alg()
+        digest_alg = digest_alg or def_sig.get_digest_alg()
 
         if (sign and self.sec.cert_handler.generate_cert()) or client_crt is not None:
             with self.lock:
