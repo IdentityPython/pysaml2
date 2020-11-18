@@ -74,7 +74,7 @@ from saml2.virtual_org import VirtualOrg
 from saml2.pack import http_redirect_message
 from saml2.pack import http_form_post_message
 
-import saml2.xmldsig as ds
+from saml2.xmldsig import DefaultSignature
 
 
 logger = logging.getLogger(__name__)
@@ -231,7 +231,7 @@ class Entity(HTTPBase):
             else None
         )
         sign = sign_config if sign is None else sign
-        def_sig = ds.DefaultSignature()
+        def_sig = DefaultSignature()
         sigalg = sigalg or def_sig.get_sign_alg()
 
         # unless if BINDING_HTTP_ARTIFACT

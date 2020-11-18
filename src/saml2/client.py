@@ -14,7 +14,7 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
 
-import saml2.xmldsig as ds
+from saml2.xmldsig import DefaultSignature
 
 from saml2.ident import decode, code
 from saml2.httpbase import HTTPError
@@ -264,7 +264,7 @@ class Saml2Client(Base):
                 if sign is None:
                     sign = self.logout_requests_signed
 
-                def_sig = ds.DefaultSignature()
+                def_sig = DefaultSignature()
                 sign_alg = def_sig.get_sign_alg() if sign_alg is None else sign_alg
                 digest_alg = (
                     def_sig.get_digest_alg()

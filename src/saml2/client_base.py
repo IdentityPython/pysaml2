@@ -54,8 +54,9 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_PAOS
 
-import saml2.xmldsig as ds
-
+from saml2.xmldsig import SIG_ALLOWED_ALG
+from saml2.xmldsig import DIGEST_ALLOWED_ALG
+from saml2.xmldsig import DefaultSignature
 
 logger = logging.getLogger(__name__)
 
@@ -450,9 +451,18 @@ class Base(Entity):
         # XXX will be used to embed the signature to the xml doc - ie, POST binding
         # XXX always called by the SP, no need to check the context
         sign = self.authn_requests_signed if sign is None else sign
-        def_sig = ds.DefaultSignature()
+        def_sig = DefaultSignature()
         sign_alg = sign_alg or def_sig.get_sign_alg()
         digest_alg = digest_alg or def_sig.get_digest_alg()
+
+        if sign_alg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
+            raise Exception(
+                "Signature algo not in allowed list: {algo}".format(algo=sign_alg)
+            )
+        if digest_alg not in [long_name for short_name, long_name in DIGEST_ALLOWED_ALG]:
+            raise Exception(
+                "Digest algo not in allowed list: {algo}".format(algo=digest_alg)
+            )
 
         if (sign and self.sec.cert_handler.generate_cert()) or client_crt is not None:
             with self.lock:

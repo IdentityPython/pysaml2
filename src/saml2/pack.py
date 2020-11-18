@@ -186,7 +186,6 @@ def http_redirect_message(
         args["RelayState"] = relay_state
 
     if sign:
-        # XXX check for allowed algo -- should do the same for POST binding
         # sigalgs, should be one defined in xmldsig
         if sigalg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
             raise Exception(
