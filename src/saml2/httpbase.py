@@ -388,25 +388,3 @@ class HTTPBase(object):
     def add_credentials(self, user, passwd):
         self.user = user
         self.passwd = passwd
-
-    @staticmethod
-    def use_http_get(message, destination, relay_state,
-                     typ="SAMLRequest", sigalg="", signer=None, **kwargs):
-        """
-        Send a message using GET, this is the HTTP-Redirect case so
-        no direct response is expected to this request.
-
-        :param message:
-        :param destination:
-        :param relay_state:
-        :param typ: Whether a Request, Response or Artifact
-        :param sigalg: Which algorithm the signature function will use to sign
-            the message
-        :param signer: A signing function that can be used to sign the message
-        :return: dictionary
-        """
-        if not isinstance(message, six.string_types):
-            message = "%s" % (message,)
-
-        return http_redirect_message(message, destination, relay_state, typ,
-                                     sigalg, signer)

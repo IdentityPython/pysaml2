@@ -141,8 +141,15 @@ def http_post_message(message, relay_state="", typ="SAMLRequest", **kwargs):
             "status": 200}
 
 
-def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
-                          sigalg='', signer=None, **kwargs):
+def http_redirect_message(
+    message,
+    location,
+    relay_state="",
+    typ="SAMLRequest",
+    sigalg=None,
+    sign=None,
+    backend=None,
+):
     """The HTTP Redirect binding defines a mechanism by which SAML protocol
     messages can be transmitted within URL parameters.
     Messages are encoded for use with this binding using a URL encoding
@@ -156,7 +163,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     :param typ: What type of message it is SAMLRequest/SAMLResponse/SAMLart
     :param sigalg: Which algorithm the signature function will use to sign
         the message
-    :param signer: A signature function that can be used to sign the message
+    :param sign: Whether the message should be signed
     :return: A tuple containing header information and a HTML message.
     """
 
@@ -178,19 +185,18 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     if relay_state:
         args["RelayState"] = relay_state
 
-    # XXX !should not depend on signer, but on sign
-    # XXX if both signalg and signer are here they have to match
-    # XXX now we allow them to differ
-    # XXX signer should be created here; not passed in
-    if signer:
+    if sign:
         # XXX check for allowed algo -- should do the same for POST binding
         # sigalgs, should be one defined in xmldsig
         if sigalg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
             raise Exception(
                 "Signature algo not in allowed list: {algo}".format(algo=sigalg)
             )
-        args["SigAlg"] = sigalg
+        signer = backend.get_signer(sigalg) if sign and sigalg else None
+        if not signer:
+            raise Exception("Could not init signer fro algo {algo}".format(algo=sigalg))
 
+        args["SigAlg"] = sigalg
         string = "&".join(urlencode({k: args[k]}) for k in _order if k in args)
         string_enc = string.encode('ascii')
         args["Signature"] = base64.b64encode(signer.sign(string_enc))

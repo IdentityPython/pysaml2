@@ -71,6 +71,7 @@ from saml2.sigver import pre_signature_part
 from saml2.sigver import pre_encrypt_assertion
 from saml2.sigver import signed_instance_factory
 from saml2.virtual_org import VirtualOrg
+from saml2.pack import http_redirect_message
 
 import saml2.xmldsig as ds
 
@@ -251,19 +252,14 @@ class Entity(HTTPBase):
             info["method"] = "POST"
         elif binding == BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
-            signer = (
-                self.sec.sec_backend.get_signer(sigalg)
-                if sign and sigalg
-                else None
-            )
-            info = self.use_http_get(
-                msg_str,
-                destination,
-                relay_state,
-                typ,
-                signer=signer,
+            info = http_redirect_message(
+                message=msg_str,
+                location=destination,
+                relay_state=relay_state,
+                typ=typ,
+                sign=sign,
                 sigalg=sigalg,
-                **kwargs,
+                backend=self.sec.sec_backend,
             )
             info["url"] = str(destination)
             info["method"] = "GET"
