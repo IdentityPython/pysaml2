@@ -10,10 +10,8 @@ import time
 from six.moves.http_cookies import SimpleCookie
 from saml2.time_util import utc_now
 from saml2 import class_name, SAMLError
-from saml2.pack import http_form_post_message
 from saml2.pack import http_post_message
 from saml2.pack import make_soap_enveloped_saml_thingy
-from saml2.pack import http_redirect_message
 
 import logging
 
@@ -253,41 +251,6 @@ class HTTPBase(object):
             pass
 
         return r
-
-    @staticmethod
-    def use_http_post(message, destination, relay_state,
-                           typ="SAMLRequest"):
-        """
-        Return a urlencoded message that should be POSTed to the recipient.
-
-        :param message: The response
-        :param destination: Where the response should be sent
-        :param relay_state: The relay_state received in the request
-        :param typ: Whether a Request, Response or Artifact
-        :return: dictionary
-        """
-        if not isinstance(message, six.string_types):
-            message = "%s" % (message,)
-
-        return http_post_message(message, relay_state, typ)
-
-    @staticmethod
-    def use_http_form_post(message, destination, relay_state,
-                           typ="SAMLRequest"):
-        """
-        Return a form that will automagically execute and POST the message
-        to the recipient.
-
-        :param message:
-        :param destination:
-        :param relay_state:
-        :param typ: Whether a Request, Response or Artifact
-        :return: dictionary
-        """
-        if not isinstance(message, six.string_types):
-            message = "%s" % (message,)
-
-        return http_form_post_message(message, destination, relay_state, typ)
 
     @staticmethod
     def use_http_artifact(message, destination="", relay_state=""):

@@ -72,6 +72,7 @@ from saml2.sigver import pre_encrypt_assertion
 from saml2.sigver import signed_instance_factory
 from saml2.virtual_org import VirtualOrg
 from saml2.pack import http_redirect_message
+from saml2.pack import http_form_post_message
 
 import saml2.xmldsig as ds
 
@@ -241,13 +242,8 @@ class Entity(HTTPBase):
 
         if binding == BINDING_HTTP_POST:
             logger.info("HTTP POST")
-            # if self.entity_type == 'sp':
-            #     info = self.use_http_post(msg_str, destination, relay_state,
-            #                               typ)
-            #     info["url"] = destination
-            #     info["method"] = "POST"
-            # else:
-            info = self.use_http_form_post(msg_str, destination, relay_state, typ)
+            info = http_form_post_message(msg_str, destination, relay_state, typ)
+            (msg_str, destination, relay_state, typ)
             info["url"] = destination
             info["method"] = "POST"
         elif binding == BINDING_HTTP_REDIRECT:
