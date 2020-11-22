@@ -800,8 +800,9 @@ class Entity(HTTPBase):
                 return response
 
         if sign:
-            return self.sign(response, to_sign=to_sign, sign_alg=sign_alg,
-                             digest_alg=digest_alg)
+            return self.sign(
+                response, to_sign=to_sign, sign_alg=sign_alg, digest_alg=digest_alg
+            )
         else:
             return response
 
@@ -835,8 +836,7 @@ class Entity(HTTPBase):
                                   status=status, **kwargs)
 
         if sign:
-            return self.sign(response, mid, sign_alg=sign_alg,
-                             digest_alg=digest_alg)
+            return self.sign(response, mid, sign_alg=sign_alg, digest_alg=digest_alg)
         else:
             return response
 
@@ -1121,9 +1121,15 @@ class Entity(HTTPBase):
 
         rinfo = self.response_args(request, bindings)
 
-        response = self._status_response(samlp.ManageNameIDResponse, issuer,
-                                         status, sign, sign_alg=sign_alg,
-                                         digest_alg=digest_alg, **rinfo)
+        response = self._status_response(
+            samlp.ManageNameIDResponse,
+            issuer,
+            status,
+            sign,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+            **rinfo,
+        )
 
         logger.info("Response: %s", response)
 

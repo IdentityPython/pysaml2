@@ -171,19 +171,17 @@ class Base(Entity):
             "authn_requests_signed": False,
             "want_assertions_signed": False,
             "want_response_signed": True,
-            "want_assertions_or_response_signed" : False
+            "want_assertions_or_response_signed": False,
         }
-
         for attr, val_default in attribute_defaults.items():
             val_config = self.config.getattr(attr, "sp")
-            if val_config is None:
-                val = val_default
-            else:
-                val = val_config
-
+            val = (
+                val_config
+                if val_config is not None
+                else val_default
+            )
             if val == 'true':
                 val = True
-
             setattr(self, attr, val)
 
         # signing and digest algs
@@ -238,8 +236,7 @@ class Base(Entity):
             raise IdpUnspecified("Too many IdPs to choose from: %s" % eids)
 
         try:
-            srvs = self.metadata.single_sign_on_service(list(eids.keys())[0], 
-                                                        binding)
+            srvs = self.metadata.single_sign_on_service(list(eids.keys())[0], binding)
             return next(locations(srvs), None)
 
         except IndexError:
