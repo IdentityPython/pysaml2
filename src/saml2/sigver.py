@@ -1689,11 +1689,6 @@ class SecurityContext(object):
             node_id,
         )
 
-    def sign_assertion_using_xmlsec(self, statement, **kwargs):
-        """ Deprecated function. See sign_assertion(). """
-        return self.sign_statement(
-                statement, class_name(saml.Assertion()), **kwargs)
-
     def sign_assertion(self, statement, **kwargs):
         """Sign a SAML assertion.
 
@@ -1755,6 +1750,7 @@ class SecurityContext(object):
         return statement
 
 
+# XXX calls DefaultSignature
 def pre_signature_part(ident, public_key=None, identifier=None, digest_alg=None, sign_alg=None):
     """
     If an assertion is to be signed the signature part has to be preset

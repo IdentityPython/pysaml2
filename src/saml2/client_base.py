@@ -56,7 +56,7 @@ from saml2 import BINDING_PAOS
 
 from saml2.xmldsig import SIG_ALLOWED_ALG
 from saml2.xmldsig import DIGEST_ALLOWED_ALG
-from saml2.xmldsig import DefaultSignature
+
 
 logger = logging.getLogger(__name__)
 
@@ -184,10 +184,6 @@ class Base(Entity):
                 val = True
             setattr(self, attr, val)
 
-        # signing and digest algs
-        self.signing_algorithm = self.config.getattr('signing_algorithm', "sp")
-        self.digest_algorithm = self.config.getattr('digest_algorithm', "sp")
-
         if self.entity_type == "sp" and not any(
             [
                 self.want_assertions_signed,
@@ -287,6 +283,7 @@ class Base(Entity):
         else:
             return None
 
+    # XXX sp create
     def create_authn_request(
         self,
         destination,
@@ -451,12 +448,9 @@ class Base(Entity):
         client_crt = kwargs.get("client_crt")
         nsprefix = kwargs.get("nsprefix")
 
-        # XXX will be used to embed the signature to the xml doc - ie, POST binding
-        # XXX always called by the SP, no need to check the context
-        sign = self.authn_requests_signed if sign is None else sign
-        def_sig = DefaultSignature()
-        sign_alg = sign_alg or def_sig.get_sign_alg()
-        digest_alg = digest_alg or def_sig.get_digest_alg()
+        sign = sign if sign is not None else self.should_sign
+        sign_alg = sign_alg or self.signing_algorithm
+        digest_alg = digest_alg or self.digest_algorithm
 
         if sign_alg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
             raise Exception(
@@ -506,6 +500,7 @@ class Base(Entity):
 
         return msg
 
+    # XXX sp create
     def create_attribute_query(self, destination, name_id=None,
             attribute=None, message_id=0, consent=None,
             extensions=None, sign=False, sign_prepare=False, sign_alg=None,
@@ -572,6 +567,7 @@ class Base(Entity):
     # MUST use SOAP for
     # AssertionIDRequest, SubjectQuery,
     # AuthnQuery, AttributeQuery, or AuthzDecisionQuery
+    # XXX sp create
     def create_authz_decision_query(self, destination, action,
             evidence=None, resource=None, subject=None,
             message_id=0, consent=None, extensions=None,
@@ -596,6 +592,7 @@ class Base(Entity):
                              subject=subject, sign_alg=sign_alg,
                              digest_alg=digest_alg, **kwargs)
 
+    # XXX sp create
     def create_authz_decision_query_using_assertion(self, destination,
             assertion, action=None,
             resource=None,
@@ -632,6 +629,7 @@ class Base(Entity):
                 extensions=extensions, sign=sign, nsprefix=nsprefix)
 
     @staticmethod
+    # XXX sp create
     def create_assertion_id_request(assertion_id_refs, **kwargs):
         """
 
@@ -644,6 +642,7 @@ class Base(Entity):
         else:
             return 0, assertion_id_refs[0]
 
+    # XXX sp create
     def create_authn_query(self, subject, destination=None, authn_context=None,
             session_index="", message_id=0, consent=None,
             extensions=None, sign=False, nsprefix=None, sign_alg=None,
@@ -667,6 +666,7 @@ class Base(Entity):
                              nsprefix=nsprefix, sign_alg=sign_alg,
                              digest_alg=digest_alg)
 
+    # XXX sp create
     def create_name_id_mapping_request(self, name_id_policy,
             name_id=None, base_id=None,
             encrypted_id=None, destination=None,
@@ -828,6 +828,7 @@ class Base(Entity):
 
     # ------------------- ECP ------------------------------------------------
 
+    # XXX sp create
     def create_ecp_authn_request(self, entityid=None, relay_state="",
             sign=False, **kwargs):
         """ Makes an authentication request.
@@ -932,6 +933,7 @@ class Base(Entity):
     # ----------------------------------------------------------------------
 
     @staticmethod
+    # XXX sp create
     def create_discovery_service_request(url, entity_id, **kwargs):
         """
         Created the HTTP redirect URL needed to send the user to the

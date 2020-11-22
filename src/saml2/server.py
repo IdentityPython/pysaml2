@@ -77,8 +77,15 @@ def _shelve_compat(name, *args, **kwargs):
 class Server(Entity):
     """ A class that does things that IdPs or AAs do """
 
-    def __init__(self, config_file="", config=None, cache=None, stype="idp",
-                 symkey="", msg_cb=None):
+    def __init__(
+        self,
+        config_file="",
+        config=None,
+        cache=None,
+        stype="idp",
+        symkey="",
+        msg_cb=None,
+    ):
         Entity.__init__(self, stype, config, config_file, msg_cb=msg_cb)
         self.eptid = None
         self.init_config(stype)
@@ -218,6 +225,7 @@ class Server(Entity):
         return False
 
     # -------------------------------------------------------------------------
+
     def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
         """Parse a Authentication Request
 
@@ -438,7 +446,6 @@ class Server(Entity):
         :param encrypt_cert_assertion: Certificate to be used for encryption
         of assertions.
         :param authn_statement: Authentication statement.
-        :param sign_assertion: True if assertions should be signed.
         :param pefim: True if a response according to the PEFIM profile
         should be created.
         :param farg: Argument to pass on to the assertion constructor
@@ -510,7 +517,7 @@ class Server(Entity):
 
     # ------------------------------------------------------------------------
 
-    # noinspection PyUnusedLocal
+    # XXX idp create
     def create_attribute_response(self, identity, in_response_to, destination,
                                   sp_entity_id, userid="", name_id=None,
                                   status=None, issuer=None,
@@ -594,15 +601,15 @@ class Server(Entity):
     def gather_authn_response_args(
         self, sp_entity_id, name_id_policy, userid, **kwargs
     ):
+        kwargs["policy"] = kwargs.get("release_policy")
+
         # collect args and return them
         args = {}
 
-        args["policy"] = kwargs.get(
-            "release_policy", self.config.getattr("policy", "idp")
-        )
-        args['best_effort'] = kwargs.get("best_effort", False)
-
+        # XXX will be passed to _authn_response
         param_defaults = {
+            'policy': None,
+            'best_effort': False,
             'sign_assertion': False,
             'sign_response': False,
             'encrypt_assertion': False,
@@ -610,12 +617,8 @@ class Server(Entity):
             'encrypted_advice_attributes': False,
             'encrypt_cert_advice': None,
             'encrypt_cert_assertion': None,
+            # need to be named sign_alg and digest_alg
         }
-
-        # signing and digest algs
-        self.signing_algorithm = self.config.getattr('signing_algorithm', "idp")
-        self.digest_algorithm = self.config.getattr('digest_algorithm', "idp")
-
         for param, val_default in param_defaults.items():
             val_kw = kwargs.get(param)
             val_config = self.config.getattr(param, "idp")
@@ -687,6 +690,7 @@ class Server(Entity):
 
         return args
 
+    # XXX idp create
     def create_authn_response(
         self,
         identity,
@@ -736,7 +740,6 @@ class Server(Entity):
         assertions in the advice element.
         :param encrypt_cert_assertion: Certificate to be used for encryption
         of assertions.
-        :param sign_assertion: True if assertions should be signed.
         :param pefim: True if a response according to the PEFIM profile
         should be created.
         :return: A response instance
@@ -785,6 +788,7 @@ class Server(Entity):
             return self.create_error_response(in_response_to, destination,
                                               sp_entity_id, exc, name_id)
 
+    # XXX idp create
     def create_authn_request_response(self, identity, in_response_to,
                                       destination, sp_entity_id,
                                       name_id_policy=None, userid=None,
@@ -800,7 +804,7 @@ class Server(Entity):
                                           authn_decl=authn_decl,
                                           session_not_on_or_after=session_not_on_or_after)
 
-    # noinspection PyUnusedLocal
+    # XXX idp create
     def create_assertion_id_request_response(self, assertion_id, sign=False,
                                              sign_alg=None,
                                              digest_alg=None, **kwargs):
@@ -827,7 +831,8 @@ class Server(Entity):
         else:
             return assertion
 
-    # noinspection PyUnusedLocal
+    # XXX calls self.sign => should it call _message (which calls self.sign)?
+    # XXX idp create
     def create_name_id_mapping_response(self, name_id=None, encrypted_id=None,
                                         in_response_to=None,
                                         issuer=None, sign_response=False,
@@ -859,6 +864,7 @@ class Server(Entity):
             logger.info("Message: %s", _resp)
             return _resp
 
+    # XXX idp create
     def create_authn_query_response(self, subject, session_index=None,
                                     requested_context=None, in_response_to=None,
                                     issuer=None, sign_response=False,
@@ -892,6 +898,7 @@ class Server(Entity):
     def parse_ecp_authn_request(self):
         pass
 
+    # XXX idp create
     def create_ecp_authn_request_response(self, acs_url, identity,
                                           in_response_to, destination,
                                           sp_entity_id, name_id_policy=None,

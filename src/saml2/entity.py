@@ -141,6 +141,24 @@ class Entity(HTTPBase):
         else:
             raise SAMLError("Missing configuration")
 
+        def_sig = DefaultSignature()
+        self.signing_algorithm = (
+            self.config.getattr('signing_algorithm')
+            or def_sig.get_sign_alg()
+        )
+        self.digest_algorithm = (
+            self.config.getattr('digest_algorithm')
+            or def_sig.get_digest_alg()
+        )
+        sign_config = (
+            self.config.getattr("authn_requests_signed", "sp")
+            if self.entity_type == "sp"
+            else self.config.getattr("sign_response", "idp")
+            if self.entity_type == "idp"
+            else False
+        )
+        self.should_sign = sign_config
+
         for item in ["cert_file", "key_file", "ca_certs"]:
             _val = getattr(self.config, item, None)
             if not _val:
@@ -219,20 +237,8 @@ class Entity(HTTPBase):
         :return: A dictionary
         """
 
-        # XXX authn_requests_signed (obj property) applies only to an SP
-        # XXX sign_response (config option) applies to idp/aa
-        # XXX Looking into sp/idp/aa properties should be done in the same way
-        # XXX ^this discrepancy should be fixed
-        sign_config = (
-            self.authn_requests_signed
-            if self.config.context == "sp"
-            else self.config.getattr("sign_response")
-            if self.config.context == "idp"
-            else None
-        )
-        sign = sign_config if sign is None else sign
-        def_sig = DefaultSignature()
-        sigalg = sigalg or def_sig.get_sign_alg()
+        sign = sign if sign is not None else self.should_sign
+        sigalg = sigalg or self.signing_algorithm
 
         # unless if BINDING_HTTP_ARTIFACT
         if response:
@@ -453,10 +459,6 @@ class Entity(HTTPBase):
         sign_alg=None,
         digest_alg=None,
     ):
-        # sign adn digest algs
-        sign_alg = sign_alg or self.signing_algorithm
-        digest_alg = digest_alg or self.digest_algorithm
-
         if msg.signature is None:
             msg.signature = pre_signature_part(
                 msg.id, self.sec.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg
@@ -476,6 +478,7 @@ class Entity(HTTPBase):
         logger.info("REQUEST: %s", msg)
         return signed_instance_factory(msg, self.sec, to_sign)
 
+    # XXX calls self.sign
     def _message(
         self,
         request_cls,
@@ -629,6 +632,7 @@ class Entity(HTTPBase):
             raise exception
         return response
 
+    # XXX calls self.sign
     def _response(self, in_response_to, consumer_url=None, status=None,
                   issuer=None, sign=False, to_sign=None, sp_entity_id=None,
                   encrypt_assertion=False,
@@ -806,6 +810,7 @@ class Entity(HTTPBase):
         else:
             return response
 
+    # XXX calls self.sign
     def _status_response(self, response_class, issuer, status, sign=False,
                          sign_alg=None, digest_alg=None,
                          **kwargs):
@@ -914,6 +919,7 @@ class Entity(HTTPBase):
 
     # ------------------------------------------------------------------------
 
+    # XXX ent create
     def create_error_response(self, in_response_to, destination, info,
                               sign=False, issuer=None, sign_alg=None,
                               digest_alg=None, **kwargs):
@@ -936,6 +942,7 @@ class Entity(HTTPBase):
 
     # ------------------------------------------------------------------------
 
+    # XXX ent create
     def create_logout_request(self, destination, issuer_entity_id,
                               subject_id=None, name_id=None,
                               reason=None, expire=None, message_id=0,
@@ -988,6 +995,7 @@ class Entity(HTTPBase):
                              issuer=self._issuer(), sign_alg=sign_alg,
                              digest_alg=digest_alg, **args)
 
+    # XXX ent create
     def create_logout_response(self, request, bindings=None, status=None,
                                sign=False, issuer=None, sign_alg=None,
                                digest_alg=None):
@@ -1015,6 +1023,7 @@ class Entity(HTTPBase):
 
         return response
 
+    # XXX ent create
     def create_artifact_resolve(self, artifact, destination, sessid,
                                 consent=None, extensions=None, sign=False,
                                 sign_alg=None, digest_alg=None):
@@ -1036,6 +1045,7 @@ class Entity(HTTPBase):
                              consent, extensions, sign, artifact=artifact,
                              sign_alg=sign_alg, digest_alg=digest_alg)
 
+    # XXX ent create
     def create_artifact_response(self, request, artifact, bindings=None,
                                  status=None, sign=False, issuer=None,
                                  sign_alg=None, digest_alg=None):
@@ -1056,6 +1066,7 @@ class Entity(HTTPBase):
 
         return response
 
+    # XXX ent create
     def create_manage_name_id_request(self, destination, message_id=0,
                                       consent=None, extensions=None, sign=False,
                                       name_id=None, new_id=None,
@@ -1114,6 +1125,7 @@ class Entity(HTTPBase):
         return self._parse_request(xmlstr, saml_request.ManageNameIDRequest,
                                    "manage_name_id_service", binding)
 
+    # XXX ent create
     def create_manage_name_id_response(self, request, bindings=None,
                                        status=None, sign=False, issuer=None,
                                        sign_alg=None, digest_alg=None,

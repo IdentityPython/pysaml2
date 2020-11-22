@@ -201,6 +201,8 @@ class Saml2Client(Base):
         return self.do_logout(name_id, entity_ids, reason, expire, sign,
                               sign_alg=sign_alg, digest_alg=digest_alg)
 
+    # XXX calls DefaultSignature
+    # XXX calls self.sign
     def do_logout(self, name_id, entity_ids, reason, expire, sign=None,
                   expected_binding=None, sign_alg=None, digest_alg=None,
                   **kwargs):
