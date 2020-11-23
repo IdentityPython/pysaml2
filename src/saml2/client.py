@@ -470,6 +470,7 @@ class Saml2Client(Base):
         sign=False,
         binding=BINDING_SOAP,
         nsprefix=None,
+        sign_alg=None,
     ):
         """ Does a attribute request to an attribute authority, this is
         by default done over SOAP.
@@ -535,6 +536,7 @@ class Saml2Client(Base):
                 destination,
                 relay_state,
                 sign=sign,
+                sigalg=sign_alg,
             )
         else:
             raise SAMLError("Unsupported binding")
