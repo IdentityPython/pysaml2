@@ -229,14 +229,13 @@ class Saml2Client(Base):
         for entity_id in entity_ids:
             logger.debug("Logout from '%s'", entity_id)
             # for all where I can use the SOAP binding, do those first
-            for binding in [BINDING_SOAP, BINDING_HTTP_POST,
-                            BINDING_HTTP_REDIRECT]:
+            for binding in [BINDING_SOAP, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]:
                 if expected_binding and binding != expected_binding:
                     continue
                 try:
-                    srvs = self.metadata.single_logout_service(entity_id,
-                                                               binding,
-                                                               "idpsso")
+                    srvs = self.metadata.single_logout_service(
+                        entity_id, binding, "idpsso"
+                    )
                 except:
                     srvs = None
 
@@ -247,9 +246,9 @@ class Saml2Client(Base):
                 destination = next(locations(srvs), None)
                 logger.info("destination to provider: %s", destination)
                 try:
-                    session_info = self.users.get_info_from(name_id,
-                                                            entity_id,
-                                                            False)
+                    session_info = self.users.get_info_from(
+                        name_id, entity_id, False
+                    )
                     session_indexes = [session_info['session_index']]
                 except KeyError:
                     session_indexes = None
@@ -257,9 +256,7 @@ class Saml2Client(Base):
                     destination, entity_id, name_id=name_id, reason=reason,
                     expire=expire, session_indexes=session_indexes)
 
-                if sign is None:
-                    sign = self.logout_requests_signed
-
+                sign = sign if sign is not None else self.logout_requests_signed
                 def_sig = DefaultSignature()
                 sign_alg = def_sig.get_sign_alg() if sign_alg is None else sign_alg
                 digest_alg = (
@@ -459,11 +456,21 @@ class Saml2Client(Base):
 
         return None
 
-    def do_attribute_query(self, entityid, subject_id,
-                           attribute=None, sp_name_qualifier=None,
-                           name_qualifier=None, nameid_format=None,
-                           real_id=None, consent=None, extensions=None,
-                           sign=False, binding=BINDING_SOAP, nsprefix=None):
+    def do_attribute_query(
+        self,
+        entityid,
+        subject_id,
+        attribute=None,
+        sp_name_qualifier=None,
+        name_qualifier=None,
+        nameid_format=None,
+        real_id=None,
+        consent=None,
+        extensions=None,
+        sign=False,
+        binding=BINDING_SOAP,
+        nsprefix=None,
+    ):
         """ Does a attribute request to an attribute authority, this is
         by default done over SOAP.
 
@@ -522,13 +529,19 @@ class Saml2Client(Base):
                                     "subject_id": subject_id,
                                     "sign": sign}
             relay_state = self._relay_state(query.id)
-            return self.apply_binding(binding, "%s" % query, destination,
-                                      relay_state, sign=sign)
+            return self.apply_binding(
+                binding,
+                str(query),
+                destination,
+                relay_state,
+                sign=sign,
+            )
         else:
             raise SAMLError("Unsupported binding")
 
-    def handle_logout_request(self, request, name_id, binding, sign=None,
-                              sign_alg=None, relay_state=""):
+    def handle_logout_request(
+        self, request, name_id, binding, sign=None, sign_alg=None, relay_state=""
+    ):
         """
         Deal with a LogoutRequest
 
@@ -571,16 +584,22 @@ class Saml2Client(Base):
         elif binding in [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]:
             response_bindings = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]
         else:
-            response_bindings = self.config.preferred_binding[
-                "single_logout_service"]
+            response_bindings = self.config.preferred_binding["single_logout_service"]
 
         if sign is None:
             sign = self.logout_responses_signed
 
-        response = self.create_logout_response(_req.message, response_bindings,
-                                               status, sign, sign_alg=sign_alg)
+        response = self.create_logout_response(
+            _req.message, response_bindings, status, sign, sign_alg=sign_alg
+        )
         rinfo = self.response_args(_req.message, response_bindings)
 
-        return self.apply_binding(rinfo["binding"], response,
-                                  rinfo["destination"], relay_state,
-                                  response=True, sign=sign)
+        return self.apply_binding(
+            rinfo["binding"],
+            response,
+            rinfo["destination"],
+            relay_state,
+            response=True,
+            sign=sign,
+            sigalg=sign_alg,
+        )
