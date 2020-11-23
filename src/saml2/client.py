@@ -257,10 +257,6 @@ class Saml2Client(Base):
                     destination, entity_id, name_id=name_id, reason=reason,
                     expire=expire, session_indexes=session_indexes)
 
-                # to_sign = []
-                if binding.startswith("http://"):
-                    sign = True
-
                 if sign is None:
                     sign = self.logout_requests_signed
 
