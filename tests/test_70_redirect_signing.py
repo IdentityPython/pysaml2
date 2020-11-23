@@ -30,11 +30,15 @@ def test():
         destination = srvs[0]["location"]
         req_id, req = sp.create_authn_request(destination, id="id1")
 
-        signer = sp.sec.sec_backend.get_signer(SIG_RSA_SHA1)
-
-        info = http_redirect_message(req, destination, relay_state="RS",
-                                     typ="SAMLRequest", sigalg=SIG_RSA_SHA1,
-                                     signer=signer)
+        info = http_redirect_message(
+            req,
+            destination,
+            relay_state="RS",
+            typ="SAMLRequest",
+            sigalg=SIG_RSA_SHA1,
+            sign=True,
+            backend=sp.sec.sec_backend,
+        )
 
         verified_ok = False
 

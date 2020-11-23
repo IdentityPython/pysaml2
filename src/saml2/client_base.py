@@ -54,6 +54,9 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_PAOS
 
+from saml2.xmldsig import SIG_ALLOWED_ALG
+from saml2.xmldsig import DIGEST_ALLOWED_ALG
+from saml2.xmldsig import DefaultSignature
 
 logger = logging.getLogger(__name__)
 
@@ -281,13 +284,25 @@ class Base(Entity):
         else:
             return None
 
-    def create_authn_request(self, destination, vorg="", scoping=None,
-            binding=saml2.BINDING_HTTP_POST,
-            nameid_format=None,
-            service_url_binding=None, message_id=0,
-            consent=None, extensions=None, sign=None,
-            allow_create=None, sign_prepare=False, sign_alg=None,
-            digest_alg=None, requested_attributes=None, **kwargs):
+    def create_authn_request(
+        self,
+        destination,
+        vorg="",
+        scoping=None,
+        binding=BINDING_HTTP_POST,
+        nameid_format=None,
+        service_url_binding=None,
+        message_id=0,
+        consent=None,
+        extensions=None,
+        sign=None,
+        sign_prepare=False,
+        sign_alg=None,
+        digest_alg=None,
+        allow_create=None,
+        requested_attributes=None,
+        **kwargs,
+    ):
         """ Creates an authentication request.
 
         :param destination: Where the request should be sent.
@@ -302,6 +317,8 @@ class Base(Entity):
         :param extensions: Possible extensions
         :param sign: Whether the request should be signed or not.
         :param sign_prepare: Whether the signature should be prepared or not.
+        :param sign_alg: The request signature algorithm
+        :param digest_alg: The request digest algorithm
         :param allow_create: If the identity provider is allowed, in the course
             of fulfilling the request, to create a new identifier to represent
             the principal.
@@ -430,7 +447,22 @@ class Base(Entity):
 
         client_crt = kwargs.get("client_crt")
         nsprefix = kwargs.get("nsprefix")
+
+        # XXX will be used to embed the signature to the xml doc - ie, POST binding
+        # XXX always called by the SP, no need to check the context
         sign = self.authn_requests_signed if sign is None else sign
+        def_sig = DefaultSignature()
+        sign_alg = sign_alg or def_sig.get_sign_alg()
+        digest_alg = digest_alg or def_sig.get_digest_alg()
+
+        if sign_alg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
+            raise Exception(
+                "Signature algo not in allowed list: {algo}".format(algo=sign_alg)
+            )
+        if digest_alg not in [long_name for short_name, long_name in DIGEST_ALLOWED_ALG]:
+            raise Exception(
+                "Digest algo not in allowed list: {algo}".format(algo=digest_alg)
+            )
 
         if (sign and self.sec.cert_handler.generate_cert()) or client_crt is not None:
             with self.lock:
@@ -445,11 +477,11 @@ class Base(Entity):
                     extensions,
                     sign,
                     sign_prepare,
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg,
                     protocol_binding=binding,
                     scoping=scoping,
                     nsprefix=nsprefix,
-                    sign_alg=sign_alg,
-                    digest_alg=digest_alg,
                     **args,
                 )
         else:
@@ -461,11 +493,11 @@ class Base(Entity):
                 extensions,
                 sign,
                 sign_prepare,
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
                 protocol_binding=binding,
                 scoping=scoping,
                 nsprefix=nsprefix,
-                sign_alg=sign_alg,
-                digest_alg=digest_alg,
                 **args,
             )
 
@@ -843,10 +875,12 @@ class Base(Entity):
 
             # The IDP publishes support for ECP by using the SOAP binding on
             # SingleSignOnService
-            _, location = self.pick_binding("single_sign_on_service",
-                                            [_binding], entity_id=entityid)
+            _, location = self.pick_binding(
+                "single_sign_on_service", [_binding], entity_id=entityid
+            )
             req_id, authn_req = self.create_authn_request(
-                    location, service_url_binding=BINDING_PAOS, **kwargs)
+                location, service_url_binding=BINDING_PAOS, **kwargs
+            )
 
         # ----------------------------------------
         # The SOAP envelope

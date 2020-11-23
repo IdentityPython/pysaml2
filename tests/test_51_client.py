@@ -10,6 +10,7 @@ from pytest import raises
 
 from saml2.argtree import add_path
 from saml2.cert import OpenSSLWrapper
+from saml2.xmldsig import sig_default
 from saml2.xmldsig import SIG_RSA_SHA256
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
@@ -1445,28 +1446,70 @@ class TestClient:
                 'givenName': ['Derek'], 'email':
                     ['test.testsson@test.se'], 'sn': ['Jeter']}
 
-    def test_signed_redirect(self):
-
+    def test_signed_with_default_algo_redirect(self):
         # Revert configuration change to disallow unsinged responses
         self.client.want_response_signed = True
 
-        msg_str = "%s" % self.client.create_authn_request(
-            "http://localhost:8088/sso", message_id="id1")[1]
+        reqid, req = self.client.create_authn_request(
+            "http://localhost:8088/sso", message_id="id1"
+        )
+        msg_str = str(req)
 
         info = self.client.apply_binding(
-            BINDING_HTTP_REDIRECT, msg_str, destination="",
-            relay_state="relay2", sign=True, sigalg=SIG_RSA_SHA256)
-
+            BINDING_HTTP_REDIRECT,
+            msg_str,
+            destination="",
+            relay_state="relay2",
+            sign=True,
+        )
         loc = info["headers"][0][1]
         qs = parse.parse_qs(loc[1:])
-        assert _leq(qs.keys(),
-                    ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
-        assert verify_redirect_signature(list_values2simpletons(qs),
-                                         self.client.sec.sec_backend)
+        expected_query_params = ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature']
 
-        res = self.server.parse_authn_request(qs["SAMLRequest"][0],
-                                              BINDING_HTTP_REDIRECT)
+        assert _leq(qs.keys(), expected_query_params)
+        assert all(len(qs[k]) == 1 for k in expected_query_params)
+        assert qs["SigAlg"] == [sig_default]
+        assert verify_redirect_signature(
+            list_values2simpletons(qs), self.client.sec.sec_backend
+        )
+
+        res = self.server.parse_authn_request(
+            qs["SAMLRequest"][0], BINDING_HTTP_REDIRECT
+        )
+
+    def test_signed_redirect(self):
+        # Revert configuration change to disallow unsinged responses
+        self.client.want_response_signed = True
+
+        reqid, req = self.client.create_authn_request(
+            "http://localhost:8088/sso", message_id="id1"
+        )
+        msg_str = str(req)
+
+        info = self.client.apply_binding(
+            BINDING_HTTP_REDIRECT,
+            msg_str,
+            destination="",
+            relay_state="relay2",
+            sign=True,
+            sigalg=SIG_RSA_SHA256,
+        )
+        loc = info["headers"][0][1]
+        qs = parse.parse_qs(loc[1:])
+
+        expected_query_params = ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature']
+
+        assert _leq(qs.keys(), expected_query_params)
+        assert all(len(qs[k]) == 1 for k in expected_query_params)
+        assert qs["SigAlg"] == [SIG_RSA_SHA256]
+        assert verify_redirect_signature(
+            list_values2simpletons(qs), self.client.sec.sec_backend
+        )
+
+        res = self.server.parse_authn_request(
+            qs["SAMLRequest"][0], BINDING_HTTP_REDIRECT
+        )
 
     def test_do_logout_signed_redirect(self):
         conf = config.SPConfig()

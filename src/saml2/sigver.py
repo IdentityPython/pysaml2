@@ -566,8 +566,7 @@ def verify_redirect_signature(saml_msg, crypto, cert=None, sigkey=None):
     try:
         signer = crypto.get_signer(saml_msg['SigAlg'], sigkey)
     except KeyError:
-        raise Unsupported('Signature algorithm: {alg}'.format(
-            alg=saml_msg['SigAlg']))
+        raise Unsupported('Signature algorithm: {alg}'.format(alg=saml_msg['SigAlg']))
     else:
         if saml_msg['SigAlg'] in SIGNER_ALGS:
             if 'SAMLRequest' in saml_msg:
@@ -576,13 +575,18 @@ def verify_redirect_signature(saml_msg, crypto, cert=None, sigkey=None):
                 _order = RESP_ORDER
             else:
                 raise Unsupported(
-                    'Verifying signature on something that should not be '
-                    'signed')
+                    'Verifying signature on something that should not be signed'
+                )
+
             _args = saml_msg.copy()
             del _args['Signature']  # everything but the signature
             string = '&'.join(
-                [parse.urlencode({k: _args[k]}) for k in _order if k in
-                 _args]).encode('ascii')
+                [
+                    parse.urlencode({k: _args[k]})
+                    for k in _order
+                    if k in _args
+                ]
+            ).encode('ascii')
 
             if cert:
                 _key = extract_rsa_key_from_x509_cert(pem_format(cert))

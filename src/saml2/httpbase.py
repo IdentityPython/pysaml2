@@ -10,10 +10,8 @@ import time
 from six.moves.http_cookies import SimpleCookie
 from saml2.time_util import utc_now
 from saml2 import class_name, SAMLError
-from saml2.pack import http_form_post_message
 from saml2.pack import http_post_message
 from saml2.pack import make_soap_enveloped_saml_thingy
-from saml2.pack import http_redirect_message
 
 import logging
 
@@ -255,41 +253,6 @@ class HTTPBase(object):
         return r
 
     @staticmethod
-    def use_http_post(message, destination, relay_state,
-                           typ="SAMLRequest"):
-        """
-        Return a urlencoded message that should be POSTed to the recipient.
-
-        :param message: The response
-        :param destination: Where the response should be sent
-        :param relay_state: The relay_state received in the request
-        :param typ: Whether a Request, Response or Artifact
-        :return: dictionary
-        """
-        if not isinstance(message, six.string_types):
-            message = "%s" % (message,)
-
-        return http_post_message(message, relay_state, typ)
-
-    @staticmethod
-    def use_http_form_post(message, destination, relay_state,
-                           typ="SAMLRequest"):
-        """
-        Return a form that will automagically execute and POST the message
-        to the recipient.
-
-        :param message:
-        :param destination:
-        :param relay_state:
-        :param typ: Whether a Request, Response or Artifact
-        :return: dictionary
-        """
-        if not isinstance(message, six.string_types):
-            message = "%s" % (message,)
-
-        return http_form_post_message(message, destination, relay_state, typ)
-
-    @staticmethod
     def use_http_artifact(message, destination="", relay_state=""):
         if relay_state:
             query = urlencode({"SAMLart": message,
@@ -388,25 +351,3 @@ class HTTPBase(object):
     def add_credentials(self, user, passwd):
         self.user = user
         self.passwd = passwd
-
-    @staticmethod
-    def use_http_get(message, destination, relay_state,
-                     typ="SAMLRequest", sigalg="", signer=None, **kwargs):
-        """
-        Send a message using GET, this is the HTTP-Redirect case so
-        no direct response is expected to this request.
-
-        :param message:
-        :param destination:
-        :param relay_state:
-        :param typ: Whether a Request, Response or Artifact
-        :param sigalg: Which algorithm the signature function will use to sign
-            the message
-        :param signer: A signing function that can be used to sign the message
-        :return: dictionary
-        """
-        if not isinstance(message, six.string_types):
-            message = "%s" % (message,)
-
-        return http_redirect_message(message, destination, relay_state, typ,
-                                     sigalg, signer)

@@ -71,6 +71,11 @@ from saml2.sigver import pre_signature_part
 from saml2.sigver import pre_encrypt_assertion
 from saml2.sigver import signed_instance_factory
 from saml2.virtual_org import VirtualOrg
+from saml2.pack import http_redirect_message
+from saml2.pack import http_form_post_message
+
+from saml2.xmldsig import DefaultSignature
+
 
 logger = logging.getLogger(__name__)
 
@@ -190,8 +195,17 @@ class Entity(HTTPBase):
             return Issuer(text=self.config.entityid,
                           format=NAMEID_FORMAT_ENTITY)
 
-    def apply_binding(self, binding, msg_str, destination="", relay_state="",
-                      response=False, sign=False, **kwargs):
+    def apply_binding(
+        self,
+        binding,
+        msg_str,
+        destination="",
+        relay_state="",
+        response=False,
+        sign=None,
+        sigalg=None,
+        **kwargs,
+    ):
         """
         Construct the necessary HTTP arguments dependent on Binding
 
@@ -204,6 +218,22 @@ class Entity(HTTPBase):
         :param kwargs: response type specific arguments
         :return: A dictionary
         """
+
+        # XXX authn_requests_signed (obj property) applies only to an SP
+        # XXX sign_response (config option) applies to idp/aa
+        # XXX Looking into sp/idp/aa properties should be done in the same way
+        # XXX ^this discrepancy should be fixed
+        sign_config = (
+            self.authn_requests_signed
+            if self.config.context == "sp"
+            else self.config.getattr("sign_response")
+            if self.config.context == "idp"
+            else None
+        )
+        sign = sign_config if sign is None else sign
+        def_sig = DefaultSignature()
+        sigalg = sigalg or def_sig.get_sign_alg()
+
         # unless if BINDING_HTTP_ARTIFACT
         if response:
             typ = "SAMLResponse"
@@ -212,29 +242,27 @@ class Entity(HTTPBase):
 
         if binding == BINDING_HTTP_POST:
             logger.info("HTTP POST")
-            # if self.entity_type == 'sp':
-            #     info = self.use_http_post(msg_str, destination, relay_state,
-            #                               typ)
-            #     info["url"] = destination
-            #     info["method"] = "POST"
-            # else:
-            info = self.use_http_form_post(msg_str, destination,
-                                           relay_state, typ)
+            info = http_form_post_message(msg_str, destination, relay_state, typ)
+            (msg_str, destination, relay_state, typ)
             info["url"] = destination
             info["method"] = "POST"
         elif binding == BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
-            sigalg = kwargs.get("sigalg")
-            if sign and sigalg:
-                signer = self.sec.sec_backend.get_signer(sigalg)
-            else:
-                signer = None
-            info = self.use_http_get(msg_str, destination, relay_state, typ,
-                                     signer=signer, **kwargs)
+            info = http_redirect_message(
+                message=msg_str,
+                location=destination,
+                relay_state=relay_state,
+                typ=typ,
+                sign=sign,
+                sigalg=sigalg,
+                backend=self.sec.sec_backend,
+            )
             info["url"] = str(destination)
             info["method"] = "GET"
         elif binding == BINDING_SOAP or binding == BINDING_PAOS:
-            info = self.use_soap(msg_str, destination, sign=sign, **kwargs)
+            info = self.use_soap(
+                msg_str, destination, sign=sign, sigalg=sigalg, **kwargs
+            )
         elif binding == BINDING_URI:
             info = self.use_http_uri(msg_str, typ, destination)
         elif binding == BINDING_HTTP_ARTIFACT:
@@ -416,12 +444,19 @@ class Entity(HTTPBase):
 
     # --------------------------------------------------------------------------
 
-    def sign(self, msg, mid=None, to_sign=None, sign_prepare=False,
-             sign_alg=None, digest_alg=None):
+    def sign(
+        self,
+        msg,
+        mid=None,
+        to_sign=None,
+        sign_prepare=False,
+        sign_alg=None,
+        digest_alg=None,
+    ):
         if msg.signature is None:
-            msg.signature = pre_signature_part(msg.id, self.sec.my_cert, 1,
-                                               sign_alg=sign_alg,
-                                               digest_alg=digest_alg)
+            msg.signature = pre_signature_part(
+                msg.id, self.sec.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg
+            )
 
         if sign_prepare:
             return msg
@@ -437,9 +472,20 @@ class Entity(HTTPBase):
         logger.info("REQUEST: %s", msg)
         return signed_instance_factory(msg, self.sec, to_sign)
 
-    def _message(self, request_cls, destination=None, message_id=0,
-                 consent=None, extensions=None, sign=False, sign_prepare=False,
-                 nsprefix=None, sign_alg=None, digest_alg=None, **kwargs):
+    def _message(
+        self,
+        request_cls,
+        destination=None,
+        message_id=0,
+        consent=None,
+        extensions=None,
+        sign=False,
+        sign_prepare=False,
+        nsprefix=None,
+        sign_alg=None,
+        digest_alg=None,
+        **kwargs,
+    ):
         """
         Some parameters appear in all requests so simplify by doing
         it in one place
@@ -480,13 +526,17 @@ class Entity(HTTPBase):
             req = self.msg_cb(req)
 
         reqid = req.id
-
         if sign:
-            return reqid, self.sign(req, sign_prepare=sign_prepare,
-                                    sign_alg=sign_alg, digest_alg=digest_alg)
-        else:
-            logger.info("REQUEST: %s", req)
-            return reqid, req
+            signed_req = self.sign(
+                req,
+                sign_prepare=sign_prepare,
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
+            )
+            req = signed_req
+
+        logger.info("REQUEST: %s", req)
+        return reqid, req
 
     @staticmethod
     def _filter_args(instance, extensions=None, **kwargs):
