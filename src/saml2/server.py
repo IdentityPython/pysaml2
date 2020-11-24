@@ -328,10 +328,25 @@ class Server(Entity):
                           consumer_url])
         return farg
 
-    def setup_assertion(self, authn, sp_entity_id, in_response_to, consumer_url,
-                        name_id, policy, _issuer, authn_statement, identity,
-                        best_effort, sign_response, farg=None,
-                        session_not_on_or_after=None, **kwargs):
+    def setup_assertion(
+        self,
+        authn,
+        sp_entity_id,
+        in_response_to,
+        consumer_url,
+        name_id,
+        policy,
+        _issuer,
+        authn_statement,
+        identity,
+        best_effort,
+        sign_response,
+        farg=None,
+        session_not_on_or_after=None,
+        sign_alg=None,
+        digest_alg=None,
+        **kwargs,
+    ):
         """
         Construct and return the Assertion
 
@@ -360,8 +375,15 @@ class Server(Entity):
             ast.apply_policy(sp_entity_id, policy)
         except MissingValue as exc:
             if not best_effort:
-                return self.create_error_response(in_response_to, consumer_url,
-                                                  exc, sign_response)
+                response = self.create_error_response(
+                    in_response_to,
+                    destination=consumer_url,
+                    info=exc,
+                    sign=sign_response,
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg,
+                )
+                return str(response).split("\n")
 
         farg = self.update_farg(in_response_to, consumer_url, farg)
 
@@ -785,9 +807,14 @@ class Server(Entity):
             )
         except IOError as exc:
             response = self.create_error_response(
-                in_response_to, destination, sp_entity_id, exc, name_id
+                in_response_to,
+                destination=destination,
+                info=exc,
+                sign=sign_response,
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
             )
-            return ("%s" % response).split("\n")
+            return str(response).split("\n")
 
         try:
             _authn = authn
@@ -806,7 +833,12 @@ class Server(Entity):
             )
         except MissingValue as exc:
             return self.create_error_response(
-                in_response_to, destination, sp_entity_id, exc, name_id
+                in_response_to,
+                destination=destination,
+                info=exc,
+                sign=sign_response,
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
             )
 
     # XXX DONE idp create > create_authn_response > _authn_response > _response

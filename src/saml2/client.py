@@ -14,8 +14,6 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
 
-from saml2.xmldsig import DefaultSignature
-
 from saml2.ident import decode, code
 from saml2.httpbase import HTTPError
 from saml2.s_utils import sid
@@ -50,6 +48,7 @@ class Saml2Client(Base):
         consent=None, extensions=None,
         sign=None,
         sigalg=None,
+        digest_alg=None,
         response_binding=saml2.BINDING_HTTP_POST,
         **kwargs,
     ):
@@ -81,6 +80,7 @@ class Saml2Client(Base):
             extensions=extensions,
             sign=sign,
             sigalg=sigalg,
+            digest_alg=digest_alg,
             response_binding=response_binding,
             **kwargs,
         )
@@ -107,6 +107,7 @@ class Saml2Client(Base):
         sign=None,
         response_binding=saml2.BINDING_HTTP_POST,
         sigalg=None,
+        digest_alg=None,
         **kwargs,
     ):
         """ Makes all necessary preparations for an authentication request
@@ -140,8 +141,8 @@ class Saml2Client(Base):
             # XXX   ^through self.create_authn_request(...)
             # XXX - sign_redirect will add the signature to the query params
             # XXX   ^through self.apply_binding(...)
-            sign_post = (binding == BINDING_HTTP_POST and sign)
-            sign_redirect = (binding == BINDING_HTTP_REDIRECT and sign)
+            sign_post = False if binding == BINDING_HTTP_REDIRECT else sign
+            sign_redirect = False if binding == BINDING_HTTP_POST and sign else sign
 
             reqid, request = self.create_authn_request(
                 destination,
@@ -153,6 +154,7 @@ class Saml2Client(Base):
                 extensions=extensions,
                 sign=sign_post,
                 sign_alg=sigalg,
+                digest_alg=digest_alg,
                 **kwargs,
             )
 
@@ -172,8 +174,15 @@ class Saml2Client(Base):
         else:
             raise SignOnError("No supported bindings available for authentication")
 
-    def global_logout(self, name_id, reason="", expire=None, sign=None,
-                      sign_alg=None, digest_alg=None):
+    def global_logout(
+        self,
+        name_id,
+        reason="",
+        expire=None,
+        sign=None,
+        sign_alg=None,
+        digest_alg=None,
+    ):
         """ More or less a layer of indirection :-/
         Bootstrapping the whole thing by finding all the IdPs that should
         be notified.
@@ -198,14 +207,28 @@ class Saml2Client(Base):
 
         # find out which IdPs/AAs I should notify
         entity_ids = self.users.issuers_of_info(name_id)
-        return self.do_logout(name_id, entity_ids, reason, expire, sign,
-                              sign_alg=sign_alg, digest_alg=digest_alg)
+        return self.do_logout(
+            name_id,
+            entity_ids,
+            reason,
+            expire,
+            sign,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+        )
 
-    # XXX calls DefaultSignature
-    # XXX calls self.sign
-    def do_logout(self, name_id, entity_ids, reason, expire, sign=None,
-                  expected_binding=None, sign_alg=None, digest_alg=None,
-                  **kwargs):
+    def do_logout(
+        self,
+        name_id,
+        entity_ids,
+        reason,
+        expire,
+        sign=None,
+        expected_binding=None,
+        sign_alg=None,
+        digest_alg=None,
+        **kwargs,
+    ):
         """
 
         :param name_id: Identifier of the Subject (a NameID instance)
@@ -234,6 +257,7 @@ class Saml2Client(Base):
             for binding in [BINDING_SOAP, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]:
                 if expected_binding and binding != expected_binding:
                     continue
+
                 try:
                     srvs = self.metadata.single_logout_service(
                         entity_id, binding, "idpsso"
@@ -247,6 +271,7 @@ class Saml2Client(Base):
 
                 destination = next(locations(srvs), None)
                 logger.info("destination to provider: %s", destination)
+
                 try:
                     session_info = self.users.get_info_from(
                         name_id, entity_id, False
@@ -254,37 +279,29 @@ class Saml2Client(Base):
                     session_indexes = [session_info['session_index']]
                 except KeyError:
                     session_indexes = None
-                req_id, request = self.create_logout_request(
-                    destination, entity_id, name_id=name_id, reason=reason,
-                    expire=expire, session_indexes=session_indexes)
 
-                sign = sign if sign is not None else self.logout_requests_signed
-                def_sig = DefaultSignature()
-                sign_alg = def_sig.get_sign_alg() if sign_alg is None else sign_alg
-                digest_alg = (
-                    def_sig.get_digest_alg()
-                    if digest_alg is None
-                    else digest_alg
+                sign_post = False if binding == BINDING_HTTP_REDIRECT else sign
+                sign_redirect = False if binding == BINDING_HTTP_POST and sign else sign
+
+                req_id, request = self.create_logout_request(
+                    destination,
+                    entity_id,
+                    name_id=name_id,
+                    reason=reason,
+                    expire=expire,
+                    session_indexes=session_indexes,
+                    sign=sign_post,
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg,
                 )
 
-                if sign:
-                    if binding == BINDING_HTTP_REDIRECT:
-                        srequest = str(request)
-                    else:
-                        srequest = self.sign(
-                            request, sign_alg=sign_alg, digest_alg=digest_alg
-                        )
-                else:
-                    srequest = str(request)
-
                 relay_state = self._relay_state(req_id)
-
                 http_info = self.apply_binding(
                     binding,
-                    srequest,
+                    str(request),
                     destination,
                     relay_state,
-                    sign=sign,
+                    sign=sign_redirect,
                     sigalg=sign_alg,
                 )
 
@@ -357,11 +374,15 @@ class Saml2Client(Base):
             status["entity_ids"].remove(issuer)
             if "sign_alg" in status:
                 sign_alg = status["sign_alg"]
-            return self.do_logout(decode(status["name_id"]),
-                                  status["entity_ids"],
-                                  status["reason"], status["not_on_or_after"],
-                                  status["sign"], sign_alg=sign_alg,
-                                  digest_alg=digest_alg)
+            return self.do_logout(
+                decode(status["name_id"]),
+                status["entity_ids"],
+                status["reason"],
+                status["not_on_or_after"],
+                status["sign"],
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
+            )
 
     def _use_soap(self, destination, query_type, **kwargs):
         _create_func = getattr(self, "create_%s" % query_type)
@@ -473,6 +494,7 @@ class Saml2Client(Base):
         binding=BINDING_SOAP,
         nsprefix=None,
         sign_alg=None,
+        digest_alg=None,
     ):
         """ Does a attribute request to an attribute authority, this is
         by default done over SOAP.
@@ -502,10 +524,9 @@ class Saml2Client(Base):
             response_args = {}
 
         if not binding:
-            binding, destination = self.pick_binding("attribute_service",
-                                                     None,
-                                                     "attribute_authority",
-                                                     entity_id=entityid)
+            binding, destination = self.pick_binding(
+                "attribute_service", None, "attribute_authority", entity_id=entityid
+            )
         else:
             srvs = self.metadata.attribute_service(entityid, binding)
             if srvs is []:
@@ -514,37 +535,62 @@ class Saml2Client(Base):
             destination = next(locations(srvs), None)
 
         if binding == BINDING_SOAP:
-            return self._use_soap(destination, "attribute_query",
-                                  consent=consent, extensions=extensions,
-                                  sign=sign, subject_id=subject_id,
-                                  attribute=attribute,
-                                  sp_name_qualifier=sp_name_qualifier,
-                                  name_qualifier=name_qualifier,
-                                  format=nameid_format,
-                                  response_args=response_args)
+            return self._use_soap(
+                destination,
+                "attribute_query",
+                consent=consent,
+                extensions=extensions,
+                sign=sign,
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
+                subject_id=subject_id,
+                attribute=attribute,
+                sp_name_qualifier=sp_name_qualifier,
+                name_qualifier=name_qualifier,
+                format=nameid_format,
+                response_args=response_args,
+            )
         elif binding == BINDING_HTTP_POST:
             mid = sid()
-            query = self.create_attribute_query(destination, subject_id,
-                                                attribute, mid, consent,
-                                                extensions, sign, nsprefix)
-            self.state[query.id] = {"entity_id": entityid,
-                                    "operation": "AttributeQuery",
-                                    "subject_id": subject_id,
-                                    "sign": sign}
+            query = self.create_attribute_query(
+                destination,
+                name_id=subject_id,
+                attribute=attribute,
+                message_id=mid,
+                consent=consent,
+                extensions=extensions,
+                sign=sign,
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
+                nsprefix=nsprefix,
+            )
+            self.state[query.id] = {
+                "entity_id": entityid,
+                "operation": "AttributeQuery",
+                "subject_id": subject_id,
+                "sign": sign,
+            }
             relay_state = self._relay_state(query.id)
             return self.apply_binding(
                 binding,
                 str(query),
                 destination,
                 relay_state,
-                sign=sign,
+                sign=False,
                 sigalg=sign_alg,
             )
         else:
             raise SAMLError("Unsupported binding")
 
     def handle_logout_request(
-        self, request, name_id, binding, sign=None, sign_alg=None, relay_state=""
+        self,
+        request,
+        name_id,
+        binding,
+        sign=None,
+        sign_alg=None,
+        digest_alg=None,
+        relay_state="",
     ):
         """
         Deal with a LogoutRequest
@@ -594,7 +640,12 @@ class Saml2Client(Base):
             sign = self.logout_responses_signed
 
         response = self.create_logout_response(
-            _req.message, response_bindings, status, sign, sign_alg=sign_alg
+            _req.message,
+            bindings=response_bindings,
+            status=status,
+            sign=sign,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
         )
         rinfo = self.response_args(_req.message, response_bindings)
 
