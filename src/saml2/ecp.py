@@ -40,7 +40,9 @@ def ecp_capable(headers):
 
 
 #noinspection PyUnusedLocal
-def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
+def ecp_auth_request(
+    cls, entityid=None, relay_state="", sign=None, sign_alg=None, digest_alg=None
+):
     """ Makes an authentication request.
 
     :param entityid: The entity ID of the IdP to send the request to
@@ -59,9 +61,12 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
 
     # must_understand and actor according to the standard
     #
-    paos_request = paos.Request(must_understand="1", actor=ACTOR,
-                                response_consumer_url=my_url,
-                                service=SERVICE)
+    paos_request = paos.Request(
+        must_understand="1",
+        actor=ACTOR,
+        response_consumer_url=my_url,
+        service=SERVICE,
+    )
 
     eelist.append(element_to_extension_element(paos_request))
 
@@ -73,7 +78,13 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
 
     location = cls._sso_location(entityid, binding=BINDING_SOAP)
     req_id, authn_req = cls.create_authn_request(
-        location, binding=BINDING_PAOS, service_url_binding=BINDING_PAOS)
+        location,
+        binding=BINDING_PAOS,
+        service_url_binding=BINDING_PAOS,
+        sign=sign,
+        sign_alg=sign_alg,
+        digest_alg=digest_alg,
+    )
 
     body = soapenv.Body()
     body.extension_elements = [element_to_extension_element(authn_req)]
@@ -96,7 +107,8 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
         must_understand="1",
         provider_name=None,
         issuer=saml.Issuer(text=authn_req.issuer.text),
-        idp_list=idp_list)
+        idp_list=idp_list,
+    )
 
     eelist.append(element_to_extension_element(ecp_request))
 
@@ -104,8 +116,7 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
     # <ecp:RelayState>
     # ----------------------------------------
 
-    relay_state = ecp.RelayState(actor=ACTOR, must_understand="1",
-                                 text=relay_state)
+    relay_state = ecp.RelayState(actor=ACTOR, must_understand="1", text=relay_state)
 
     eelist.append(element_to_extension_element(relay_state))
 
@@ -118,20 +129,22 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
 
     soap_envelope = soapenv.Envelope(header=header, body=body)
 
-    return req_id, "%s" % soap_envelope
+    return req_id, str(soap_envelope)
 
 
 def handle_ecp_authn_response(cls, soap_message, outstanding=None):
     rdict = soap.class_instances_from_soap_enveloped_saml_thingies(
-        soap_message, [paos, ecp, samlp])
+        soap_message, [paos, ecp, samlp]
+    )
 
     _relay_state = None
     for item in rdict["header"]:
         if item.c_tag == "RelayState" and item.c_namespace == ecp.NAMESPACE:
             _relay_state = item
 
-    response = authn_response(cls.config, cls.service_urls(), outstanding,
-                              allow_unsolicited=True)
+    response = authn_response(
+        cls.config, cls.service_urls(), outstanding, allow_unsolicited=True
+    )
 
     response.loads("%s" % rdict["body"], False, soap_message)
     response.verify()
