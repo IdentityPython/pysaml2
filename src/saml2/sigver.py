@@ -1750,7 +1750,7 @@ class SecurityContext(object):
         return statement
 
 
-# XXX calls DefaultSignature
+# XXX FIXME calls DefaultSignature - remove to unveil chain of calls without proper args
 def pre_signature_part(ident, public_key=None, identifier=None, digest_alg=None, sign_alg=None):
     """
     If an assertion is to be signed the signature part has to be preset

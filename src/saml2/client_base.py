@@ -283,7 +283,7 @@ class Base(Entity):
         else:
             return None
 
-    # XXX sp create
+    # XXX DONE sp create > _message
     def create_authn_request(
         self,
         destination,
@@ -296,7 +296,7 @@ class Base(Entity):
         consent=None,
         extensions=None,
         sign=None,
-        sign_prepare=False,
+        sign_prepare=None,
         sign_alg=None,
         digest_alg=None,
         allow_create=None,
@@ -448,64 +448,39 @@ class Base(Entity):
         client_crt = kwargs.get("client_crt")
         nsprefix = kwargs.get("nsprefix")
 
-        sign = sign if sign is not None else self.should_sign
-        sign_alg = sign_alg or self.signing_algorithm
-        digest_alg = digest_alg or self.digest_algorithm
-
-        if sign_alg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
-            raise Exception(
-                "Signature algo not in allowed list: {algo}".format(algo=sign_alg)
-            )
-        if digest_alg not in [long_name for short_name, long_name in DIGEST_ALLOWED_ALG]:
-            raise Exception(
-                "Digest algo not in allowed list: {algo}".format(algo=digest_alg)
-            )
-
-        if (sign and self.sec.cert_handler.generate_cert()) or client_crt is not None:
-            with self.lock:
-                self.sec.cert_handler.update_cert(True, client_crt)
-                if client_crt is not None:
-                    sign_prepare = True
-                msg = self._message(
-                    AuthnRequest,
-                    destination,
-                    message_id,
-                    consent,
-                    extensions,
-                    sign,
-                    sign_prepare,
-                    sign_alg=sign_alg,
-                    digest_alg=digest_alg,
-                    protocol_binding=binding,
-                    scoping=scoping,
-                    nsprefix=nsprefix,
-                    **args,
-                )
-        else:
-            msg = self._message(
-                AuthnRequest,
-                destination,
-                message_id,
-                consent,
-                extensions,
-                sign,
-                sign_prepare,
-                sign_alg=sign_alg,
-                digest_alg=digest_alg,
-                protocol_binding=binding,
-                scoping=scoping,
-                nsprefix=nsprefix,
-                **args,
-            )
+        msg = self._message(
+            AuthnRequest,
+            destination,
+            message_id,
+            consent,
+            extensions,
+            sign,
+            sign_prepare,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+            protocol_binding=binding,
+            scoping=scoping,
+            nsprefix=nsprefix,
+            **args,
+        )
 
         return msg
 
-    # XXX sp create
-    def create_attribute_query(self, destination, name_id=None,
-            attribute=None, message_id=0, consent=None,
-            extensions=None, sign=False, sign_prepare=False, sign_alg=None,
-            digest_alg=None,
-            **kwargs):
+    # XXX DONE sp create > _message
+    def create_attribute_query(
+        self,
+        destination,
+        name_id=None,
+        attribute=None,
+        message_id=0,
+        consent=None,
+        extensions=None,
+        sign=None,
+        sign_prepare=None,
+        sign_alg=None,
+        digest_alg=None,
+        **kwargs,
+    ):
         """ Constructs an AttributeQuery
 
         :param destination: To whom the query should be sent
@@ -559,19 +534,40 @@ class Base(Entity):
         except KeyError:
             nsprefix = None
 
-        return self._message(AttributeQuery, destination, message_id, consent,
-                             extensions, sign, sign_prepare, subject=subject,
-                             attribute=attribute, nsprefix=nsprefix,
-                             sign_alg=sign_alg, digest_alg=digest_alg)
+        return self._message(
+            AttributeQuery,
+            destination,
+            message_id,
+            consent,
+            extensions,
+            sign,
+            sign_prepare,
+            subject=subject,
+            attribute=attribute,
+            nsprefix=nsprefix,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+        )
 
     # MUST use SOAP for
     # AssertionIDRequest, SubjectQuery,
     # AuthnQuery, AttributeQuery, or AuthzDecisionQuery
-    # XXX sp create
-    def create_authz_decision_query(self, destination, action,
-            evidence=None, resource=None, subject=None,
-            message_id=0, consent=None, extensions=None,
-            sign=None, sign_alg=None, digest_alg=None, **kwargs):
+    # XXX DONE sp create > _message
+    def create_authz_decision_query(
+        self,
+        destination,
+        action,
+        evidence=None,
+        resource=None,
+        subject=None,
+        message_id=0,
+        consent=None,
+        extensions=None,
+        sign=None,
+        sign_alg=None,
+        digest_alg=None,
+        **kwargs,
+    ):
         """ Creates an authz decision query.
 
         :param destination: The IdP endpoint
@@ -586,20 +582,38 @@ class Base(Entity):
         :return: AuthzDecisionQuery instance
         """
 
-        return self._message(AuthzDecisionQuery, destination, message_id,
-                             consent, extensions, sign, action=action,
-                             evidence=evidence, resource=resource,
-                             subject=subject, sign_alg=sign_alg,
-                             digest_alg=digest_alg, **kwargs)
+        return self._message(
+            AuthzDecisionQuery,
+            destination,
+            message_id,
+            consent,
+            extensions,
+            sign,
+            action=action,
+            evidence=evidence,
+            resource=resource,
+            subject=subject,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+            **kwargs,
+        )
 
-    # XXX sp create
-    def create_authz_decision_query_using_assertion(self, destination,
-            assertion, action=None,
-            resource=None,
-            subject=None, message_id=0,
-            consent=None,
-            extensions=None,
-            sign=False, nsprefix=None):
+    # XXX DONE sp create > self.create_authz_decision_query (FIXME pass sign/sign_alg/etc) > _message
+    def create_authz_decision_query_using_assertion(
+        self,
+        destination,
+        assertion,
+        action=None,
+        resource=None,
+        subject=None,
+        message_id=0,
+        consent=None,
+        extensions=None,
+        sign=None,
+        sign_ag=None,
+        digest_alg=None,
+        nsprefix=None,
+    ):
         """ Makes an authz decision query based on a previously received
         Assertion.
 
@@ -624,12 +638,21 @@ class Base(Entity):
             _action = None
 
         return self.create_authz_decision_query(
-                destination, _action, saml.Evidence(assertion=assertion),
-                resource, subject, message_id=message_id, consent=consent,
-                extensions=extensions, sign=sign, nsprefix=nsprefix)
+            destination,
+            _action,
+            saml.Evidence(assertion=assertion),
+            resource,
+            subject,
+            message_id=message_id,
+            consent=consent,
+            extensions=extensions,
+            sign=sign,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+            nsprefix=nsprefix,
+        )
 
     @staticmethod
-    # XXX sp create
     def create_assertion_id_request(assertion_id_refs, **kwargs):
         """
 
@@ -642,11 +665,21 @@ class Base(Entity):
         else:
             return 0, assertion_id_refs[0]
 
-    # XXX sp create
-    def create_authn_query(self, subject, destination=None, authn_context=None,
-            session_index="", message_id=0, consent=None,
-            extensions=None, sign=False, nsprefix=None, sign_alg=None,
-            digest_alg=None):
+    # XXX DONE sp create > _message
+    def create_authn_query(
+        self,
+        subject,
+        destination=None,
+        authn_context=None,
+        session_index="",
+        message_id=0,
+        consent=None,
+        extensions=None,
+        sign=None,
+        nsprefix=None,
+        sign_alg=None,
+        digest_alg=None,
+    ):
         """
 
         :param subject: The subject its all about as a <Subject> instance
@@ -659,20 +692,37 @@ class Base(Entity):
         :param sign: Whether the request should be signed or not.
         :return:
         """
-        return self._message(AuthnQuery, destination, message_id, consent,
-                             extensions, sign, subject=subject,
-                             session_index=session_index,
-                             requested_authn_context=authn_context,
-                             nsprefix=nsprefix, sign_alg=sign_alg,
-                             digest_alg=digest_alg)
+        return self._message(
+            AuthnQuery,
+            destination,
+            message_id,
+            consent,
+            extensions,
+            sign,
+            subject=subject,
+            session_index=session_index,
+            requested_authn_context=authn_context,
+            nsprefix=nsprefix,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+        )
 
-    # XXX sp create
-    def create_name_id_mapping_request(self, name_id_policy,
-            name_id=None, base_id=None,
-            encrypted_id=None, destination=None,
-            message_id=0, consent=None,
-            extensions=None, sign=False,
-            nsprefix=None, sign_alg=None, digest_alg=None):
+    # XXX DONE sp create > _message
+    def create_name_id_mapping_request(
+        self,
+        name_id_policy,
+        name_id=None,
+        base_id=None,
+        encrypted_id=None,
+        destination=None,
+        message_id=0,
+        consent=None,
+        extensions=None,
+        sign=None,
+        nsprefix=None,
+        sign_alg=None,
+        digest_alg=None,
+    ):
         """
 
         :param name_id_policy:
@@ -692,29 +742,39 @@ class Base(Entity):
                 "At least one of name_id, base_id or encrypted_id must be present."
             )
 
-        if name_id:
-            return self._message(NameIDMappingRequest, destination, message_id,
-                                 consent, extensions, sign,
-                                 name_id_policy=name_id_policy, name_id=name_id,
-                                 nsprefix=nsprefix, sign_alg=sign_alg,
-                                 digest_alg=digest_alg)
-        elif base_id:
-            return self._message(NameIDMappingRequest, destination, message_id,
-                                 consent, extensions, sign,
-                                 name_id_policy=name_id_policy, base_id=base_id,
-                                 nsprefix=nsprefix, sign_alg=sign_alg,
-                                 digest_alg=digest_alg)
-        else:
-            return self._message(NameIDMappingRequest, destination, message_id,
-                                 consent, extensions, sign,
-                                 name_id_policy=name_id_policy,
-                                 encrypted_id=encrypted_id, nsprefix=nsprefix,
-                                 sign_alg=sign_alg, digest_alg=digest_alg)
+        id_attr = {
+            "name_id": name_id,
+            "base_id": (
+                base_id
+                if not name_id
+                else None
+            ),
+            "encrypted_id": (
+                encrypted_id
+                if not name_id and not base_id
+                else None
+            ),
+        }
+
+        return self._message(
+            NameIDMappingRequest,
+            destination,
+            message_id,
+            consent,
+            extensions,
+            sign,
+            name_id_policy=name_id_policy,
+            **id_attr,
+            nsprefix=nsprefix,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+        )
 
     # ======== response handling ===========
 
-    def parse_authn_request_response(self, xmlstr, binding, outstanding=None,
-                                     outstanding_certs=None, conv_info=None):
+    def parse_authn_request_response(
+        self, xmlstr, binding, outstanding=None, outstanding_certs=None, conv_info=None
+    ):
         """ Deal with an AuthnResponse
 
         :param xmlstr: The reply as a xml string
@@ -743,15 +803,14 @@ class Base(Entity):
             "return_addrs": self.service_urls(binding=binding),
             "entity_id": self.config.entityid,
             "attribute_converters": self.config.attribute_converters,
-            "allow_unknown_attributes":
-                self.config.allow_unknown_attributes,
-            'conv_info': conv_info
+            "allow_unknown_attributes": self.config.allow_unknown_attributes,
+            'conv_info': conv_info,
         }
 
         try:
-            resp = self._parse_response(xmlstr, AuthnResponse,
-                                        "assertion_consumer_service",
-                                        binding, **kwargs)
+            resp = self._parse_response(
+                xmlstr, AuthnResponse, "assertion_consumer_service", binding, **kwargs
+            )
         except StatusError as err:
             logger.error("SAML status error: %s", err)
             raise
@@ -762,12 +821,14 @@ class Base(Entity):
             raise
 
         if not isinstance(resp, AuthnResponse):
-            logger.error("Response type not supported: %s",
-                         saml2.class_name(resp))
+            logger.error("Response type not supported: %s", saml2.class_name(resp))
             return None
 
-        if (resp.assertion and len(resp.response.encrypted_assertion) == 0 and
-                resp.assertion.subject.name_id):
+        if (
+            resp.assertion
+            and len(resp.response.encrypted_assertion) == 0
+            and resp.assertion.subject.name_id
+        ):
             self.users.add_information_about_person(resp.session_info())
             logger.info("--- ADDED person info ----")
 
@@ -777,15 +838,15 @@ class Base(Entity):
     # SubjectQuery, AuthnQuery, RequestedAuthnContext, AttributeQuery,
     # AuthzDecisionQuery all get Response as response
 
-    def parse_authz_decision_query_response(self, response,
-            binding=BINDING_SOAP):
+    def parse_authz_decision_query_response(self, response, binding=BINDING_SOAP):
         """ Verify that the response is OK
         """
-        kwargs = {"entity_id": self.config.entityid,
-                  "attribute_converters": self.config.attribute_converters}
+        kwargs = {
+            "entity_id": self.config.entityid,
+            "attribute_converters": self.config.attribute_converters,
+        }
 
-        return self._parse_response(response, AuthzResponse, "", binding,
-                                    **kwargs)
+        return self._parse_response(response, AuthzResponse, "", binding, **kwargs)
 
     def parse_authn_query_response(self, response, binding=BINDING_SOAP):
         """ Verify that the response is OK
@@ -828,9 +889,16 @@ class Base(Entity):
 
     # ------------------- ECP ------------------------------------------------
 
-    # XXX sp create
-    def create_ecp_authn_request(self, entityid=None, relay_state="",
-            sign=False, **kwargs):
+    # XXX DONE sp create > create_authn_request (FIXME DONE sign/sign_alg/etc) > _message
+    def create_ecp_authn_request(
+        self,
+        entityid=None,
+        relay_state="",
+        sign=None,
+        sign_alg=None,
+        digest_alg=None,
+        **kwargs,
+    ):
         """ Makes an authentication request.
 
         :param entityid: The entity ID of the IdP to send the request to
@@ -847,16 +915,22 @@ class Base(Entity):
 
         # must_understand and act according to the standard
         #
-        paos_request = paos.Request(must_understand="1", actor=ACTOR,
-                                    response_consumer_url=my_url,
-                                    service=ECP_SERVICE)
+        paos_request = paos.Request(
+            must_understand="1",
+            actor=ACTOR,
+            response_consumer_url=my_url,
+            service=ECP_SERVICE,
+        )
 
         # ----------------------------------------
         # <ecp:RelayState>
         # ----------------------------------------
 
-        relay_state = ecp.RelayState(actor=ACTOR, must_understand="1",
-                                     text=relay_state)
+        relay_state = ecp.RelayState(
+            actor=ACTOR,
+            must_understand="1",
+            text=relay_state,
+        )
 
         # ----------------------------------------
         # <samlp:AuthnRequest>
@@ -883,18 +957,23 @@ class Base(Entity):
                 "single_sign_on_service", [_binding], entity_id=entityid
             )
             req_id, authn_req = self.create_authn_request(
-                location, service_url_binding=BINDING_PAOS, **kwargs
+                location,
+                service_url_binding=BINDING_PAOS,
+                sign=sign,
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
+                **kwargs,
             )
 
         # ----------------------------------------
         # The SOAP envelope
         # ----------------------------------------
 
-        soap_envelope = make_soap_enveloped_saml_thingy(authn_req,
-                                                        [paos_request,
-                                                         relay_state])
+        soap_envelope = make_soap_enveloped_saml_thingy(
+            authn_req, [paos_request, relay_state]
+        )
 
-        return req_id, "%s" % soap_envelope
+        return req_id, str(soap_envelope)
 
     def parse_ecp_authn_response(self, txt, outstanding=None):
         rdict = soap.class_instances_from_soap_enveloped_saml_thingies(txt,
@@ -933,7 +1012,6 @@ class Base(Entity):
     # ----------------------------------------------------------------------
 
     @staticmethod
-    # XXX sp create
     def create_discovery_service_request(url, entity_id, **kwargs):
         """
         Created the HTTP redirect URL needed to send the user to the
