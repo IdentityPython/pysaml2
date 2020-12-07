@@ -760,14 +760,19 @@ class Entity(HTTPBase):
         if not has_encrypt_cert and encrypt_cert_assertion is None:
             encrypt_assertion = False
 
+        # XXX if encrypt_assertion or encrypted_advice_attributes
+        # XXX once in, response becomes a str and uses signed_instance_factory
         if (
+            # XXX goto part-C
             encrypt_assertion
             or (
+                # XXX goto part-B
                 encrypted_advice_attributes
                 and response.assertion.advice is not None
                 and len(response.assertion.advice.assertion) == 1
             )
         ):
+            # XXX part-A (common) prepare sign response
             if sign:
                 response.signature = pre_signature_part(
                     response.id,
@@ -780,6 +785,7 @@ class Entity(HTTPBase):
             else:
                 sign_class = []
 
+            # XXX part-B if encrypted_advice_attributes
             if (
                 encrypted_advice_attributes
                 and response.assertion.advice is not None
@@ -788,94 +794,135 @@ class Entity(HTTPBase):
                 _assertions = response.assertion
                 if not isinstance(_assertions, list):
                     _assertions = [_assertions]
+
                 for _assertion in _assertions:
                     _assertion.advice.encrypted_assertion = []
-                    _assertion.advice.encrypted_assertion.append(
-                        EncryptedAssertion())
-                    _advice_assertions = copy.deepcopy(
-                        _assertion.advice.assertion)
+                    _assertion.advice.encrypted_assertion.append(EncryptedAssertion())
+                    _advice_assertions = copy.deepcopy(_assertion.advice.assertion)
                     _assertion.advice.assertion = []
+
                     if not isinstance(_advice_assertions, list):
                         _advice_assertions = [_advice_assertions]
+
                     for tmp_assertion in _advice_assertions:
                         to_sign_advice = []
+                        # XXX prepare sign assertion
                         if sign_assertion and not pefim:
                             tmp_assertion.signature = pre_signature_part(
-                                tmp_assertion.id, self.sec.my_cert, 1,
-                                sign_alg=sign_alg, digest_alg=digest_alg)
+                                tmp_assertion.id,
+                                self.sec.my_cert,
+                                1,
+                                sign_alg=sign_alg,
+                                digest_alg=digest_alg,
+                            )
                             to_sign_advice.append(
-                                (class_name(tmp_assertion), tmp_assertion.id))
+                                (class_name(tmp_assertion), tmp_assertion.id),
+                            )
 
+                        # XXX prepare encrypt assertion
                         # tmp_assertion = response.assertion.advice.assertion[0]
-                        _assertion.advice.encrypted_assertion[
-                            0].add_extension_element(tmp_assertion)
+                        _assertion.advice.encrypted_assertion[0].add_extension_element(
+                            tmp_assertion
+                        )
                         if encrypt_assertion_self_contained:
-                            advice_tag = \
-                                response.assertion.advice._to_element_tree().tag
+                            advice_tag = response.assertion.advice._to_element_tree().tag
                             assertion_tag = tmp_assertion._to_element_tree().tag
-                            response = \
-                                response.get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(
-                                    assertion_tag, advice_tag)
+                            response = response.get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(
+                                assertion_tag, advice_tag
+                            )
                         node_xpath = ''.join(
-                            ["/*[local-name()=\"%s\"]" % v for v in
-                             ["Response", "Assertion", "Advice",
-                              "EncryptedAssertion", "Assertion"]])
+                            [
+                                "/*[local-name()=\"%s\"]" % v
+                                for v in [
+                                    "Response",
+                                    "Assertion",
+                                    "Advice",
+                                    "EncryptedAssertion",
+                                    "Assertion"
+                                ]
+                            ]
+                        )
 
+                        # XXX sign assertion
                         if to_sign_advice:
-                            response = signed_instance_factory(response,
-                                                               self.sec,
-                                                               to_sign_advice)
+                            response = signed_instance_factory(
+                                response, self.sec, to_sign_advice
+                            )
+
+                        # XXX encrypt assertion
                         response = self._encrypt_assertion(
-                            encrypt_cert_advice, sp_entity_id, response,
-                            node_xpath=node_xpath)
+                            encrypt_cert_advice,
+                            sp_entity_id,
+                            response,
+                            node_xpath=node_xpath,
+                        )
                         response = response_from_string(response)
 
+            # XXX part-C if encrypt_assertion
             if encrypt_assertion:
                 to_sign_assertion = []
-                if sign_assertion is not None and sign_assertion:
+
+                # XXX prepare sign assertion
+                if sign_assertion:
                     _assertions = response.assertion
+
                     if not isinstance(_assertions, list):
                         _assertions = [_assertions]
+
                     for _assertion in _assertions:
                         _assertion.signature = pre_signature_part(
-                            _assertion.id, self.sec.my_cert, 1,
-                            sign_alg=sign_alg, digest_alg=digest_alg)
+                            _assertion.id,
+                            self.sec.my_cert,
+                            1,
+                            sign_alg=sign_alg,
+                            digest_alg=digest_alg,
+                        )
                         to_sign_assertion.append(
-                            (class_name(_assertion), _assertion.id))
+                            (class_name(_assertion), _assertion.id),
+                        )
+
+                # XXX prepare encrypt assertion
                 if encrypt_assertion_self_contained:
                     try:
-                        assertion_tag = response.assertion._to_element_tree(
-
-                        ).tag
+                        assertion_tag = response.assertion._to_element_tree().tag
                     except:
-                        assertion_tag = response.assertion[
-                            0]._to_element_tree().tag
+                        assertion_tag = response.assertion[0]._to_element_tree().tag
                     response = pre_encrypt_assertion(response)
-                    response = \
-                        response.get_xml_string_with_self_contained_assertion_within_encrypted_assertion(
-                            assertion_tag)
+                    response = response.get_xml_string_with_self_contained_assertion_within_encrypted_assertion(
+                        assertion_tag
+                    )
                 else:
                     response = pre_encrypt_assertion(response)
+
+                # XXX sign assertion
                 if to_sign_assertion:
-                    response = signed_instance_factory(response, self.sec,
-                                                       to_sign_assertion)
-                response = self._encrypt_assertion(encrypt_cert_assertion,
-                                                   sp_entity_id, response)
+                    response = signed_instance_factory(
+                        response, self.sec, to_sign_assertion
+                    )
+
+                # XXX encrypt assertion
+                response = self._encrypt_assertion(
+                    encrypt_cert_assertion, sp_entity_id, response
+                )
             else:
+                # XXX sign other parts! (defiend by to_sign)
                 if to_sign:
-                    response = signed_instance_factory(response, self.sec,
-                                                       to_sign)
+                    response = signed_instance_factory(response, self.sec, to_sign)
+
+            # XXX part-D (common) sign response
+            # XXX handle response having been signed/encrypted => str
             if sign:
                 return signed_instance_factory(response, self.sec, sign_class)
             else:
                 return response
 
+        # XXX sign response
         if sign:
             return self.sign(
                 response, to_sign=to_sign, sign_alg=sign_alg, digest_alg=digest_alg
             )
-        else:
-            return response
+
+        return response
 
     # XXX DONE calls self.sign must figure out sign
     def _status_response(
