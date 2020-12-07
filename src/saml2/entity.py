@@ -467,7 +467,12 @@ class Entity(HTTPBase):
 
     # XXX DONE will actually use sign_alg and digest_alg for the POST-Binding
     # XXX DONE deepest level - needs to decide the sign_alg and digest_alg value
-    # XXX calls pre_signature_part
+    # XXX a controler for signed_instance_factory
+    # XXX syncs pre_signature_part and signed_instance_factory
+    # XXX makes sure pre_signature_part is called before signed_instance_factory
+    # XXX calls pre_signature_part - must have sign_alg & digest_alg
+    # XXX calls signed_instance_factory - after pre_signature_part
+    # XXX !!expects a msg object!!
     def sign(
         self,
         msg,

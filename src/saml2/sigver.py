@@ -301,6 +301,12 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
     return instance
 
 
+# XXX will actually sign the nodes
+# XXX assumes pre_signature_part has already been called
+# XXX calls sign without specifying sign_alg/digest_alg
+# XXX this is fine as the algs are embeded in the document
+# XXX as setup by pre_signature_part
+# XXX !!expects instance string!!
 def signed_instance_factory(instance, seccont, elements_to_sign=None):
     """
 
