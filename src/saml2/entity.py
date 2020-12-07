@@ -151,13 +151,12 @@ class Entity(HTTPBase):
             self.config.getattr('digest_algorithm')
             or def_sig.get_digest_alg()
         )
-        sign_config = (
-            self.config.getattr("authn_requests_signed", "sp")
-            if self.entity_type == "sp"
-            else self.config.getattr("sign_response", "idp")
-            if self.entity_type == "idp"
-            else False
-        )
+
+        sign_config_per_entity_type = {
+            'sp': self.config.getattr("authn_requests_signed", "sp"),
+            'idp': self.config.getattr("sign_response", "idp"),
+        }
+        sign_config = sign_config_per_entity_type.get(self.entity_type, False)
         self.should_sign = sign_config
 
         for item in ["cert_file", "key_file", "ca_certs"]:
