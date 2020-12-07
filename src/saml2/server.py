@@ -548,7 +548,6 @@ class Server(Entity):
 
     # ------------------------------------------------------------------------
 
-    # XXX calls pre_signature_part without ensuring sign_alg/digest_alg
     # XXX DONE idp create > _response
     def create_attribute_response(
         self,
@@ -616,20 +615,6 @@ class Server(Entity):
                 issuer=_issuer, name_id=name_id,
                 farg=farg['assertion'])
 
-            if sign_assertion:
-                # XXX calls pre_signature_part without ensuring sign_alg/digest_alg
-                assertion.signature = pre_signature_part(
-                    assertion.id, self.sec.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg
-                )
-                # Just the assertion or the response and the assertion ?
-                to_sign = [(class_name(assertion), assertion.id)]
-                kwargs['sign_assertion'] = True
-
-            kwargs["assertion"] = assertion
-
-        if sp_entity_id:
-            kwargs['sp_entity_id'] = sp_entity_id
-
         return self._response(
             in_response_to,
             destination,
@@ -637,8 +622,11 @@ class Server(Entity):
             issuer,
             sign_response,
             to_sign,
+            sign_assertion=sign_assertion,
             sign_alg=sign_alg,
             digest_alg=digest_alg,
+            assertion=assertion,
+            sp_entity_id=sp_entity_id,
             **kwargs,
         )
 
