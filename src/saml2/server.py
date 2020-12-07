@@ -414,8 +414,8 @@ class Server(Entity):
                 **kwargs)
         return assertion
 
-    # XXX calls pre_signature_part
-    # XXX > _response
+    # XXX DONE calls pre_signature_part
+    # XXX calls _response
     def _authn_response(
         self,
         in_response_to,
@@ -479,7 +479,6 @@ class Server(Entity):
         if farg is None:
             assertion_args = {}
 
-        args = {}
         # if identity:
         _issuer = self._issuer(issuer)
 
@@ -517,12 +516,20 @@ class Server(Entity):
         to_sign = []
         if not encrypt_assertion:
             if sign_assertion:
+                # XXX self.signing_algorithm self.digest_algorithm defined by entity
+                # XXX this should be handled through entity.py
+                # XXX sig/digest-allowed should be configurable
+                sign_alg = sign_alg or self.signing_algorithm
+                digest_alg = digest_alg or self.digest_algorithm
+
                 assertion.signature = pre_signature_part(
-                    assertion.id, self.sec.my_cert, 2, sign_alg=sign_alg, digest_alg=digest_alg
+                    assertion.id,
+                    self.sec.my_cert,
+                    2,
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg,
                 )
                 to_sign.append((class_name(assertion), assertion.id))
-
-        args["assertion"] = assertion
 
         if (self.support_AssertionIDRequest() or self.support_AuthnQuery()):
             self.session_db.store_assertion(assertion, to_sign)
@@ -544,7 +551,7 @@ class Server(Entity):
             pefim=pefim,
             sign_alg=sign_alg,
             digest_alg=digest_alg,
-            **args,
+            assertion=assertion,
         )
 
     # ------------------------------------------------------------------------
@@ -868,7 +875,7 @@ class Server(Entity):
             digest_alg=digest_alg,
         )
 
-    # XXX calls pre_signature_part without ensuring sign_alg/digest_alg
+    # XXX DONE calls pre_signature_part
     # XXX DONE idp create > [...]
     def create_assertion_id_request_response(
         self, assertion_id, sign=None, sign_alg=None, digest_alg=None, **kwargs
@@ -880,7 +887,12 @@ class Server(Entity):
 
         if to_sign:
             if assertion.signature is None:
-                # XXX calls pre_signature_part without ensuring sign_alg/digest_alg
+                # XXX self.signing_algorithm self.digest_algorithm defined by entity
+                # XXX this should be handled through entity.py
+                # XXX sig/digest-allowed should be configurable
+                sign_alg = sign_alg or self.signing_algorithm
+                digest_alg = digest_alg or self.digest_algorithm
+
                 assertion.signature = pre_signature_part(
                     assertion.id,
                     self.sec.my_cert,

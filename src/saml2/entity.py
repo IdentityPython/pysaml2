@@ -772,6 +772,10 @@ class Entity(HTTPBase):
                 and len(response.assertion.advice.assertion) == 1
             )
         ):
+            # XXX sig/digest-allowed should be configurable
+            sign_alg = sign_alg or self.signing_algorithm
+            digest_alg = digest_alg or self.digest_algorithm
+
             # XXX part-A (common) prepare sign response
             if sign:
                 response.signature = pre_signature_part(
