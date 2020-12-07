@@ -1878,23 +1878,6 @@ def pre_encrypt_assertion(response):
     return response
 
 
-def response_factory(sign=False, encrypt=False, sign_alg=None, digest_alg=None,
-                     **kwargs):
-    response = samlp.Response(id=sid(), version=VERSION,
-                              issue_instant=instant())
-
-    if sign:
-        response.signature = pre_signature_part(
-            kwargs['id'], sign_alg=sign_alg, digest_alg=digest_alg)
-    if encrypt:
-        pass
-
-    for key, val in kwargs.items():
-        setattr(response, key, val)
-
-    return response
-
-
 if __name__ == '__main__':
     import argparse
 

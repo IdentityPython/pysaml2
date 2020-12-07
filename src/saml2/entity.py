@@ -62,7 +62,6 @@ from saml2 import class_name
 from saml2.config import config_factory
 from saml2.httpbase import HTTPBase
 from saml2.sigver import security_context
-from saml2.sigver import response_factory
 from saml2.sigver import SigverError
 from saml2.sigver import SignatureError
 from saml2.sigver import make_temp
@@ -730,10 +729,10 @@ class Entity(HTTPBase):
 
         _issuer = self._issuer(issuer)
 
-        response = response_factory(issuer=_issuer,
-                                    in_response_to=in_response_to,
-                                    status=status, sign_alg=sign_alg,
-                                    digest_alg=digest_alg)
+        response = samlp.Response(id=sid(), version=VERSION, issue_instant=instant())
+        response.issuer = _issuer
+        response.in_response_to = in_response_to
+        response.status = status
 
         if consumer_url:
             response.destination = consumer_url

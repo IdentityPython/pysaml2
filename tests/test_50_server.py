@@ -23,12 +23,15 @@ from saml2 import extension_elements_to_elements
 from saml2 import s_utils
 from saml2 import sigver
 from saml2 import time_util
+from saml2 import VERSION
 from saml2.s_utils import OtherError
 from saml2.s_utils import do_attribute_statement
 from saml2.s_utils import factory
+from saml2.s_utils import sid
 from saml2.soap import make_soap_enveloped_saml_thingy
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
+from saml2.time_util import instant
 
 from pytest import raises
 from pathutils import full_path
@@ -43,6 +46,14 @@ AUTHN = {
     "authn_auth": "http://www.example.com/login"
 }
 
+
+def response_factory(**kwargs):
+    response = samlp.Response(id=sid(), version=VERSION, issue_instant=instant())
+
+    for key, val in kwargs.items():
+        setattr(response, key, val)
+
+    return response
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
@@ -179,7 +190,7 @@ class TestServer1():
         assert subject.name_id.format == saml.NAMEID_FORMAT_TRANSIENT
 
     def test_response(self):
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="https:#www.example.com",
             status=s_utils.success_status_factory(),
@@ -1239,7 +1250,7 @@ class TestServer1NonAsciiAva():
         assert subject.name_id.format == saml.NAMEID_FORMAT_TRANSIENT
 
     def test_response(self):
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="https:#www.example.com",
             status=s_utils.success_status_factory(),
