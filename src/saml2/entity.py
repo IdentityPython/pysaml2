@@ -516,8 +516,8 @@ class Entity(HTTPBase):
     # XXX DONE will actually use sign the POST-Binding
     # XXX DONE deepest level - needs to decide the sign value
     # XXX DONE calls self.sign must figure out sign
-    # XXX ensure both SPs and IdPs go through this
-    # XXX ensure this works for the POST-Binding
+    # XXX DONE ensure both SPs and IdPs go through this
+    # XXX DONE ensure this works for the POST-Binding
     def _message(
         self,
         request_cls,
@@ -673,6 +673,8 @@ class Entity(HTTPBase):
         return response
 
     # XXX DONE calls self.sign must figure out sign
+    # XXX calls signed_instance_factory - must have called pre_signature_part
+    # XXX calls pre_signature_part - must figure out sign_alg/digest_alg
     def _response(
         self,
         in_response_to,
@@ -746,8 +748,8 @@ class Entity(HTTPBase):
 
         sign = sign if sign is not None else self.should_sign
         if (
-            not sign
-            and to_sign
+            to_sign
+            and not sign
             and not encrypt_assertion
         ):
             return signed_instance_factory(response, self.sec, to_sign)

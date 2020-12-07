@@ -414,6 +414,7 @@ class Server(Entity):
                 **kwargs)
         return assertion
 
+    # XXX calls pre_signature_part
     # XXX > _response
     def _authn_response(
         self,

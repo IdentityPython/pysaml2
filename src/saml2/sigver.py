@@ -315,16 +315,19 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     :param elements_to_sign: Which parts if any that should be signed
     :return: A class instance if not signed otherwise a string
     """
-    if elements_to_sign:
-        signed_xml = instance
-        if not isinstance(instance, six.string_types):
-            signed_xml = instance.to_string()
-        for (node_name, nodeid) in elements_to_sign:
-            signed_xml = seccont.sign_statement(
-                signed_xml, node_name=node_name, node_id=nodeid)
-        return signed_xml
-    else:
+    if not elements_to_sign:
         return instance
+
+    signed_xml = instance
+    if not isinstance(instance, six.string_types):
+        signed_xml = instance.to_string()
+
+    for (node_name, nodeid) in elements_to_sign:
+        signed_xml = seccont.sign_statement(
+            signed_xml, node_name=node_name, node_id=nodeid
+        )
+
+    return signed_xml
 
 
 def make_temp(content, suffix="", decode=True, delete_tmpfiles=True):
@@ -1740,10 +1743,11 @@ class SecurityContext(object):
 
             if not item.signature:
                 item.signature = pre_signature_part(
-                        sid,
-                        self.cert_file,
-                        sign_alg=sign_alg,
-                        digest_alg=digest_alg)
+                    ident=sid,
+                    public_key=self.cert_file,
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg,
+                )
 
             statement = self.sign_statement(
                 statement,
@@ -1757,7 +1761,13 @@ class SecurityContext(object):
 
 
 # XXX FIXME calls DefaultSignature - remove to unveil chain of calls without proper args
-def pre_signature_part(ident, public_key=None, identifier=None, digest_alg=None, sign_alg=None):
+def pre_signature_part(
+    ident,
+    public_key=None,
+    identifier=None,
+    digest_alg=None,
+    sign_alg=None,
+):
     """
     If an assertion is to be signed the signature part has to be preset
     with which algorithms to be used, this function returns such a
@@ -1770,10 +1780,12 @@ def pre_signature_part(ident, public_key=None, identifier=None, digest_alg=None,
     :return: A preset signature part
     """
 
+    # XXX
     if not digest_alg:
         digest_alg = ds.DefaultSignature().get_digest_alg()
     if not sign_alg:
         sign_alg = ds.DefaultSignature().get_sign_alg()
+
     signature_method = ds.SignatureMethod(algorithm=sign_alg)
     canonicalization_method = ds.CanonicalizationMethod(
         algorithm=ds.ALG_EXC_C14N)
