@@ -247,6 +247,7 @@ The globally unique identifier of the entity.
 .. note:: It is recommended that the entityid should point to a real
     webpage where the metadata for the entity can be found.
 
+
 key_file
 ^^^^^^^^
 
@@ -1013,6 +1014,23 @@ Example::
         }
     }
 
+
+signing_algorithm
+"""""""""""""""""
+
+Default algorithm to be used. Example::
+
+    'signing_algorithm': "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512"
+
+
+digest_algorithm
+"""""""""""""""""
+
+Default algorithm to be used. Example::
+
+    'digest_algorithm': "http://www.w3.org/2001/04/xmlenc#sha512"
+
+
 logout_responses_signed
 """""""""""""""""""""""
 
@@ -1030,6 +1048,7 @@ Example::
             "logout_responses_signed": False,
         }
     }
+
 
 subject_data
 """"""""""""

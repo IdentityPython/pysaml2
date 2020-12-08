@@ -21,6 +21,7 @@ from saml2 import saml
 from saml2 import samlp
 from saml2 import sigver
 from saml2 import s_utils
+from saml2 import VERSION
 from saml2.assertion import Assertion
 from saml2.extension.requested_attributes import RequestedAttributes
 from saml2.extension.requested_attributes import RequestedAttribute
@@ -40,7 +41,10 @@ from saml2.sigver import verify_redirect_signature
 from saml2.sigver import SignatureError, SigverError
 from saml2.s_utils import do_attribute_statement
 from saml2.s_utils import factory
-from saml2.time_util import in_a_while, a_while_ago
+from saml2.s_utils import sid
+from saml2.time_util import in_a_while
+from saml2.time_util import a_while_ago
+from saml2.time_util import instant
 
 from defusedxml.common import EntitiesForbidden
 
@@ -52,6 +56,14 @@ AUTHN = {
     "class_ref": INTERNETPROTOCOLPASSWORD,
     "authn_auth": "http://www.example.com/login"
 }
+
+def response_factory(**kwargs):
+    response = samlp.Response(id=sid(), version=VERSION, issue_instant=instant())
+
+    for key, val in kwargs.items():
+        setattr(response, key, val)
+
+    return response
 
 def generate_cert():
     sn = uuid.uuid4().urn
@@ -943,7 +955,7 @@ class TestClient:
         # Create an Assertion instance from the signed assertion
         _ass = saml.assertion_from_string(sigass)
 
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="https:#www.example.com",
             status=s_utils.success_status_factory(),
@@ -951,10 +963,11 @@ class TestClient:
             assertion=_ass
         )
 
-        enctext = _sec.crypto.encrypt_assertion(response,
-                                                self.client.sec.encryption_keypairs[
-                                                    0]["cert_file"],
-                                                pre_encryption_part())
+        enctext = _sec.crypto.encrypt_assertion(
+            response,
+            self.client.sec.encryption_keypairs[0]["cert_file"],
+            pre_encryption_part(),
+        )
 
         seresp = samlp.response_from_string(enctext)
 
@@ -1023,7 +1036,7 @@ class TestClient:
                                      node_id=assertion.id)
 
         sigass = rm_xmltag(sigass)
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),
@@ -1116,7 +1129,7 @@ class TestClient:
         assertion.advice.encrypted_assertion[0].add_extension_element(
             a_assertion)
 
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),
@@ -1267,7 +1280,7 @@ class TestClient:
         assertion_2.signature = sigver.pre_signature_part(assertion_2.id,
                                                           _sec.my_cert, 1)
 
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),
@@ -2560,7 +2573,7 @@ class TestClientNonAsciiAva:
         # Create an Assertion instance from the signed assertion
         _ass = saml.assertion_from_string(sigass)
 
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="https:#www.example.com",
             status=s_utils.success_status_factory(),
@@ -2640,7 +2653,7 @@ class TestClientNonAsciiAva:
                                      node_id=assertion.id)
 
         sigass = rm_xmltag(sigass)
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),
@@ -2733,7 +2746,7 @@ class TestClientNonAsciiAva:
         assertion.advice.encrypted_assertion[0].add_extension_element(
             a_assertion)
 
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),
@@ -2885,7 +2898,7 @@ class TestClientNonAsciiAva:
         assertion_2.signature = sigver.pre_signature_part(assertion_2.id,
                                                           _sec.my_cert, 1)
 
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),

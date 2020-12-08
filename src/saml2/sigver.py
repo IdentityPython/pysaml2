@@ -301,6 +301,12 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
     return instance
 
 
+# XXX will actually sign the nodes
+# XXX assumes pre_signature_part has already been called
+# XXX calls sign without specifying sign_alg/digest_alg
+# XXX this is fine as the algs are embeded in the document
+# XXX as setup by pre_signature_part
+# XXX !!expects instance string!!
 def signed_instance_factory(instance, seccont, elements_to_sign=None):
     """
 
@@ -309,16 +315,19 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     :param elements_to_sign: Which parts if any that should be signed
     :return: A class instance if not signed otherwise a string
     """
-    if elements_to_sign:
-        signed_xml = instance
-        if not isinstance(instance, six.string_types):
-            signed_xml = instance.to_string()
-        for (node_name, nodeid) in elements_to_sign:
-            signed_xml = seccont.sign_statement(
-                signed_xml, node_name=node_name, node_id=nodeid)
-        return signed_xml
-    else:
+    if not elements_to_sign:
         return instance
+
+    signed_xml = instance
+    if not isinstance(instance, six.string_types):
+        signed_xml = instance.to_string()
+
+    for (node_name, nodeid) in elements_to_sign:
+        signed_xml = seccont.sign_statement(
+            signed_xml, node_name=node_name, node_id=nodeid
+        )
+
+    return signed_xml
 
 
 def make_temp(content, suffix="", decode=True, delete_tmpfiles=True):
@@ -1689,11 +1698,6 @@ class SecurityContext(object):
             node_id,
         )
 
-    def sign_assertion_using_xmlsec(self, statement, **kwargs):
-        """ Deprecated function. See sign_assertion(). """
-        return self.sign_statement(
-                statement, class_name(saml.Assertion()), **kwargs)
-
     def sign_assertion(self, statement, **kwargs):
         """Sign a SAML assertion.
 
@@ -1739,10 +1743,11 @@ class SecurityContext(object):
 
             if not item.signature:
                 item.signature = pre_signature_part(
-                        sid,
-                        self.cert_file,
-                        sign_alg=sign_alg,
-                        digest_alg=digest_alg)
+                    ident=sid,
+                    public_key=self.cert_file,
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg,
+                )
 
             statement = self.sign_statement(
                 statement,
@@ -1755,7 +1760,14 @@ class SecurityContext(object):
         return statement
 
 
-def pre_signature_part(ident, public_key=None, identifier=None, digest_alg=None, sign_alg=None):
+# XXX FIXME calls DefaultSignature - remove to unveil chain of calls without proper args
+def pre_signature_part(
+    ident,
+    public_key=None,
+    identifier=None,
+    digest_alg=None,
+    sign_alg=None,
+):
     """
     If an assertion is to be signed the signature part has to be preset
     with which algorithms to be used, this function returns such a
@@ -1768,10 +1780,12 @@ def pre_signature_part(ident, public_key=None, identifier=None, digest_alg=None,
     :return: A preset signature part
     """
 
+    # XXX
     if not digest_alg:
         digest_alg = ds.DefaultSignature().get_digest_alg()
     if not sign_alg:
         sign_alg = ds.DefaultSignature().get_sign_alg()
+
     signature_method = ds.SignatureMethod(algorithm=sign_alg)
     canonicalization_method = ds.CanonicalizationMethod(
         algorithm=ds.ALG_EXC_C14N)
@@ -1879,23 +1893,6 @@ def pre_encrypt_assertion(response):
             response.encrypted_assertion.add_extension_elements(assertion)
         else:
             response.encrypted_assertion.add_extension_element(assertion)
-    return response
-
-
-def response_factory(sign=False, encrypt=False, sign_alg=None, digest_alg=None,
-                     **kwargs):
-    response = samlp.Response(id=sid(), version=VERSION,
-                              issue_instant=instant())
-
-    if sign:
-        response.signature = pre_signature_part(
-            kwargs['id'], sign_alg=sign_alg, digest_alg=digest_alg)
-    if encrypt:
-        pass
-
-    for key, val in kwargs.items():
-        setattr(response, key, val)
-
     return response
 
 

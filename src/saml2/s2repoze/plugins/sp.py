@@ -271,7 +271,6 @@ class SAML2Plugin(object):
     #### IChallenger ####
     # noinspection PyUnusedLocal
     def challenge(self, environ, _status, _app_headers, _forget_headers):
-
         _cli = self.saml_client
 
         if "REMOTE_USER" in environ:
@@ -346,7 +345,7 @@ class SAML2Plugin(object):
                     )
 
                 if _cli.authn_requests_signed:
-                    _sid = saml2.s_utils.sid()
+                    _sid = sid()
                     req_id, msg_str = _cli.create_authn_request(
                         dest,
                         vorg=vorg_name,
@@ -357,7 +356,10 @@ class SAML2Plugin(object):
                     _sid = req_id
                 else:
                     req_id, req = _cli.create_authn_request(
-                        dest, vorg=vorg_name, sign=False, extensions=extensions
+                        dest,
+                        vorg=vorg_name,
+                        sign=False,
+                        extensions=extensions,
                     )
                     msg_str = "%s" % req
                     _sid = req_id

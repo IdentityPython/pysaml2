@@ -42,17 +42,8 @@ def get_ava(assertion):
 
 
 class TestSignedResponse():
-
     def setup_class(self):
         self.server = Server("idp_conf")
-        sign_alg = Mock()
-        sign_alg.return_value = ds.SIG_RSA_SHA512
-        digest_alg = Mock()
-        digest_alg.return_value = ds.DIGEST_SHA512
-        self.restet_default = ds.DefaultSignature
-        ds.DefaultSignature = MagicMock()
-        ds.DefaultSignature().get_sign_alg = sign_alg
-        ds.DefaultSignature().get_digest_alg = digest_alg
         conf = config.SPConfig()
         conf.load_file("server_conf")
         self.client = client.Saml2Client(conf)
@@ -62,7 +53,6 @@ class TestSignedResponse():
                "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
     def teardown_class(self):
-        ds.DefaultSignature = self.restet_default
         self.server.close()
 
     def verify_assertion(self, assertion):
@@ -76,7 +66,6 @@ class TestSignedResponse():
                 'surName': ['Jeter'], 'title': ['The man']}
 
     def test_signed_response(self):
-
         print(ds.DefaultSignature().get_digest_alg())
         name_id = self.server.ident.transient_nameid(
             "urn:mace:example.com:saml:roland:sp", "id12")
@@ -96,11 +85,10 @@ class TestSignedResponse():
         assert signed_resp
 
         sresponse = response_from_string(signed_resp)
-        assert ds.SIG_RSA_SHA512 in str(sresponse), "Not correctly signed!"
-        assert ds.DIGEST_SHA512 in str(sresponse), "Not correctly signed!"
+        assert ds.SIG_RSA_SHA1 in str(sresponse), "Not correctly signed!"
+        assert ds.DIGEST_SHA1 in str(sresponse), "Not correctly signed!"
 
     def test_signed_response_1(self):
-
         signed_resp = self.server.create_authn_response(
             self.ava,
             "id12",  # in_response_to
@@ -112,15 +100,15 @@ class TestSignedResponse():
         )
 
         sresponse = response_from_string(signed_resp)
-        assert ds.SIG_RSA_SHA512 in str(sresponse), "Not correctly signed!"
-        assert ds.DIGEST_SHA512 in str(sresponse), "Not correctly signed!"
+        assert ds.SIG_RSA_SHA1 in str(sresponse), "Not correctly signed!"
+        assert ds.DIGEST_SHA1 in str(sresponse), "Not correctly signed!"
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
                                                  node_id=sresponse.id)
         assert valid
-        assert ds.SIG_RSA_SHA512 in str(sresponse.assertion[0]), "Not correctly signed!"
-        assert ds.DIGEST_SHA512 in str(sresponse.assertion[0]), "Not correctly signed!"
+        assert ds.SIG_RSA_SHA1 in str(sresponse.assertion[0]), "Not correctly signed!"
+        assert ds.DIGEST_SHA1 in str(sresponse.assertion[0]), "Not correctly signed!"
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
@@ -130,7 +118,6 @@ class TestSignedResponse():
         self.verify_assertion(sresponse.assertion)
 
     def test_signed_response_2(self):
-
         signed_resp = self.server.create_authn_response(
             self.ava,
             "id12",  # in_response_to
@@ -160,6 +147,7 @@ class TestSignedResponse():
         assert valid
 
         self.verify_assertion(sresponse.assertion)
+
 
 if __name__ == "__main__":
     ts = TestSignedResponse()

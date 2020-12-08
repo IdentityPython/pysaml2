@@ -62,7 +62,6 @@ from saml2 import class_name
 from saml2.config import config_factory
 from saml2.httpbase import HTTPBase
 from saml2.sigver import security_context
-from saml2.sigver import response_factory
 from saml2.sigver import SigverError
 from saml2.sigver import SignatureError
 from saml2.sigver import make_temp
@@ -75,6 +74,8 @@ from saml2.pack import http_redirect_message
 from saml2.pack import http_form_post_message
 
 from saml2.xmldsig import DefaultSignature
+from saml2.xmldsig import SIG_ALLOWED_ALG
+from saml2.xmldsig import DIGEST_ALLOWED_ALG
 
 
 logger = logging.getLogger(__name__)
@@ -141,6 +142,23 @@ class Entity(HTTPBase):
         else:
             raise SAMLError("Missing configuration")
 
+        def_sig = DefaultSignature()
+        self.signing_algorithm = (
+            self.config.getattr('signing_algorithm')
+            or def_sig.get_sign_alg()
+        )
+        self.digest_algorithm = (
+            self.config.getattr('digest_algorithm')
+            or def_sig.get_digest_alg()
+        )
+
+        sign_config_per_entity_type = {
+            'sp': self.config.getattr("authn_requests_signed", "sp"),
+            'idp': self.config.getattr("sign_response", "idp"),
+        }
+        sign_config = sign_config_per_entity_type.get(self.entity_type, False)
+        self.should_sign = sign_config
+
         for item in ["cert_file", "key_file", "ca_certs"]:
             _val = getattr(self.config, item, None)
             if not _val:
@@ -195,6 +213,10 @@ class Entity(HTTPBase):
             return Issuer(text=self.config.entityid,
                           format=NAMEID_FORMAT_ENTITY)
 
+    # XXX DONE will actually use sign_alg and digest_alg for the Redirect-Binding
+    # XXX DONE deepest level - needs to decide the sign_alg (no digest_alg here)
+    # XXX verify digest_alg is not needed
+    # XXX deprecate sigalg for sign_alg
     def apply_binding(
         self,
         binding,
@@ -219,20 +241,13 @@ class Entity(HTTPBase):
         :return: A dictionary
         """
 
-        # XXX authn_requests_signed (obj property) applies only to an SP
-        # XXX sign_response (config option) applies to idp/aa
-        # XXX Looking into sp/idp/aa properties should be done in the same way
-        # XXX ^this discrepancy should be fixed
-        sign_config = (
-            self.authn_requests_signed
-            if self.config.context == "sp"
-            else self.config.getattr("sign_response")
-            if self.config.context == "idp"
-            else None
-        )
-        sign = sign_config if sign is None else sign
-        def_sig = DefaultSignature()
-        sigalg = sigalg or def_sig.get_sign_alg()
+        # XXX sig-allowed should be configurable
+        sign = sign if sign is not None else self.should_sign
+        sign_alg = sigalg or self.signing_algorithm
+        if sign_alg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
+            raise Exception(
+                "Signature algo not in allowed list: {algo}".format(algo=sign_alg)
+            )
 
         # unless if BINDING_HTTP_ARTIFACT
         if response:
@@ -254,14 +269,14 @@ class Entity(HTTPBase):
                 relay_state=relay_state,
                 typ=typ,
                 sign=sign,
-                sigalg=sigalg,
+                sigalg=sign_alg,
                 backend=self.sec.sec_backend,
             )
             info["url"] = str(destination)
             info["method"] = "GET"
         elif binding == BINDING_SOAP or binding == BINDING_PAOS:
             info = self.use_soap(
-                msg_str, destination, sign=sign, sigalg=sigalg, **kwargs
+                msg_str, destination, sign=sign, sigalg=sign_alg, **kwargs
             )
         elif binding == BINDING_URI:
             info = self.use_http_uri(msg_str, typ, destination)
@@ -329,8 +344,13 @@ class Entity(HTTPBase):
         if not message_id:
             message_id = sid()
 
-        return {"id": message_id, "version": VERSION,
-                "issue_instant": instant(), "issuer": self._issuer()}
+        margs = {
+            "id": message_id,
+            "version": VERSION,
+            "issue_instant": instant(),
+            "issuer": self._issuer(),
+        }
+        return margs
 
     def response_args(self, message, bindings=None, descr_type=""):
         """
@@ -444,15 +464,35 @@ class Entity(HTTPBase):
 
     # --------------------------------------------------------------------------
 
+    # XXX DONE will actually use sign_alg and digest_alg for the POST-Binding
+    # XXX DONE deepest level - needs to decide the sign_alg and digest_alg value
+    # XXX a controler for signed_instance_factory
+    # XXX syncs pre_signature_part and signed_instance_factory
+    # XXX makes sure pre_signature_part is called before signed_instance_factory
+    # XXX calls pre_signature_part - must have sign_alg & digest_alg
+    # XXX calls signed_instance_factory - after pre_signature_part
+    # XXX !!expects a msg object!!
     def sign(
         self,
         msg,
         mid=None,
         to_sign=None,
-        sign_prepare=False,
+        sign_prepare=None,
         sign_alg=None,
         digest_alg=None,
     ):
+        # XXX sig/digest-allowed should be configurable
+        sign_alg = sign_alg or self.signing_algorithm
+        digest_alg = digest_alg or self.digest_algorithm
+        if sign_alg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
+            raise Exception(
+                "Signature algo not in allowed list: {algo}".format(algo=sign_alg)
+            )
+        if digest_alg not in [long_name for short_name, long_name in DIGEST_ALLOWED_ALG]:
+            raise Exception(
+                "Digest algo not in allowed list: {algo}".format(algo=digest_alg)
+            )
+
         if msg.signature is None:
             msg.signature = pre_signature_part(
                 msg.id, self.sec.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg
@@ -472,6 +512,11 @@ class Entity(HTTPBase):
         logger.info("REQUEST: %s", msg)
         return signed_instance_factory(msg, self.sec, to_sign)
 
+    # XXX DONE will actually use sign the POST-Binding
+    # XXX DONE deepest level - needs to decide the sign value
+    # XXX DONE calls self.sign must figure out sign
+    # XXX DONE ensure both SPs and IdPs go through this
+    # XXX DONE ensure this works for the POST-Binding
     def _message(
         self,
         request_cls,
@@ -479,8 +524,8 @@ class Entity(HTTPBase):
         message_id=0,
         consent=None,
         extensions=None,
-        sign=False,
-        sign_prepare=False,
+        sign=None,
+        sign_prepare=None,
         nsprefix=None,
         sign_alg=None,
         digest_alg=None,
@@ -526,6 +571,8 @@ class Entity(HTTPBase):
             req = self.msg_cb(req)
 
         reqid = req.id
+
+        sign = sign if sign is not None else self.should_sign
         if sign:
             signed_req = self.sign(
                 req,
@@ -586,8 +633,7 @@ class Entity(HTTPBase):
                 return True
         return False
 
-    def _encrypt_assertion(self, encrypt_cert, sp_entity_id, response,
-                           node_xpath=None):
+    def _encrypt_assertion(self, encrypt_cert, sp_entity_id, response, node_xpath=None):
         """ Encryption of assertions.
 
         :param encrypt_cert: Certificate to be used for encryption.
@@ -625,14 +671,29 @@ class Entity(HTTPBase):
             raise exception
         return response
 
-    def _response(self, in_response_to, consumer_url=None, status=None,
-                  issuer=None, sign=False, to_sign=None, sp_entity_id=None,
-                  encrypt_assertion=False,
-                  encrypt_assertion_self_contained=False,
-                  encrypted_advice_attributes=False,
-                  encrypt_cert_advice=None, encrypt_cert_assertion=None,
-                  sign_assertion=None, pefim=False, sign_alg=None,
-                  digest_alg=None, **kwargs):
+    # XXX DONE calls self.sign must figure out sign
+    # XXX calls signed_instance_factory - must have called pre_signature_part
+    # XXX calls pre_signature_part - must figure out sign_alg/digest_alg
+    def _response(
+        self,
+        in_response_to,
+        consumer_url=None,
+        status=None,
+        issuer=None,
+        sign=None,
+        to_sign=None,
+        sp_entity_id=None,
+        encrypt_assertion=False,
+        encrypt_assertion_self_contained=False,
+        encrypted_advice_attributes=False,
+        encrypt_cert_advice=None,
+        encrypt_cert_assertion=None,
+        sign_assertion=None,
+        pefim=False,
+        sign_alg=None,
+        digest_alg=None,
+        **kwargs,
+    ):
         """ Create a Response.
             Encryption:
                 encrypt_assertion must be true for encryption to be
@@ -674,17 +735,22 @@ class Entity(HTTPBase):
 
         _issuer = self._issuer(issuer)
 
-        response = response_factory(issuer=_issuer,
-                                    in_response_to=in_response_to,
-                                    status=status, sign_alg=sign_alg,
-                                    digest_alg=digest_alg)
+        response = samlp.Response(id=sid(), version=VERSION, issue_instant=instant())
+        response.issuer = _issuer
+        response.in_response_to = in_response_to
+        response.status = status
 
         if consumer_url:
             response.destination = consumer_url
 
         self._add_info(response, **kwargs)
 
-        if not sign and to_sign and not encrypt_assertion:
+        sign = sign if sign is not None else self.should_sign
+        if (
+            to_sign
+            and not sign
+            and not encrypt_assertion
+        ):
             return signed_instance_factory(response, self.sec, to_sign)
 
         has_encrypt_cert = self.has_encrypt_cert_in_metadata(sp_entity_id)
@@ -693,117 +759,185 @@ class Entity(HTTPBase):
         if not has_encrypt_cert and encrypt_cert_assertion is None:
             encrypt_assertion = False
 
-        if encrypt_assertion or (
-                        encrypted_advice_attributes and
-                            response.assertion.advice is
-                    not None and
-                        len(response.assertion.advice.assertion) == 1):
+        # XXX if encrypt_assertion or encrypted_advice_attributes
+        # XXX once in, response becomes a str and uses signed_instance_factory
+        if (
+            # XXX goto part-C
+            encrypt_assertion
+            or (
+                # XXX goto part-B
+                encrypted_advice_attributes
+                and response.assertion.advice is not None
+                and len(response.assertion.advice.assertion) == 1
+            )
+        ):
+            # XXX sig/digest-allowed should be configurable
+            sign_alg = sign_alg or self.signing_algorithm
+            digest_alg = digest_alg or self.digest_algorithm
+
+            # XXX part-A (common) prepare sign response
             if sign:
-                response.signature = pre_signature_part(response.id,
-                                                        self.sec.my_cert, 1,
-                                                        sign_alg=sign_alg,
-                                                        digest_alg=digest_alg)
+                response.signature = pre_signature_part(
+                    response.id,
+                    self.sec.my_cert,
+                    1,
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg,
+                )
                 sign_class = [(class_name(response), response.id)]
             else:
                 sign_class = []
 
-            if encrypted_advice_attributes and response.assertion.advice is \
-                    not None \
-                    and len(response.assertion.advice.assertion) > 0:
+            # XXX part-B if encrypted_advice_attributes
+            if (
+                encrypted_advice_attributes
+                and response.assertion.advice is not None
+                and len(response.assertion.advice.assertion) > 0
+            ):
                 _assertions = response.assertion
                 if not isinstance(_assertions, list):
                     _assertions = [_assertions]
+
                 for _assertion in _assertions:
                     _assertion.advice.encrypted_assertion = []
-                    _assertion.advice.encrypted_assertion.append(
-                        EncryptedAssertion())
-                    _advice_assertions = copy.deepcopy(
-                        _assertion.advice.assertion)
+                    _assertion.advice.encrypted_assertion.append(EncryptedAssertion())
+                    _advice_assertions = copy.deepcopy(_assertion.advice.assertion)
                     _assertion.advice.assertion = []
+
                     if not isinstance(_advice_assertions, list):
                         _advice_assertions = [_advice_assertions]
+
                     for tmp_assertion in _advice_assertions:
                         to_sign_advice = []
+                        # XXX prepare sign assertion
                         if sign_assertion and not pefim:
                             tmp_assertion.signature = pre_signature_part(
-                                tmp_assertion.id, self.sec.my_cert, 1,
-                                sign_alg=sign_alg, digest_alg=digest_alg)
+                                tmp_assertion.id,
+                                self.sec.my_cert,
+                                1,
+                                sign_alg=sign_alg,
+                                digest_alg=digest_alg,
+                            )
                             to_sign_advice.append(
-                                (class_name(tmp_assertion), tmp_assertion.id))
+                                (class_name(tmp_assertion), tmp_assertion.id),
+                            )
 
+                        # XXX prepare encrypt assertion
                         # tmp_assertion = response.assertion.advice.assertion[0]
-                        _assertion.advice.encrypted_assertion[
-                            0].add_extension_element(tmp_assertion)
+                        _assertion.advice.encrypted_assertion[0].add_extension_element(
+                            tmp_assertion
+                        )
                         if encrypt_assertion_self_contained:
-                            advice_tag = \
-                                response.assertion.advice._to_element_tree().tag
+                            advice_tag = response.assertion.advice._to_element_tree().tag
                             assertion_tag = tmp_assertion._to_element_tree().tag
-                            response = \
-                                response.get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(
-                                    assertion_tag, advice_tag)
+                            response = response.get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(
+                                assertion_tag, advice_tag
+                            )
                         node_xpath = ''.join(
-                            ["/*[local-name()=\"%s\"]" % v for v in
-                             ["Response", "Assertion", "Advice",
-                              "EncryptedAssertion", "Assertion"]])
+                            [
+                                "/*[local-name()=\"%s\"]" % v
+                                for v in [
+                                    "Response",
+                                    "Assertion",
+                                    "Advice",
+                                    "EncryptedAssertion",
+                                    "Assertion"
+                                ]
+                            ]
+                        )
 
+                        # XXX sign assertion
                         if to_sign_advice:
-                            response = signed_instance_factory(response,
-                                                               self.sec,
-                                                               to_sign_advice)
+                            response = signed_instance_factory(
+                                response, self.sec, to_sign_advice
+                            )
+
+                        # XXX encrypt assertion
                         response = self._encrypt_assertion(
-                            encrypt_cert_advice, sp_entity_id, response,
-                            node_xpath=node_xpath)
+                            encrypt_cert_advice,
+                            sp_entity_id,
+                            response,
+                            node_xpath=node_xpath,
+                        )
                         response = response_from_string(response)
 
+            # XXX part-C if encrypt_assertion
             if encrypt_assertion:
                 to_sign_assertion = []
-                if sign_assertion is not None and sign_assertion:
+
+                # XXX prepare sign assertion
+                if sign_assertion:
                     _assertions = response.assertion
+
                     if not isinstance(_assertions, list):
                         _assertions = [_assertions]
+
                     for _assertion in _assertions:
                         _assertion.signature = pre_signature_part(
-                            _assertion.id, self.sec.my_cert, 1,
-                            sign_alg=sign_alg, digest_alg=digest_alg)
+                            _assertion.id,
+                            self.sec.my_cert,
+                            1,
+                            sign_alg=sign_alg,
+                            digest_alg=digest_alg,
+                        )
                         to_sign_assertion.append(
-                            (class_name(_assertion), _assertion.id))
+                            (class_name(_assertion), _assertion.id),
+                        )
+
+                # XXX prepare encrypt assertion
                 if encrypt_assertion_self_contained:
                     try:
-                        assertion_tag = response.assertion._to_element_tree(
-
-                        ).tag
+                        assertion_tag = response.assertion._to_element_tree().tag
                     except:
-                        assertion_tag = response.assertion[
-                            0]._to_element_tree().tag
+                        assertion_tag = response.assertion[0]._to_element_tree().tag
                     response = pre_encrypt_assertion(response)
-                    response = \
-                        response.get_xml_string_with_self_contained_assertion_within_encrypted_assertion(
-                            assertion_tag)
+                    response = response.get_xml_string_with_self_contained_assertion_within_encrypted_assertion(
+                        assertion_tag
+                    )
                 else:
                     response = pre_encrypt_assertion(response)
+
+                # XXX sign assertion
                 if to_sign_assertion:
-                    response = signed_instance_factory(response, self.sec,
-                                                       to_sign_assertion)
-                response = self._encrypt_assertion(encrypt_cert_assertion,
-                                                   sp_entity_id, response)
+                    response = signed_instance_factory(
+                        response, self.sec, to_sign_assertion
+                    )
+
+                # XXX encrypt assertion
+                response = self._encrypt_assertion(
+                    encrypt_cert_assertion, sp_entity_id, response
+                )
             else:
+                # XXX sign other parts! (defiend by to_sign)
                 if to_sign:
-                    response = signed_instance_factory(response, self.sec,
-                                                       to_sign)
+                    response = signed_instance_factory(response, self.sec, to_sign)
+
+            # XXX part-D (common) sign response
+            # XXX handle response having been signed/encrypted => str
             if sign:
                 return signed_instance_factory(response, self.sec, sign_class)
             else:
                 return response
 
+        # XXX sign response
         if sign:
-            return self.sign(response, to_sign=to_sign, sign_alg=sign_alg,
-                             digest_alg=digest_alg)
-        else:
-            return response
+            return self.sign(
+                response, to_sign=to_sign, sign_alg=sign_alg, digest_alg=digest_alg
+            )
 
-    def _status_response(self, response_class, issuer, status, sign=False,
-                         sign_alg=None, digest_alg=None,
-                         **kwargs):
+        return response
+
+    # XXX DONE calls self.sign must figure out sign
+    def _status_response(
+        self,
+        response_class,
+        issuer,
+        status,
+        sign=None,
+        sign_alg=None,
+        digest_alg=None,
+        **kwargs,
+    ):
         """ Create a StatusResponse.
 
         :param response_class: Which subclass of StatusResponse that should be
@@ -818,21 +952,23 @@ class Entity(HTTPBase):
         mid = sid()
 
         for key in ["binding"]:
-            try:
-                del kwargs[key]
-            except KeyError:
-                pass
+            kwargs.pop(key, None)
 
         if not status:
             status = success_status_factory()
 
-        response = response_class(issuer=issuer, id=mid, version=VERSION,
-                                  issue_instant=instant(),
-                                  status=status, **kwargs)
+        response = response_class(
+            issuer=issuer,
+            id=mid,
+            version=VERSION,
+            issue_instant=instant(),
+            status=status,
+            **kwargs,
+        )
 
+        sign = sign if sign is not None else self.should_sign
         if sign:
-            return self.sign(response, mid, sign_alg=sign_alg,
-                             digest_alg=digest_alg)
+            return self.sign(response, mid, sign_alg=sign_alg, digest_alg=digest_alg)
         else:
             return response
 
@@ -910,9 +1046,18 @@ class Entity(HTTPBase):
 
     # ------------------------------------------------------------------------
 
-    def create_error_response(self, in_response_to, destination, info,
-                              sign=False, issuer=None, sign_alg=None,
-                              digest_alg=None, **kwargs):
+    # XXX DONE ent create > _response
+    def create_error_response(
+        self,
+        in_response_to,
+        destination,
+        info,
+        sign=None,
+        issuer=None,
+        sign_alg=None,
+        digest_alg=None,
+        **kwargs,
+    ):
         """ Create a error response.
 
         :param in_response_to: The identifier of the message this is a response
@@ -927,17 +1072,35 @@ class Entity(HTTPBase):
         """
         status = error_status_factory(info)
 
-        return self._response(in_response_to, destination, status, issuer,
-                              sign, sign_alg=sign_alg, digest_alg=digest_alg)
+        return self._response(
+            in_response_to,
+            destination,
+            status,
+            issuer,
+            sign,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+        )
 
     # ------------------------------------------------------------------------
 
-    def create_logout_request(self, destination, issuer_entity_id,
-                              subject_id=None, name_id=None,
-                              reason=None, expire=None, message_id=0,
-                              consent=None, extensions=None, sign=False,
-                              session_indexes=None, sign_alg=None,
-                              digest_alg=None):
+    # XXX DONE ent create > _message
+    def create_logout_request(
+        self,
+        destination,
+        issuer_entity_id,
+        subject_id=None,
+        name_id=None,
+        reason=None,
+        expire=None,
+        message_id=0,
+        consent=None,
+        extensions=None,
+        sign=None,
+        session_indexes=None,
+        sign_alg=None,
+        digest_alg=None,
+    ):
         """ Constructs a LogoutRequest
 
         :param destination: Destination of the request
@@ -959,9 +1122,9 @@ class Entity(HTTPBase):
 
         if subject_id:
             if self.entity_type == "idp":
-                name_id = NameID(text=self.users.get_entityid(subject_id,
-                                                              issuer_entity_id,
-                                                              False))
+                name_id = NameID(
+                    text=self.users.get_entityid(subject_id, issuer_entity_id, False)
+                )
             else:
                 name_id = NameID(text=subject_id)
 
@@ -978,15 +1141,33 @@ class Entity(HTTPBase):
                     sis.append(SessionIndex(text=si))
             args["session_index"] = sis
 
-        return self._message(LogoutRequest, destination, message_id,
-                             consent, extensions, sign, name_id=name_id,
-                             reason=reason, not_on_or_after=expire,
-                             issuer=self._issuer(), sign_alg=sign_alg,
-                             digest_alg=digest_alg, **args)
+        return self._message(
+            LogoutRequest,
+            destination,
+            message_id,
+            consent,
+            extensions,
+            sign,
+            name_id=name_id,
+            reason=reason,
+            not_on_or_after=expire,
+            issuer=self._issuer(),
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+            **args,
+        )
 
-    def create_logout_response(self, request, bindings=None, status=None,
-                               sign=False, issuer=None, sign_alg=None,
-                               digest_alg=None):
+    # XXX DONE ent create > _status_response
+    def create_logout_response(
+        self,
+        request,
+        bindings=None,
+        status=None,
+        sign=None,
+        issuer=None,
+        sign_alg=None,
+        digest_alg=None,
+    ):
         """ Create a LogoutResponse.
 
         :param request: The request this is a response to
@@ -1003,17 +1184,32 @@ class Entity(HTTPBase):
         if not issuer:
             issuer = self._issuer()
 
-        response = self._status_response(samlp.LogoutResponse, issuer, status,
-                                         sign, sign_alg=sign_alg,
-                                         digest_alg=digest_alg, **rinfo)
+        response = self._status_response(
+            samlp.LogoutResponse,
+            issuer,
+            status,
+            sign,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+            **rinfo,
+        )
 
         logger.info("Response: %s", response)
 
         return response
 
-    def create_artifact_resolve(self, artifact, destination, sessid,
-                                consent=None, extensions=None, sign=False,
-                                sign_alg=None, digest_alg=None):
+    # XXX DONE ent create > _message
+    def create_artifact_resolve(
+        self,
+        artifact,
+        destination,
+        sessid,
+        consent=None,
+        extensions=None,
+        sign=None,
+        sign_alg=None,
+        digest_alg=None,
+    ):
         """
         Create a ArtifactResolve request
 
@@ -1028,22 +1224,45 @@ class Entity(HTTPBase):
 
         artifact = Artifact(text=artifact)
 
-        return self._message(ArtifactResolve, destination, sessid,
-                             consent, extensions, sign, artifact=artifact,
-                             sign_alg=sign_alg, digest_alg=digest_alg)
+        return self._message(
+            ArtifactResolve,
+            destination,
+            sessid,
+            consent,
+            extensions,
+            sign,
+            artifact=artifact,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+        )
 
-    def create_artifact_response(self, request, artifact, bindings=None,
-                                 status=None, sign=False, issuer=None,
-                                 sign_alg=None, digest_alg=None):
+    # XXX DONE ent create > _status_response
+    def create_artifact_response(
+        self,
+        request,
+        artifact,
+        bindings=None,
+        status=None,
+        sign=None,
+        issuer=None,
+        sign_alg=None,
+        digest_alg=None,
+    ):
         """
         Create an ArtifactResponse
         :return:
         """
 
         rinfo = self.response_args(request, bindings)
-        response = self._status_response(ArtifactResponse, issuer, status,
-                                         sign=sign, sign_alg=sign_alg,
-                                         digest_alg=digest_alg, **rinfo)
+        response = self._status_response(
+            ArtifactResponse,
+            issuer,
+            status,
+            sign=sign,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+            **rinfo,
+        )
 
         msg = element_to_extension_element(self.artifact[artifact])
         response.extension_elements = [msg]
@@ -1052,12 +1271,22 @@ class Entity(HTTPBase):
 
         return response
 
-    def create_manage_name_id_request(self, destination, message_id=0,
-                                      consent=None, extensions=None, sign=False,
-                                      name_id=None, new_id=None,
-                                      encrypted_id=None, new_encrypted_id=None,
-                                      terminate=None, sign_alg=None,
-                                      digest_alg=None):
+    # XXX DONE ent create > _message
+    def create_manage_name_id_request(
+        self,
+        destination,
+        message_id=0,
+        consent=None,
+        extensions=None,
+        sign=None,
+        name_id=None,
+        new_id=None,
+        encrypted_id=None,
+        new_encrypted_id=None,
+        terminate=None,
+        sign_alg=None,
+        digest_alg=None,
+    ):
         """
 
         :param destination:
@@ -1093,9 +1322,16 @@ class Entity(HTTPBase):
                 "One of NewID, NewEncryptedNameID or Terminate has to be "
                 "provided")
 
-        return self._message(ManageNameIDRequest, destination, consent=consent,
-                             extensions=extensions, sign=sign,
-                             sign_alg=sign_alg, digest_alg=digest_alg, **kwargs)
+        return self._message(
+            ManageNameIDRequest,
+            destination,
+            consent=consent,
+            extensions=extensions,
+            sign=sign,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+            **kwargs,
+        )
 
     def parse_manage_name_id_request(self, xmlstr, binding=BINDING_SOAP):
         """ Deal with a LogoutRequest
@@ -1110,31 +1346,55 @@ class Entity(HTTPBase):
         return self._parse_request(xmlstr, saml_request.ManageNameIDRequest,
                                    "manage_name_id_service", binding)
 
-    def create_manage_name_id_response(self, request, bindings=None,
-                                       status=None, sign=False, issuer=None,
-                                       sign_alg=None, digest_alg=None,
-                                       **kwargs):
+    # XXX DONE ent create > _status_response
+    def create_manage_name_id_response(
+        self,
+        request,
+        bindings=None,
+        status=None,
+        sign=None,
+        issuer=None,
+        sign_alg=None,
+        digest_alg=None,
+        **kwargs,
+    ):
 
         rinfo = self.response_args(request, bindings)
 
-        response = self._status_response(samlp.ManageNameIDResponse, issuer,
-                                         status, sign, sign_alg=sign_alg,
-                                         digest_alg=digest_alg, **rinfo)
+        response = self._status_response(
+            samlp.ManageNameIDResponse,
+            issuer,
+            status,
+            sign,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
+            **rinfo,
+        )
 
         logger.info("Response: %s", response)
 
         return response
 
-    def parse_manage_name_id_request_response(self, string,
-                                              binding=BINDING_SOAP):
-        return self._parse_response(string, saml_response.ManageNameIDResponse,
-                                    "manage_name_id_service", binding,
-                                    asynchop=False)
+    def parse_manage_name_id_request_response(self, string, binding=BINDING_SOAP):
+        return self._parse_response(
+            string,
+            saml_response.ManageNameIDResponse,
+            "manage_name_id_service",
+            binding,
+            asynchop=False,
+        )
 
     # ------------------------------------------------------------------------
 
-    def _parse_response(self, xmlstr, response_cls, service, binding,
-                        outstanding_certs=None, **kwargs):
+    def _parse_response(
+        self,
+        xmlstr,
+        response_cls,
+        service,
+        binding,
+        outstanding_certs=None,
+        **kwargs,
+    ):
         """ Deal with a Response
 
         :param xmlstr: The response as a xml string
@@ -1335,7 +1595,15 @@ class Entity(HTTPBase):
 
         return destination
 
-    def artifact2message(self, artifact, descriptor, sign=False):
+    # XXX DONE uses sign but not a create_*
+    def artifact2message(
+        self,
+        artifact,
+        descriptor,
+        sign=None,
+        sign_alg=None,
+        digest_alg=None,
+    ):
         """
 
         :param artifact: The Base64 encoded SAML artifact as sent over the net
@@ -1355,6 +1623,8 @@ class Entity(HTTPBase):
             destination,
             _sid,
             sign=sign,
+            sign_alg=sign_alg,
+            digest_alg=digest_alg,
         )
         return self.send_using_soap(msg, destination)
 
