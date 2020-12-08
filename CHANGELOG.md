@@ -1,7 +1,7 @@
 # Changelog
 
 
-## 6.4.9 (2020-12-08)
+## 6.4.0 (2020-12-08)
 
 - Add preferred signing and digest algorithms configuration options:
     Use the new configuration options `signing_algorithm` and `digest_algorithm`.
