@@ -1,6 +1,16 @@
 # Changelog
 
 
+## 6.4.9 (2020-12-08)
+
+- Add preferred signing and digest algorithms configuration options:
+    Use the new configuration options `signing_algorithm` and `digest_algorithm`.
+- Fix signed SAML AuthnRequest and Response when HTTP-Redirect binding is used:
+    Previously, the query params `Signature` and `SigAlg` were not included.
+- Ignore duplicate RequestedAttribute entries when filtering attributes
+- tests: Avoid reuse of old test data files
+
+
 ## 6.3.1 (2020-11-11)
 
 - Fix extraction of RegistrationInfo when no information is available
