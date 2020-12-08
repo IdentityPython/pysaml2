@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 6.4.1 (2020-12-08)
+
+- Indicate minimum required python version during installation
+
+
 ## 6.4.0 (2020-12-08)
 
 - Add preferred signing and digest algorithms configuration options:
