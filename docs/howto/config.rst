@@ -1020,7 +1020,7 @@ signing_algorithm
 
 Default algorithm to be used. Example::
 
-    'signing_algorithm':  saml2.xmldsig.SIG_RSA_SHA256,
+    'signing_algorithm': "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512"
 
 
 digest_algorithm
@@ -1028,7 +1028,7 @@ digest_algorithm
 
 Default algorithm to be used. Example::
 
-    'digest_algorithm':  saml2.xmldsig.DIGEST_SHA256,
+    'digest_algorithm': "http://www.w3.org/2001/04/xmlenc#sha512"
 
 
 logout_responses_signed
