@@ -102,7 +102,7 @@ def test_filter_ava3():
     }
 
     ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp")
-    assert _eq(list(ava.keys()), ['eduPersonTargetedID', "norEduPersonNIN"])
+    assert _eq(list(ava.keys()), ["norEduPersonNIN"])
 
 
 def test_filter_ava4():
@@ -131,7 +131,7 @@ def test_filter_ava4():
 
     ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp")
     assert _eq(
-        list(ava.keys()), ['eduPersonTargetedID', "givenName", "c", "mail", "sn"]
+        list(ava.keys()), ["givenName", "c", "mail", "sn"]
     )
 
 
@@ -160,7 +160,7 @@ def test_filter_ava5():
 
     ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp")
 
-    assert _eq(list(ava.keys()), ['eduPersonTargetedID'])
+    assert _eq(list(ava.keys()), [])
 
 
 def test_idp_policy_filter():
