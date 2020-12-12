@@ -24,7 +24,6 @@ OTHER = [
 ]
 
 R_AND_S = [
-    'eduPersonTargetedID',
     'eduPersonPrincipalName',
     'eduPersonUniqueID',
     'mail',
