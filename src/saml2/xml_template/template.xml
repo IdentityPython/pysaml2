@@ -2,13 +2,18 @@
 <EncryptedData
         xmlns="http://www.w3.org/2001/04/xmlenc#"
         Type="http://www.w3.org/2001/04/xmlenc#Element">
-    <EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
-                      />
+    <EncryptionMethod Algorithm="http://www.w3.org/2009/xmlenc11#aes128-gcm"
+                      xmlns="http://www.w3.org/2001/04/xmlenc#"/>
     <KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
-        <EncryptedKey xmlns="http://www.w3.org/2001/04/xmlenc#">
-            <EncryptionMethod Algorithm=
-                                      "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"/>
-            <KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
+        <EncryptedKey xmlns="http://www.w3.org/2001/04/xmlenc#"
+                      Recipient="https://sp.testunical.it/shibboleth">
+            <EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
+                              xmlns="http://www.w3.org/2001/04/xmlenc#"/>
+                <ns2:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"
+                                  xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+                                 />
+            </EncryptionMethod>
+            <KeyInfo>
                 <KeyName/>
             </KeyInfo>
             <CipherData>

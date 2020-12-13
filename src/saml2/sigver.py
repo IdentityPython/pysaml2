@@ -9,7 +9,7 @@ import itertools
 import logging
 import os
 import six
-from uuid import uuid4 as gen_random_key
+from uuid import uuid4
 
 from time import mktime
 import pytz
@@ -64,7 +64,11 @@ SIG = '{{{ns}#}}{attribute}'.format(ns=ds.NAMESPACE, attribute='Signature')
 RSA_1_5 = 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
 RSA_OAEP = "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
 TRIPLE_DES_CBC = 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc'
-AES128_GCM="http://www.w3.org/2001/04/xmlenc#aes128-cbc"
+AES128_GBC="http://www.w3.org/2001/04/xmlenc#aes128-cbc"
+
+def gen_random_key():
+    return f'{uuid4()}'.replace('-','')
+
 
 class SigverError(SAMLError):
     pass
@@ -762,7 +766,6 @@ class CryptoBackendXmlSec1(CryptoBackend):
             '--xml-data', tmp.name,
             '--node-xpath', node_xpath,
         ]
-
         if node_id:
             com_list.extend(['--node-id', node_id])
 
@@ -1835,7 +1838,8 @@ def pre_signature_part(ident, public_key=None, identifier=None, digest_alg=None,
 
 def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_OAEP, 
                         key_name='my-rsa-key',
-                        encrypted_key_id=None, encrypted_data_id=None):
+                        encrypted_key_id=None, encrypted_data_id=None,
+                        encrypt_cert=None):
     """
 
     :param msg_enc:
@@ -1843,14 +1847,17 @@ def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_OAEP,
     :param key_name:
     :return:
     """
-    ek_id = encrypted_key_id or "EK_{id}".format(id=gen_random_key())
-    ed_id = encrypted_data_id or "ED_{id}".format(id=gen_random_key())
+    ek_id = encrypted_key_id or "_{id}".format(id=gen_random_key())
+    ed_id = encrypted_data_id or "_{id}".format(id=gen_random_key())
     msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
     key_encryption_method = EncryptionMethod(algorithm=key_enc)
     encrypted_key = EncryptedKey(
         id=ek_id,
         encryption_method=key_encryption_method,
-        key_info=ds.KeyInfo(key_name=ds.KeyName(text=key_name)),
+        key_info=ds.KeyInfo(key_name=ds.KeyName(text=key_name),
+                            x509_data=ds.X509Data(
+                            x509_certificate=ds.X509Certificate(text=encrypt_cert)
+                        )),
         cipher_data=CipherData(cipher_value=CipherValue(text='')),
     )
     key_info = ds.KeyInfo(encrypted_key=encrypted_key)
