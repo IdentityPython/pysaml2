@@ -660,8 +660,12 @@ class Entity(HTTPBase):
                 tmp = make_temp(_cert.encode('ascii'),
                                 decode=False,
                                 delete_tmpfiles=self.config.delete_tmpfiles)
+                
+                # it would be possibile to handle many other args here ...
+                pre_enc_part = pre_encryption_part(encrypt_cert=encrypt_cert)
+                
                 response = self.sec.encrypt_assertion(response, tmp.name,
-                                                      pre_encryption_part(),
+                                                      pre_enc_part,
                                                       node_xpath=node_xpath)
                 return response
             except Exception as ex:

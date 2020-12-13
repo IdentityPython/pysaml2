@@ -1850,7 +1850,8 @@ def pre_signature_part(
 
 
 def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_1_5, key_name='my-rsa-key',
-        encrypted_key_id=None, encrypted_data_id=None):
+        encrypted_key_id=None, encrypted_data_id=None,
+        encrypt_cert=None):
     """
 
     :param msg_enc:
@@ -1865,7 +1866,10 @@ def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_1_5, key_name='my-rs
     encrypted_key = EncryptedKey(
         id=ek_id,
         encryption_method=key_encryption_method,
-        key_info=ds.KeyInfo(key_name=ds.KeyName(text=key_name)),
+        key_info=ds.KeyInfo(key_name=ds.KeyName(text=key_name),
+                            x509_data=ds.X509Data(
+                            x509_certificate=ds.X509Certificate(text=encrypt_cert)
+                        )),
         cipher_data=CipherData(cipher_value=CipherValue(text='')),
     )
     key_info = ds.KeyInfo(encrypted_key=encrypted_key)
