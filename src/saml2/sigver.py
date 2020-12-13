@@ -61,9 +61,11 @@ logger = logging.getLogger(__name__)
 
 SIG = '{{{ns}#}}{attribute}'.format(ns=ds.NAMESPACE, attribute='Signature')
 
+# deprecated 
 RSA_1_5 = 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
-TRIPLE_DES_CBC = 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc'
 
+TRIPLE_DES_CBC = 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc'
+RSA_OAEP = "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
 
 class SigverError(SAMLError):
     pass
@@ -1849,7 +1851,8 @@ def pre_signature_part(
 # </EncryptedData>
 
 
-def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_1_5, key_name='my-rsa-key',
+def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_OAEP, 
+        key_name='my-rsa-key',
         encrypted_key_id=None, encrypted_data_id=None,
         encrypt_cert=None):
     """
