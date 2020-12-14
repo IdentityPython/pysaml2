@@ -1020,7 +1020,12 @@ signing_algorithm
 
 Default algorithm to be used. Example::
 
-    'signing_algorithm': "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512"
+    "service": {
+        "sp": {
+            "signing_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512",
+            "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha512",
+        }
+    }
 
 
 digest_algorithm
@@ -1028,7 +1033,12 @@ digest_algorithm
 
 Default algorithm to be used. Example::
 
-    'digest_algorithm': "http://www.w3.org/2001/04/xmlenc#sha512"
+    "service": {
+        "idp": {
+            "signing_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512",
+            "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha512",
+        }
+    }
 
 
 logout_responses_signed
