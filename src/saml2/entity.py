@@ -1,6 +1,7 @@
 import base64
 import copy
 import logging
+import re
 import requests
 import six
 
@@ -650,19 +651,20 @@ class Entity(HTTPBase):
             _certs = self.metadata.certs(sp_entity_id, "any", "encryption")
         exception = None
         for _cert in _certs:
+            begin_cert = "-----BEGIN CERTIFICATE-----\n"
+            end_cert = "\n-----END CERTIFICATE-----\n"
+            unwrapped_cert = re.sub(f'{begin_cert}|{end_cert}', '', _cert)
+            wrapped_cert = f'{begin_cert}{unwrapped_cert}{end_cert}'
             try:
-                begin_cert = "-----BEGIN CERTIFICATE-----\n"
-                end_cert = "\n-----END CERTIFICATE-----\n"
-                if begin_cert not in _cert:
-                    _cert = "%s%s" % (begin_cert, _cert)
-                if end_cert not in _cert:
-                    _cert = "%s%s" % (_cert, end_cert)
-                tmp = make_temp(_cert.encode('ascii'),
+                tmp = make_temp(wrapped_cert.encode('ascii'),
                                 decode=False,
                                 delete_tmpfiles=self.config.delete_tmpfiles)
                 
                 # it would be possibile to handle many other args here ...
-                pre_enc_part = pre_encryption_part(encrypt_cert=encrypt_cert)
+                pre_enc_part_dict = dict()
+                if encrypt_cert:
+                    pre_enc_part_dict['encrypt_cert'] = unwrapped_cert
+                pre_enc_part = pre_encryption_part(**pre_enc_part_dict)
                 
                 response = self.sec.encrypt_assertion(response, tmp.name,
                                                       pre_enc_part,

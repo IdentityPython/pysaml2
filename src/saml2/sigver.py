@@ -62,7 +62,7 @@ logger = logging.getLogger(__name__)
 SIG = '{{{ns}#}}{attribute}'.format(ns=ds.NAMESPACE, attribute='Signature')
 
 # deprecated 
-RSA_1_5 = 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
+# RSA_1_5 = 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
 
 TRIPLE_DES_CBC = 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc'
 RSA_OAEP = "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
@@ -754,7 +754,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param key_type: The type of session key to use.
         :return: The encrypted text
         """
-
+        
         if isinstance(statement, SamlBase):
             statement = pre_encrypt_assertion(statement)
 
@@ -1293,7 +1293,7 @@ class SecurityContext(object):
 
         self.metadata = metadata
         self.only_use_keys_in_metadata = only_use_keys_in_metadata
-
+        
         if not template:
             this_dir, this_filename = os.path.split(__file__)
             self.template = os.path.join(this_dir, 'xml_template', 'template.xml')
@@ -1866,13 +1866,17 @@ def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_OAEP,
     ed_id = encrypted_data_id or "ED_{id}".format(id=gen_random_key())
     msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
     key_encryption_method = EncryptionMethod(algorithm=key_enc)
+    
+    enc_key_dict= dict(key_name=ds.KeyName(text=key_name))
+    
+    enc_key_dict['x509_data'] = ds.X509Data(
+        x509_certificate=ds.X509Certificate(text=encrypt_cert))
+    key_info = ds.KeyInfo(**enc_key_dict)
+    
     encrypted_key = EncryptedKey(
         id=ek_id,
         encryption_method=key_encryption_method,
-        key_info=ds.KeyInfo(key_name=ds.KeyName(text=key_name),
-                            x509_data=ds.X509Data(
-                            x509_certificate=ds.X509Certificate(text=encrypt_cert)
-                        )),
+        key_info=key_info,
         cipher_data=CipherData(cipher_value=CipherValue(text='')),
     )
     key_info = ds.KeyInfo(encrypted_key=encrypted_key)
