@@ -1,7 +1,6 @@
 import base64
 import copy
 import logging
-import re
 import requests
 import six
 
@@ -66,6 +65,7 @@ from saml2.sigver import security_context
 from saml2.sigver import SigverError
 from saml2.sigver import SignatureError
 from saml2.sigver import make_temp
+from saml2.sigver import get_pem_wrapped_unwrapped
 from saml2.sigver import pre_encryption_part
 from saml2.sigver import pre_signature_part
 from saml2.sigver import pre_encrypt_assertion
@@ -651,10 +651,7 @@ class Entity(HTTPBase):
             _certs = self.metadata.certs(sp_entity_id, "any", "encryption")
         exception = None
         for _cert in _certs:
-            begin_cert = "-----BEGIN CERTIFICATE-----\n"
-            end_cert = "\n-----END CERTIFICATE-----\n"
-            unwrapped_cert = re.sub(f'{begin_cert}|{end_cert}', '', _cert)
-            wrapped_cert = f'{begin_cert}{unwrapped_cert}{end_cert}'
+            wrapped_cert, unwrapped_cert = get_pem_wrapped_unwrapped(_cert)
             try:
                 tmp = make_temp(wrapped_cert.encode('ascii'),
                                 decode=False,
@@ -665,6 +662,7 @@ class Entity(HTTPBase):
                 if encrypt_cert:
                     pre_enc_part_dict['encrypt_cert'] = unwrapped_cert
                 pre_enc_part = pre_encryption_part(**pre_enc_part_dict)
+                # end pre_enc_part
                 
                 response = self.sec.encrypt_assertion(response, tmp.name,
                                                       pre_enc_part,
