@@ -70,7 +70,7 @@ NREN = 'http://www.swamid.se/category/nren-service'          # Deprecated from 2
 HEI = 'http://www.swamid.se/category/hei-service'            # Deprecated from 2021-03-31
 
 RELEASE = {
-    '': [''],
+    '': [],
     SFS_1993_1153: ['norEduPersonNIN', 'eduPersonAssurance'],
     (RESEARCH_AND_EDUCATION, EU): NAME + STATIC_ORG_INFO + OTHER,
     (RESEARCH_AND_EDUCATION, NREN): NAME + STATIC_ORG_INFO + OTHER,

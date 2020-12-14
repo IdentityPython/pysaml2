@@ -481,6 +481,8 @@ class Policy(object):
 
                         for attr in attrs:
                             restrictions[attr] = None
+                        else:
+                            restrictions[''] = None
 
             return restrictions
 
