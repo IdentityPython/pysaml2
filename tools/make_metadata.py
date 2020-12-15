@@ -34,6 +34,12 @@ parser.add_argument('-x', dest='xmlsec',
                     help="xmlsec binaries to be used for the signing")
 parser.add_argument('-w', dest='wellknown',
                     help="Use wellknown namespace prefixes")
+parser.add_argument('-S', dest='signalg',
+                    default='http://www.w3.org/2000/09/xmldsig#rsa-sha1',
+                    help="Algorithm to sign the metadata")
+parser.add_argument('-D', dest='digestalg',
+                    default='http://www.w3.org/2000/09/xmldsig#sha1',
+                    help="Algorithm to compute the digest of the metadata")
 parser.add_argument(dest="config", nargs="+")
 args = parser.parse_args()
 
@@ -70,16 +76,19 @@ if args.id:
                                        args.sign, secc)
     valid_instance(desc)
     xmldoc = metadata_tostring_fix(desc, nspair, xmldoc)
-    print(xmldoc.decode("utf-8"))
+    print(xmldoc)
 else:
     for eid in eds:
         if args.sign:
             assert conf.key_file
             assert conf.cert_file
-            eid, xmldoc = sign_entity_descriptor(eid, args.id, secc)
+            sign_alg = args.signalg
+            digest_alg = args.digestalg
+            eid, xmldoc = sign_entity_descriptor(eid, args.id, secc, sign_alg,
+                                                 digest_alg)
         else:
             xmldoc = None
 
         valid_instance(eid)
         xmldoc = metadata_tostring_fix(eid, nspair, xmldoc)
-        print(xmldoc.decode("utf-8"))
+        print(xmldoc)
