@@ -404,7 +404,12 @@ class Config(object):
         if endps and service in endps:
             for endpspec in endps[service]:
                 try:
-                    endp, bind = endpspec
+                    # endspec sometime is str, sometime is a tuple
+                    if type(endpspec) in (tuple, list):
+                        # slice prevents 3-tuple, eg: sp's assertion_consumer_service
+                        endp, bind = endpspec[0:2]
+                    else:
+                        endp, bind = endpspec
                     if binding is None or bind == binding:
                         spec.append(endp)
                 except ValueError:
