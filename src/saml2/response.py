@@ -255,7 +255,7 @@ class StatusResponse(object):
     def __init__(self, sec_context, return_addrs=None, timeslack=0,
             request_id=0, asynchop=True, conv_info=None):
         self.sec = sec_context
-        self.return_addrs = return_addrs
+        self.return_addrs = return_addrs or []
 
         self.timeslack = timeslack
         self.request_id = request_id
@@ -402,10 +402,11 @@ class StatusResponse(object):
                 raise RequestVersionTooHigh()
 
         if self.asynchop:
-            if self.response.destination and \
-                            self.response.destination not in self.return_addrs:
-                logger.error("%s not in %s", self.response.destination,
-                             self.return_addrs)
+            if (
+                self.response.destination
+                and self.response.destination not in self.return_addrs
+            ):
+                logger.error("%s not in %s", self.response.destination, self.return_addrs)
                 return None
 
         valid = self.issue_instant_ok() and self.status_ok()
