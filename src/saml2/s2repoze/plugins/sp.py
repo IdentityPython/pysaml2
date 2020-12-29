@@ -102,7 +102,7 @@ class SAML2Plugin(object):
         self.discosrv = discovery
         self.idp_query_param = idp_query_param
         self.logout_endpoints = [
-            parse.urlparse(ep)[2] for ep in config.endpoint("single_logout_service")
+            parse.urlparse(ep).path for ep in config.endpoint("single_logout_service")
         ]
         try:
             self.metadata = self.conf.metadata
