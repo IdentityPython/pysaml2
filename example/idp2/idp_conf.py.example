@@ -145,22 +145,22 @@ CONFIG = {
             },
         },
         "handlers": {
-            "stdout": {
+            "stderr": {
                 "class": "logging.StreamHandler",
-                "stream": "ext://sys.stdout",
+                "stream": "ext://sys.stderr",
                 "level": "DEBUG",
                 "formatter": "simple",
             },
         },
         "loggers": {
             "saml2": {
-                "level": "INFO"
+                "level": "DEBUG"
             },
         },
         "root": {
             "level": "DEBUG",
             "handlers": [
-                "stdout",
+                "stderr",
             ],
         },
     },
