@@ -1,7 +1,6 @@
 """ Functions connected to signing and verifying.
 Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
-from OpenSSL import crypto
 
 import base64
 import hashlib
@@ -10,19 +9,21 @@ import logging
 import os
 import six
 from uuid import uuid4 as gen_random_key
-
 from time import mktime
+from tempfile import NamedTemporaryFile
+from subprocess import Popen
+from subprocess import PIPE
+from importlib_resources import path as _resource_path
+
+from OpenSSL import crypto
+
 import pytz
 
 from six.moves.urllib import parse
 
 import saml2.cryptography.asymmetric
 import saml2.cryptography.pki
-
-from tempfile import NamedTemporaryFile
-from subprocess import Popen
-from subprocess import PIPE
-
+import saml2.xmldsig as ds
 from saml2 import samlp
 from saml2 import SamlBase
 from saml2 import SAMLError
@@ -31,20 +32,14 @@ from saml2 import class_name
 from saml2 import saml
 from saml2 import ExtensionElement
 from saml2 import VERSION
-
 from saml2.cert import OpenSSLWrapper
 from saml2.extension import pefim
 from saml2.extension.pefim import SPCertEnc
 from saml2.saml import EncryptedAssertion
-
-import saml2.xmldsig as ds
-
 from saml2.s_utils import sid
 from saml2.s_utils import Unsupported
-
 from saml2.time_util import instant
 from saml2.time_util import str_to_time
-
 from saml2.xmldsig import SIG_RSA_SHA1
 from saml2.xmldsig import SIG_RSA_SHA224
 from saml2.xmldsig import SIG_RSA_SHA256
@@ -1466,7 +1461,7 @@ class SecurityContext(object):
 
         # saml-core section "5.4 XML Signature Profile" defines constrains on the
         # xmldsig-core facilities. It explicitly dictates that enveloped signatures
-        # are the only signatures allowed. This mean that:
+        # are the only signatures allowed. This means that:
         # * Assertion/RequestType/ResponseType elements must have an ID attribute
         # * signatures must have a single Reference element
         # * the Reference element must have a URI attribute
