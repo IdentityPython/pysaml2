@@ -24,6 +24,7 @@ from six.moves.urllib import parse
 import saml2.cryptography.asymmetric
 import saml2.cryptography.pki
 import saml2.xmldsig as ds
+import saml2.data.templates as _data_template
 from saml2 import samlp
 from saml2 import SamlBase
 from saml2 import SAMLError
@@ -1288,8 +1289,8 @@ class SecurityContext(object):
         self.only_use_keys_in_metadata = only_use_keys_in_metadata
 
         if not template:
-            this_dir, this_filename = os.path.split(__file__)
-            self.template = os.path.join(this_dir, 'xml_template', 'template.xml')
+            with _resource_path(_data_template, "template_enc.xml") as fp:
+                self.template = str(fp)
         else:
             self.template = template
 
