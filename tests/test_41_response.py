@@ -17,6 +17,9 @@ from saml2.sigver import SignatureError
 
 from pathutils import full_path
 
+from pytest import raises
+
+
 FALSE_ASSERT_SIGNED = full_path("saml_false_signed.xml")
 
 TIMESLACK = 60*5
@@ -99,25 +102,26 @@ class TestResponse:
     @mock.patch('saml2.time_util.datetime')
     def test_false_sign(self, mock_datetime):
         mock_datetime.utcnow = mock.Mock(
-            return_value=datetime.datetime(2016, 9, 4, 9, 59, 39))
+            return_value=datetime.datetime(2016, 9, 4, 9, 59, 39)
+        )
         with open(FALSE_ASSERT_SIGNED) as fp:
             xml_response = fp.read()
+
         resp = response_factory(
-            xml_response, self.conf,
+            xml_response,
+            self.conf,
             return_addrs=["http://lingon.catalogix.se:8087/"],
             outstanding_queries={
-                "bahigehogffohiphlfmplepdpcohkhhmheppcdie":
-                    "http://localhost:8088/sso"},
-            timeslack=TIMESLACK, decode=False)
+                "bahigehogffohiphlfmplepdpcohkhhmheppcdie": "http://localhost:8088/sso",
+            },
+            timeslack=TIMESLACK,
+            decode=False,
+        )
 
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
-        try:
+        with raises(SignatureError):
             resp.verify()
-        except SignatureError:
-            pass
-        else:
-            assert False
 
     def test_other_response(self):
         with open(full_path("attribute_response.xml")) as fp:
