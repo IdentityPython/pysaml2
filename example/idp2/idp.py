@@ -1041,7 +1041,7 @@ def application(environ, start_response):
 
     path = environ.get("PATH_INFO", "").lstrip("/")
 
-    if path == "metadata":
+    if path == "idp.xml":
         return metadata(environ, start_response)
 
     kaka = environ.get("HTTP_COOKIE", None)
