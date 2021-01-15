@@ -115,7 +115,7 @@ class AttributeValueBase(SamlBase):
             SamlBase.__setattr__(self, key, value)
 
     def verify(self):
-        if not self.text:
+        if not self.text and not self.extension_elements:
             if not self.extension_attributes:
                 raise Exception(
                     "Attribute value base should not have extension attributes"
@@ -293,11 +293,26 @@ class AttributeValueBase(SamlBase):
             self._convert_element_tree_to_member(child)
         for attribute, value in iter(tree.attrib.items()):
             self._convert_element_attribute_to_member(attribute, value)
-        if tree.text:
+
+        # if we have added children to this node
+        # we consider whitespace insignificant
+        # and remove/trim/strip whitespace
+        # and expect to not have actual text content
+        text = (
+            tree.text.strip()
+            if tree.text and self.extension_elements
+            else tree.text
+        )
+        if text:
             #print("set_text:", tree.text)
             # clear type
             #self.clear_type()
-            self.set_text(tree.text)
+            self.set_text(text)
+
+        # if we have added a text node
+        # or other children to this node
+        # remove the nil marker
+        if text or self.extension_elements:
             if XSI_NIL in self.extension_attributes:
                 del self.extension_attributes[XSI_NIL]
 
