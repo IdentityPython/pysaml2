@@ -869,6 +869,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             self.xmlsec,
             '--verify',
             '--enabled-reference-uris', 'empty,same-doc',
+            '--enabled-key-data', 'raw-x509-cert',
             '--pubkey-cert-{type}'.format(type=cert_type), cert_file,
             '--id-attr:ID', node_name,
         ]
