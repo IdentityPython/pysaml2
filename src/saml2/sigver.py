@@ -51,6 +51,8 @@ from saml2.xmlenc import EncryptedKey
 from saml2.xmlenc import CipherData
 from saml2.xmlenc import CipherValue
 from saml2.xmlenc import EncryptedData
+from saml2.xml.schema import node_to_schema
+from saml2.xml.schema import XMLSchemaError
 
 
 logger = logging.getLogger(__name__)
@@ -1460,6 +1462,30 @@ class SecurityContext(object):
 
         if not certs:
             raise MissingKey(_issuer)
+
+        # validate XML with the appropriate schema
+        try:
+            _schema = node_to_schema[node_name]
+        except KeyError as e:
+            error_context = {
+                "message": "Signature verification failed. Unknown node type.",
+                "issuer": _issuer,
+                "type": node_name,
+                "document": decoded_xml,
+            }
+            raise SignatureError(error_context) from e
+
+        try:
+            _schema.validate(str(item))
+        except XMLSchemaError as e:
+            error_context = {
+                "message": "Signature verification failed. Invalid document format.",
+                "ID": item.id,
+                "issuer": _issuer,
+                "type": node_name,
+                "document": decoded_xml,
+            }
+            raise SignatureError(error_context) from e
 
         # saml-core section "5.4 XML Signature Profile" defines constrains on the
         # xmldsig-core facilities. It explicitly dictates that enveloped signatures

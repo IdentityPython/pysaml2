@@ -3,7 +3,8 @@ include LICENSE
 include README.rst
 include CHANGELOG.md
 
-include src/saml2/xml_template/template.xml
+include src/saml2/data/templates/*.xml
+include src/saml2/data/schemas/*.xsd
 
 graft docs
 prune docs/build
