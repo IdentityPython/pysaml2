@@ -1,6 +1,23 @@
 # Changelog
 
 
+## 6.5.0 (2021-01-20) - Security release
+
+- Fix processing of invalid SAML XML documents - [CVE-2021-21238]
+- Fix unspecified xmlsec1 key-type preference - [CVE-2021-21239]
+- Add more tests regarding XSW attacks
+- Add XML Schemas for SAML2 and common extensions
+- Fix the XML parser to not break on ePTID AttributeValues
+- Fix the initialization value of the return_addrs property of the StatusResponse object
+- Fix SWAMID entity-category policy regarding eduPersonTargetedID
+- data: use importlib to load package data (backwards compatibility through the importlib_resources package)
+- docs: improve the documentation for the signing_algorithm and digest_algorithm options
+- examples: fix the logging configuration of the example-IdP
+- tests: allow tests to pass on 32bit systems by properly choosing dates in test XML documents
+- tests: improvements on the generation of response and assertion objects
+- tests: expand tests on python-3.9 and python-3.10-dev
+
+
 ## 6.4.1 (2020-12-08)
 
 - Indicate minimum required python version during installation
@@ -110,9 +127,9 @@
 - docs: document default value for 'want_response_signed'
 
 
-## 5.0.0 (2020-01-13)
+## 5.0.0 (2020-01-13) - Security release
 
-- Fix XML Signature Wrapping (XSW) vulnerabilities - CVE-2020-5390
+- Fix XML Signature Wrapping (XSW) vulnerabilities - [CVE-2020-5390]
 - Add freshness period feature for MetaDataMDX
 - Fix bug in duration calculation in time_util library
 - Fix ipv6 validation to accommodate for addresses with brackets
@@ -234,7 +251,7 @@ Refactor AttributeValueBase::set_text method.
 - tests: fix test that depended on actual datetime
 - build: Set minimum build-tool version through pyproject.toml
 
-## 4.6.0 (2018-08-07)
+## 4.6.0 (2018-08-07) - Security release
 
 - Allow configuration and specification of id attribute name
 - Retrieve SLO endpoint by the appropriate service type
@@ -284,3 +301,9 @@ Refactor AttributeValueBase::set_text method.
 - Add backwards compatibility with ElementTree in python < 2.7.
 - Fix minor bugs in the tests.
 - Support one more nameid format.
+
+
+  [CVE-2017-1000246]: https://github.com/advisories/GHSA-cq94-qf6q-mf2h
+  [CVE-2020-5390]: https://github.com/advisories/GHSA-qf7v-8hj3-4xw7
+  [CVE-2021-21238]: https://github.com/IdentityPython/pysaml2/security/advisories/GHSA-f4g9-h89h-jgv9
+  [CVE-2021-21239]: https://github.com/IdentityPython/pysaml2/security/advisories/GHSA-5p3x-r448-pc62
