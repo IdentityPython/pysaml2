@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 6.5.1 (2021-01-21)
+
+- Fix the parser to take into account both the xs and xsd namespace prefixes
+
+
 ## 6.5.0 (2021-01-20) - Security release
 
 - Fix processing of invalid SAML XML documents - [CVE-2021-21238]
