@@ -94,6 +94,9 @@ class StatusAuthnFailed(StatusError):
 class StatusInvalidAttrNameOrValue(StatusError):
     pass
 
+class StatusInvalidAuthnResponseStatement(StatusError):
+    pass
+
 
 class StatusInvalidNameidPolicy(StatusError):
     pass
@@ -1099,13 +1102,17 @@ class AuthnResponse(StatusResponse):
             return {"name_id": self.name_id, "came_from": self.came_from,
                     "issuer": self.issuer(), "not_on_or_after": nooa,
                     "authz_decision_info": self.authz_decision_info()}
-        else:
+        elif getattr(self.assertion, 'authn_statement', None):
             authn_statement = self.assertion.authn_statement[0]
             return {"ava": self.ava, "name_id": self.name_id,
                     "came_from": self.came_from, "issuer": self.issuer(),
                     "not_on_or_after": nooa, "authn_info": self.authn_info(),
                     "session_index": authn_statement.session_index}
-
+        else:
+            raise StatusInvalidAuthnResponseStatement(
+                "The Authn Response Statement is not valid"
+            )
+        
     def __str__(self):
         return self.xmlstr
 
