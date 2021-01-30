@@ -4,6 +4,7 @@
 # Generated Mon May  2 14:23:33 2011 by parse_xsd.py version 0.4.
 #
 import base64
+import datetime
 
 from saml2.validate import valid_ipv4, MustValueError
 from saml2.validate import valid_ipv6
@@ -196,6 +197,11 @@ class AttributeValueBase(SamlBase):
             'string': {
                 'type': str,
                 'to_type': str,
+                'to_text': str,
+            },
+            'date': {
+                'type': datetime.date,
+                'to_type': lambda x: datetime.datetime.strptime(x, '%Y-%m-%d').date(),
                 'to_text': str,
             },
             'integer': {
