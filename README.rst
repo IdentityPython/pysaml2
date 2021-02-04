@@ -31,8 +31,10 @@ How to package a new version
 ----------------------------
 
 * On your branch, update the VERSION file - our convention seems to be ``<PySAML2 base version>-N`` where ``N`` is the number of TopHat's revision on top of the upstream version. E.g. ``4.6.5-2`` is the second revision since merging the upstream ``4.6.5`` version.
-* create venv?
-* ``python setup.py bdist_wheel --universal``
+* Create a virtualenv to build the package in
+    - ``python3 -m venv <some name>``
+    - ``. <some name>/bin/activate``
+* In the venv, ``python setup.py bdist_wheel --universal``
 * Find the wheel file in ``dist/`` folder
 
 How to QA your changes
