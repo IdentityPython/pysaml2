@@ -6,6 +6,7 @@ import os
 from contextlib import closing
 from six.moves.urllib.parse import parse_qs
 import uuid
+import re
 
 from saml2.cert import OpenSSLWrapper
 from saml2.sigver import make_temp, DecryptError, EncryptError, CertificateError
@@ -129,8 +130,10 @@ class TestServer1():
         self.verify_assertion(assertion)
         assert assertion[0].signature is None
 
-        assert 'EncryptedAssertion><encas1:Assertion xmlns:encas0="http://www.w3.org/2001/XMLSchema-instance" ' \
-               'xmlns:encas1="urn:oasis:names:tc:SAML:2.0:assertion"' in decr_text
+        assert re.search(
+            r':EncryptedAssertion><encas[0-9]:Assertion ([^ >]* )*xmlns:encas[0-9]="urn:oasis:names:tc:SAML:2.0:assertion"',
+            decr_text,
+        )
 
     def verify_advice_assertion(self, resp, decr_text):
         assert resp.assertion[0].signature is None
@@ -1188,9 +1191,10 @@ class TestServer1NonAsciiAva():
     def verify_encrypted_assertion(self, assertion, decr_text):
         self.verify_assertion(assertion)
         assert assertion[0].signature is None
-
-        assert 'EncryptedAssertion><encas1:Assertion xmlns:encas0="http://www.w3.org/2001/XMLSchema-instance" ' \
-               'xmlns:encas1="urn:oasis:names:tc:SAML:2.0:assertion"' in decr_text
+        assert re.search(
+            r':EncryptedAssertion><encas[0-9]:Assertion ([^ >]* )*xmlns:encas[0-9]="urn:oasis:names:tc:SAML:2.0:assertion"',
+            decr_text,
+        )
 
     def verify_advice_assertion(self, resp, decr_text):
         assert resp.assertion[0].signature is None
