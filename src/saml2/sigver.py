@@ -7,6 +7,7 @@ import hashlib
 import itertools
 import logging
 import os
+import re
 import six
 from uuid import uuid4 as gen_random_key
 from time import mktime
@@ -59,9 +60,11 @@ logger = logging.getLogger(__name__)
 
 SIG = '{{{ns}#}}{attribute}'.format(ns=ds.NAMESPACE, attribute='Signature')
 
-RSA_1_5 = 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
-TRIPLE_DES_CBC = 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc'
+# DEPRECATED
+# RSA_1_5 = 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
 
+TRIPLE_DES_CBC = 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc'
+RSA_OAEP_MGF1P = "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
 
 class SigverError(SAMLError):
     pass
@@ -98,6 +101,14 @@ class BadSignature(SigverError):
 
 class CertificateError(SigverError):
     pass
+
+
+def get_pem_wrapped_unwrapped(cert):
+    begin_cert = "-----BEGIN CERTIFICATE-----\n"
+    end_cert = "\n-----END CERTIFICATE-----\n"
+    unwrapped_cert = re.sub(f'{begin_cert}|{end_cert}', '', cert)
+    wrapped_cert = f'{begin_cert}{unwrapped_cert}{end_cert}'
+    return wrapped_cert, unwrapped_cert
 
 
 def read_file(*args, **kwargs):
@@ -1085,10 +1096,8 @@ def encrypt_cert_from_item(item):
         pass
 
     if _encrypt_cert is not None:
-        if _encrypt_cert.find('-----BEGIN CERTIFICATE-----\n') == -1:
-            _encrypt_cert = '-----BEGIN CERTIFICATE-----\n' + _encrypt_cert
-        if _encrypt_cert.find('\n-----END CERTIFICATE-----') == -1:
-            _encrypt_cert = _encrypt_cert + '\n-----END CERTIFICATE-----'
+        wrapped_cert, unwrapped_cert = get_pem_wrapped_unwrapped(_encrypt_cert)
+        _encrypt_cert = wrapped_cert
     return _encrypt_cert
 
 
@@ -1872,8 +1881,10 @@ def pre_signature_part(
 # </EncryptedData>
 
 
-def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_1_5, key_name='my-rsa-key',
-        encrypted_key_id=None, encrypted_data_id=None):
+def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_OAEP_MGF1P, 
+        key_name='my-rsa-key',
+        encrypted_key_id=None, encrypted_data_id=None,
+        encrypt_cert=None):
     """
 
     :param msg_enc:
@@ -1885,10 +1896,16 @@ def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_1_5, key_name='my-rs
     ed_id = encrypted_data_id or "ED_{id}".format(id=gen_random_key())
     msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
     key_encryption_method = EncryptionMethod(algorithm=key_enc)
+    
+    enc_key_dict= dict(key_name=ds.KeyName(text=key_name))
+    enc_key_dict['x509_data'] = ds.X509Data(
+        x509_certificate=ds.X509Certificate(text=encrypt_cert))
+    key_info = ds.KeyInfo(**enc_key_dict)
+    
     encrypted_key = EncryptedKey(
         id=ek_id,
         encryption_method=key_encryption_method,
-        key_info=ds.KeyInfo(key_name=ds.KeyName(text=key_name)),
+        key_info=key_info,
         cipher_data=CipherData(cipher_value=CipherValue(text='')),
     )
     key_info = ds.KeyInfo(encrypted_key=encrypted_key)
