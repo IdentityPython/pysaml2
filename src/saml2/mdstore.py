@@ -15,6 +15,7 @@ from os.path import join
 import requests
 import six
 
+from xml.etree.ElementTree import ParseError
 from saml2 import md
 from saml2 import saml
 from saml2 import samlp
@@ -612,8 +613,12 @@ class InMemoryMetaData(MetaData):
             self.entity[entity_descr.entity_id] = _ent
 
     def parse(self, xmlstr):
-        self.entities_descr = md.entities_descriptor_from_string(xmlstr)
-
+        try:
+            self.entities_descr = md.entities_descriptor_from_string(xmlstr)
+        except Exception as e:
+            logger.error(f'Metadata Parse Error on: {self.filename}')
+            return
+        
         if not self.entities_descr:
             self.entity_descr = md.entity_descriptor_from_string(xmlstr)
             if self.entity_descr:
