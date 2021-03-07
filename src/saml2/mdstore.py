@@ -7,15 +7,14 @@ import os
 import sys
 from itertools import chain
 from warnings import warn as _warn
-
 from hashlib import sha1
 from os.path import isfile
 from os.path import join
 
 import requests
+
 import six
 
-from xml.etree.ElementTree import ParseError
 from saml2 import md
 from saml2 import saml
 from saml2 import samlp
@@ -25,7 +24,6 @@ from saml2 import SAMLError
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
-
 from saml2.httpbase import HTTPBase
 from saml2.extension.idpdisc import BINDING_DISCO
 from saml2.extension.idpdisc import DiscoveryResponse
@@ -616,9 +614,8 @@ class InMemoryMetaData(MetaData):
         try:
             self.entities_descr = md.entities_descriptor_from_string(xmlstr)
         except Exception as e:
-            logger.error(f'Metadata Parse Error on: {self.filename}')
-            return
-        
+            raise SAMLError(f'Failed to parse metadata file: {self.filename}') from e
+
         if not self.entities_descr:
             self.entity_descr = md.entity_descriptor_from_string(xmlstr)
             if self.entity_descr:

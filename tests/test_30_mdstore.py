@@ -7,6 +7,8 @@ from collections import OrderedDict
 from unittest.mock import Mock
 from unittest.mock import patch
 
+from pytest import raises
+
 import responses
 
 from six.moves.urllib import parse
@@ -19,6 +21,7 @@ from saml2.mdstore import locations
 from saml2.mdstore import name
 from saml2 import sigver
 from saml2.httpbase import HTTPBase
+from saml2 import SAMLError
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
@@ -156,6 +159,10 @@ METADATACONF = {
         "class": "saml2.mdstore.MetaDataFile",
         "metadata": [(full_path("swamid-2.0.xml"),)],
     }],
+    "14": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("invalid_metadata_file.xml"),)],
+    }],
 }
 
 
@@ -168,6 +175,12 @@ def _fix_valid_until(xmlstring):
     new_date = new_date.strftime("%Y-%m-%dT%H:%M:%SZ")
     return re.sub(r' validUntil=".*?"', ' validUntil="%s"' % new_date,
                   xmlstring)
+
+
+def test_invalid_metadata():
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    with raises(SAMLError):
+        mds.imp(METADATACONF["14"])
 
 
 def test_swami_1():
