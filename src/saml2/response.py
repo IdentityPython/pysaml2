@@ -216,10 +216,10 @@ def for_me(conditions, myself):
         if not restriction.audience:
             continue
         for audience in restriction.audience:
-            if audience.text.strip() == myself:
+            if audience.text and audience.text.strip() == myself:
                 return True
             else:
-                logger.debug("AudienceRestriction - One condition not satisfied: %s != %s" % (audience.text.strip(), myself))
+                logger.debug("AudienceRestriction - One condition not satisfied: {} != {}".format(audience.text, myself))
     logger.debug("AudienceRestrictions not satisfied!")
     return False
 
