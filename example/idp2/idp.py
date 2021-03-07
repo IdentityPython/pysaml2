@@ -999,7 +999,7 @@ def metadata(environ, start_response):
             args.sign,
         )
         start_response("200 OK", [("Content-Type", "text/xml")])
-        return metadata
+        return [metadata]
     except Exception as ex:
         logger.error("An error occured while creating metadata: %s", ex.message)
         return not_found(environ, start_response)
@@ -1041,7 +1041,7 @@ def application(environ, start_response):
 
     path = environ.get("PATH_INFO", "").lstrip("/")
 
-    if path == "metadata":
+    if path == "idp.xml":
         return metadata(environ, start_response)
 
     kaka = environ.get("HTTP_COOKIE", None)
