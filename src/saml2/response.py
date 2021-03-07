@@ -67,6 +67,10 @@ class IncorrectlySigned(SAMLError):
     pass
 
 
+class InvalidAssertion(SAMLError):
+    pass
+
+
 class DecryptionFailed(SAMLError):
     pass
 
@@ -923,7 +927,7 @@ class AuthnResponse(StatusResponse):
             n_assertions = len(self.response.assertion)
             n_assertions_enc = len(self.response.encrypted_assertion)
             if n_assertions != 1 and n_assertions_enc != 1 and self.assertion is None:
-                raise Exception(
+                raise InvalidAssertion(
                     "Invalid number of assertions in Response: {n}".format(
                         n=n_assertions+n_assertions_enc
                     )
