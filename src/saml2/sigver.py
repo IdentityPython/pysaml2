@@ -1844,6 +1844,7 @@ def pre_signature_part(
     if identifier:
         signature.id = 'Signature{n}'.format(n=identifier)
 
+    # XXX remove - do not embed the cert
     if public_key:
         x509_data = ds.X509Data(
             x509_certificate=[ds.X509Certificate(text=public_key)])
@@ -1881,10 +1882,13 @@ def pre_signature_part(
 # </EncryptedData>
 
 
-def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_OAEP_MGF1P, 
-        key_name='my-rsa-key',
-        encrypted_key_id=None, encrypted_data_id=None,
-        encrypt_cert=None):
+def pre_encryption_part(
+    msg_enc=TRIPLE_DES_CBC,
+    key_enc=RSA_OAEP_MGF1P,
+    key_name='my-rsa-key',
+    encrypted_key_id=None,
+    encrypted_data_id=None,
+):
     """
 
     :param msg_enc:
@@ -1896,12 +1900,8 @@ def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_OAEP_MGF1P,
     ed_id = encrypted_data_id or "ED_{id}".format(id=gen_random_key())
     msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
     key_encryption_method = EncryptionMethod(algorithm=key_enc)
-    
-    enc_key_dict= dict(key_name=ds.KeyName(text=key_name))
-    enc_key_dict['x509_data'] = ds.X509Data(
-        x509_certificate=ds.X509Certificate(text=encrypt_cert))
-    key_info = ds.KeyInfo(**enc_key_dict)
-    
+    key_info = ds.KeyInfo(key_name=ds.KeyName(text=key_name))
+
     encrypted_key = EncryptedKey(
         id=ek_id,
         encryption_method=key_encryption_method,
@@ -1914,7 +1914,8 @@ def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_OAEP_MGF1P,
         type='http://www.w3.org/2001/04/xmlenc#Element',
         encryption_method=msg_encryption_method,
         key_info=key_info,
-        cipher_data=CipherData(cipher_value=CipherValue(text='')))
+        cipher_data=CipherData(cipher_value=CipherValue(text='')),
+    )
     return encrypted_data
 
 

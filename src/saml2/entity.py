@@ -657,21 +657,14 @@ class Entity(HTTPBase):
         for _cert in _certs:
             wrapped_cert, unwrapped_cert = get_pem_wrapped_unwrapped(_cert)
             try:
-                tmp = make_temp(wrapped_cert.encode('ascii'),
-                                decode=False,
-                                delete_tmpfiles=self.config.delete_tmpfiles)
-
-                # it would be possibile to handle many other args here ...
-                pre_enc_part_dict = dict()
-                if encrypt_cert:
-                    pre_enc_part_dict['encrypt_cert'] = unwrapped_cert
-                pre_enc_part = pre_encryption_part(**pre_enc_part_dict)
-                # end pre_enc_part
-
-
-                response = self.sec.encrypt_assertion(response, tmp.name,
-                                                      pre_enc_part,
-                                                      node_xpath=node_xpath)
+                tmp = make_temp(
+                    wrapped_cert.encode('ascii'),
+                    decode=False,
+                    delete_tmpfiles=self.config.delete_tmpfiles,
+                )
+                response = self.sec.encrypt_assertion(
+                    response, tmp.name, pre_encryption_part(), node_xpath=node_xpath
+                )
                 return response
             except Exception as ex:
                 exception = ex
