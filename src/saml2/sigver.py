@@ -60,9 +60,8 @@ logger = logging.getLogger(__name__)
 
 SIG = '{{{ns}#}}{attribute}'.format(ns=ds.NAMESPACE, attribute='Signature')
 
-# DEPRECATED
-# RSA_1_5 = 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
-
+# RSA_1_5 is considered deprecated
+RSA_1_5 = 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
 TRIPLE_DES_CBC = 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc'
 RSA_OAEP_MGF1P = "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
 
