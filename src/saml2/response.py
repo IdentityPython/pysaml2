@@ -394,6 +394,14 @@ class StatusResponse(object):
         issued_at = str_to_time(self.response.issue_instant)
         return lower < issued_at < upper
 
+    def issuer_ok(self):
+        """ Check if the issuer have a valid Format, additional check may be implemented"""
+        if self.response.issuer and  self.response.issuer.format:
+            if self.response.issuer.format != saml.NAMEID_FORMAT_ENTITY:
+                return False
+        return True
+
+
     def _verify(self):
         if self.request_id and self.in_response_to and \
                         self.in_response_to != self.request_id:
@@ -415,8 +423,13 @@ class StatusResponse(object):
             ):
                 logger.error("%s not in %s", self.response.destination, self.return_addrs)
                 return None
-
-        valid = self.issue_instant_ok() and self.status_ok()
+        valid = all(
+                    (
+                        self.issue_instant_ok(),
+                        self.issuer_ok(),
+                        self.status_ok()
+                    )
+                )
         return valid
 
     def loads(self, xmldata, decode=True, origxml=None):
@@ -1049,7 +1062,6 @@ class AuthnResponse(StatusResponse):
 
         if not isinstance(self.response, samlp.Response):
             return self
-
         if self.parse_assertion(keys):
             return self
         else:
@@ -1116,7 +1128,7 @@ class AuthnResponse(StatusResponse):
             raise StatusInvalidAuthnResponseStatement(
                 "The Authn Response Statement is not valid"
             )
-        
+
     def __str__(self):
         return self.xmlstr
 
