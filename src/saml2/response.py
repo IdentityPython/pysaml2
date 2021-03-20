@@ -1044,7 +1044,7 @@ class AuthnResponse(StatusResponse):
             logger.error("Verification error on the response: %s", err)
             raise
         else:
-            if res is None:
+            if not res:
                 return None
 
         if not isinstance(self.response, samlp.Response):
