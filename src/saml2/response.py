@@ -408,12 +408,16 @@ class StatusResponse(object):
             else:
                 raise RequestVersionTooHigh()
 
+        destination = self.response.destination
         if self.asynchop:
+            # Destination must be present
             if (
-                self.response.destination
-                and self.response.destination not in self.return_addrs
+                not destination
+                or destination not in self.return_addrs
             ):
-                logger.error("%s not in %s", self.response.destination, self.return_addrs)
+                logger.error(
+                    f"{destination} not in {self.return_addrs}"
+                )
                 return None
 
         valid = self.issue_instant_ok() and self.status_ok()
@@ -1116,7 +1120,7 @@ class AuthnResponse(StatusResponse):
             raise StatusInvalidAuthnResponseStatement(
                 "The Authn Response Statement is not valid"
             )
-        
+
     def __str__(self):
         return self.xmlstr
 
