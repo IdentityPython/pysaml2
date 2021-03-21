@@ -383,7 +383,7 @@ class StatusResponse(object):
         logger.info(msg)
         raise err_cls(msg)
 
-    def issue_instant_ok(self):
+    def issue_instant_ok(self, issue_instant):
         """ Check that the response was issued at a reasonable time """
         upper = time_util.shift_time(time_util.time_in_a_while(days=1),
                                      self.timeslack).timetuple()
@@ -391,7 +391,7 @@ class StatusResponse(object):
                                      -self.timeslack).timetuple()
         # print("issue_instant: %s" % self.response.issue_instant)
         # print("%s < x < %s" % (lower, upper))
-        issued_at = str_to_time(self.response.issue_instant)
+        issued_at = str_to_time(issue_instant)
         return lower < issued_at < upper
 
     def issuer_ok(self):
@@ -402,13 +402,55 @@ class StatusResponse(object):
         return True
 
     def assertion_ok(self):
-        """ Check assetions attributes, additional checks may be implemented """
+        """ Check assertions attributes, additional checks may be implemented
+
+            Commented check may be too pedantic
+        """
         valid = True
         if hasattr(self.response, 'assertion'):
+            # breakpoint()
             for ass in self.response.assertion:
+                # Version
                 if ass.version and ass.version != '2.0':
-                    valid = False
-                    break
+                    raise VersionMismatch(f'{ass.version}')
+                # IssueInstant
+                # if hasattr(ass, 'issue_instant') and not self.issue_instant_ok(ass.issue_instant):
+                    # breakpoint()
+                    # raise Exception('Invalid Issue Instant')
+                # NameQualifier
+                # if not hasattr(ass.subject.name_id, 'name_qualifier') or \
+                   # not ass.subject.name_id.name_qualifier:
+                    # raise Exception('Not a valid subject.name_id.name_qualifier')
+                if hasattr(ass.subject.name_id, 'format') and not ass.subject.name_id.format:
+                    raise Exception('Not a valid subject.name_id.format')
+                if hasattr(ass.subject.name_id, 'format'):
+                    if ass.subject.name_id.format not in dict(saml.NAMEID_FORMATS_SAML2).values():
+                        msg = 'Not a valid subject.name_id.format: {}'
+                        raise Exception(msg.format(ass.subject.name_id.format))
+
+                # subject confirmation
+                for subject_confirmation in ass.subject.subject_confirmation:
+                    if not hasattr(subject_confirmation, 'subject_confirmation_data') or \
+                         not getattr(subject_confirmation, 'subject_confirmation_data', None):
+                        msg = 'subject_confirmation_data not present'
+                        raise Exception(msg)
+
+                    if not subject_confirmation.subject_confirmation_data.in_response_to:
+                        raise Exception('subject.subject_confirmation_data in response -> null data')
+
+                    # TODO: match to the recipient
+                    # if self.recipient != subject_confirmation.subject_confirmation_data.recipient:
+                        # msg = 'subject_confirmation_data.recipient not valid: {}'
+                        # raise Exception(msg.format(subject_confirmation_data.recipient))
+
+                    if not hasattr(subject_confirmation.subject_confirmation_data, 'not_on_or_after') or \
+                         not getattr(subject_confirmation.subject_confirmation_data, 'not_on_or_after', None):
+                        raise Exception('subject.subject_confirmation_data not_on_or_after not valid')
+
+                    if not hasattr(subject_confirmation.subject_confirmation_data, 'in_response_to') or \
+                         not getattr(subject_confirmation.subject_confirmation_data, 'in_response_to', None):
+                        raise Exception('subject.subject_confirmation_data in response to not valid')
+
         return valid
 
     def _verify(self):
@@ -435,7 +477,7 @@ class StatusResponse(object):
 
         valid = all(
                     (
-                        self.issue_instant_ok(),
+                        self.issue_instant_ok(self.response.issue_instant),
                         self.issuer_ok(),
                         self.status_ok(),
                         self.assertion_ok()
