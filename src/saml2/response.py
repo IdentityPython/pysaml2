@@ -421,9 +421,10 @@ class StatusResponse(object):
                 # if not hasattr(ass.subject.name_id, 'name_qualifier') or \
                    # not ass.subject.name_id.name_qualifier:
                     # raise Exception('Not a valid subject.name_id.name_qualifier')
-                if hasattr(ass.subject.name_id, 'format') and not ass.subject.name_id.format:
-                    raise Exception('Not a valid subject.name_id.format')
                 if hasattr(ass.subject.name_id, 'format'):
+                    if not ass.subject.name_id.format:
+                        raise Exception('Not a valid subject.name_id.format')
+
                     if ass.subject.name_id.format not in dict(saml.NAMEID_FORMATS_SAML2).values():
                         msg = 'Not a valid subject.name_id.format: {}'
                         raise Exception(msg.format(ass.subject.name_id.format))
@@ -446,10 +447,6 @@ class StatusResponse(object):
                     if not hasattr(subject_confirmation.subject_confirmation_data, 'not_on_or_after') or \
                          not getattr(subject_confirmation.subject_confirmation_data, 'not_on_or_after', None):
                         raise Exception('subject.subject_confirmation_data not_on_or_after not valid')
-
-                    if not hasattr(subject_confirmation.subject_confirmation_data, 'in_response_to') or \
-                         not getattr(subject_confirmation.subject_confirmation_data, 'in_response_to', None):
-                        raise Exception('subject.subject_confirmation_data in response to not valid')
 
         return valid
 
