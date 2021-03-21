@@ -11,7 +11,7 @@ from saml2.s_utils import do_ava
 from saml2 import saml, ExtensionElement, NAMESPACE
 from saml2 import extension_elements_to_elements
 from saml2 import SAMLError
-from saml2.saml import NAME_FORMAT_UNSPECIFIED, NAMEID_FORMAT_PERSISTENT, NameID
+from saml2.saml import NAME_FORMAT_UNSPECIFIED, NAMEID_FORMAT_PERSISTENT, NameID, XSI_TYPE
 
 import logging
 logger = logging.getLogger(__name__)
@@ -343,7 +343,38 @@ class AttributeConverter(object):
             elif not value.text:
                 val.append('')
             else:
-                val.append(value.text.strip())
+                cur_val = value.text.strip()
+                if XSI_TYPE in value.extension_attributes:
+                    cur_type = value.extension_attributes[XSI_TYPE]
+                    cur_type_prefix = None
+                    if cur_type.find(":") > 0:
+                        cur_type_prefix = cur_type[0:cur_type.find(":")]
+                        if ("xmlns:" + cur_type_prefix) in value.extension_attributes:
+                            cur_type = "{" + value.extension_attributes["xmlns:" + cur_type_prefix] + "}" + cur_type[(len(cur_type_prefix) + 1):]
+                    
+                    if cur_type == "{http://www.w3.org/2001/XMLSchema}boolean":
+                        cur_val = (True if cur_val == "true" else False)
+                    elif cur_type in ["{http://www.w3.org/2001/XMLSchema}decimal",
+                                      "{http://www.w3.org/2001/XMLSchema}float",
+                                      "{http://www.w3.org/2001/XMLSchema}double",
+                                      "{http://www.w3.org/2001/XMLSchema}float"]:
+                        cur_val = float(cur_val)
+                    elif cur_type in ["{http://www.w3.org/2001/XMLSchema}integer",
+                                      "{http://www.w3.org/2001/XMLSchema}nonPositiveInteger",
+                                      "{http://www.w3.org/2001/XMLSchema}negativeInteger",
+                                      "{http://www.w3.org/2001/XMLSchema}int",
+                                      "{http://www.w3.org/2001/XMLSchema}short",
+                                      "{http://www.w3.org/2001/XMLSchema}byte",
+                                      "{http://www.w3.org/2001/XMLSchema}nonNegativeInteger",
+                                      "{http://www.w3.org/2001/XMLSchema}unsignedInt",
+                                      "{http://www.w3.org/2001/XMLSchema}unsignedShort",
+                                      "{http://www.w3.org/2001/XMLSchema}unsignedByte",
+                                      "{http://www.w3.org/2001/XMLSchema}positiveInteger"]:
+                        cur_val = int(cur_val)
+                    elif cur_type in ["{http://www.w3.org/2001/XMLSchema}long",
+                                      "{http://www.w3.org/2001/XMLSchema}unsignedLong"]:
+                        cur_val = long(cur_val)
+                val.append(cur_val)
 
         return attr, val
 
