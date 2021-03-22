@@ -123,7 +123,7 @@ Example::
 Additional public certs that will be listed.  Useful during cert/key rotation or
 if you need to include a certificate chain.
 
-Each entry in *additional_cert_files* must be a PEM formatted file with a single certificate.
+Each entry in *additional_cert_files* must be a PEM formatted file.
 
 entity_attributes
 ^^^^^^^^^^^^^^^^^
@@ -267,7 +267,7 @@ Example::
     cert_file: "cert.pem"
 
 This is the public part of the service private/public key pair.
-*cert_file* must be a PEM formatted file with a single certificate.
+*cert_file* must be a PEM formatted file.
 
 
 encryption_keypairs

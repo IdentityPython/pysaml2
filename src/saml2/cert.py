@@ -2,12 +2,13 @@ __author__ = 'haho0032'
 
 import base64
 import datetime
+from os import remove
+from os.path import join
+
 import dateutil.parser
 import pytz
 import six
 from OpenSSL import crypto
-from os.path import join
-from os import remove
 
 import saml2.cryptography.pki
 
@@ -121,7 +122,6 @@ class OpenSSLWrapper(object):
             c_f = join(cert_dir, cert_file)
             k_f = join(cert_dir, key_file)
 
-
         # create a key pair
         k = crypto.PKey()
         k.generate_key(crypto.TYPE_RSA, key_length)
@@ -142,8 +142,8 @@ class OpenSSLWrapper(object):
         cert.get_subject().CN = cn
         if not request:
             cert.set_serial_number(sn)
-            cert.gmtime_adj_notBefore(valid_from)  #Valid before present time
-            cert.gmtime_adj_notAfter(valid_to)  #3 650 days
+            cert.gmtime_adj_notBefore(valid_from)  # Valid before present time
+            cert.gmtime_adj_notAfter(valid_to)  # 3 650 days
             cert.set_issuer(cert.get_subject())
         cert.set_pubkey(k)
         cert.sign(k, hash_alg)
@@ -188,7 +188,6 @@ class OpenSSLWrapper(object):
 
         if type in ["der", "cer", "crt"]:
             return base64.b64encode(str(str_data))
-
 
     def create_cert_signed_certificate(self, sign_cert_str, sign_key_str,
                                        request_cert_str, hash_alg="sha256",
@@ -277,7 +276,6 @@ class OpenSSLWrapper(object):
             return False
         return True
 
-
     def verify(self, signing_cert_str, cert_str):
         """
         Verifies if a certificate is valid and signed by a given certificate.
@@ -324,7 +322,7 @@ class OpenSSLWrapper(object):
                 cert_str = cert_str.encode('ascii')
 
             cert_crypto = saml2.cryptography.pki.load_pem_x509_certificate(
-                    cert_str)
+                cert_str)
 
             try:
                 crypto.verify(ca_cert, cert_crypto.signature,
@@ -335,3 +333,67 @@ class OpenSSLWrapper(object):
                 return False, "Certificate is incorrectly signed."
         except Exception as e:
             return False, "Certificate is not valid for an unknown reason. %s" % str(e)
+
+
+def read_certs_from_file(cert_file, cert_type="pem"):
+    """ Reads a certificate (chain) from a file.
+
+    :param cert_file: The name of the file
+    :param cert_type: The certificate type
+    :return: A base64 encoded certificate chain as a list of strings
+     or a list with the empty string
+    """
+
+    if not cert_file:
+        return ['']
+
+    with open(cert_file, 'rb') as handler:
+        data = handler.read()
+
+    if cert_type == 'pem':
+        _a = data.decode()
+        _b = _a.replace('\r\n', '\n')
+        # filter empty lines
+        lines = _b.split('\n')
+
+        cert_chain = []
+        current_cert = None
+        index = 0
+
+        for index, line in enumerate(lines):
+            if current_cert is None:
+                if not line or line.isspace():
+                    continue
+
+                if line in (
+                    '-----BEGIN CERTIFICATE-----',
+                    '-----BEGIN PUBLIC KEY-----'
+                ):
+                    current_cert = []
+                else:
+                    raise CertificateError(
+                        'Expected start of certificate at line %d, but found "%s"' % (
+                            index, line))
+            elif line in (
+                '-----END CERTIFICATE-----',
+                '-----END PUBLIC KEY-----'
+            ):
+                cert_chain.append(''.join(current_cert))
+                current_cert = None
+
+            else:
+                current_cert.append(line)
+
+        if not cert_chain:
+            raise CertificateError(
+                'Expected start of certificate, but reached the end of the file')
+
+        if current_cert is not None:
+            raise CertificateError(
+                'Unexpected end of certificate found at line %d' % index)
+
+        return cert_chain
+
+    if cert_type in ['der', 'cer', 'crt']:
+        _cert = base64.b64encode(data)
+        return [_cert.decode()]

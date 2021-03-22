@@ -8,7 +8,7 @@ from saml2.extension import pefim
 from saml2.extension.pefim import SPCertEnc
 from saml2.samlp import Extensions
 from saml2.samlp import authn_request_from_string
-from saml2.sigver import read_cert_from_file
+from saml2.cert import read_certs_from_file
 from pathutils import full_path
 
 __author__ = 'roland'
@@ -18,7 +18,7 @@ conf.load_file("server_conf")
 client = Saml2Client(conf)
 
 # place a certificate in an authn request
-cert = read_cert_from_file(full_path("test.pem"), "pem")
+cert = read_certs_from_file(full_path("test.pem"), "pem")[0]
 
 spcertenc = SPCertEnc(
     x509_data=ds.X509Data(
