@@ -1024,7 +1024,8 @@ class Entity(HTTPBase):
                 else:
                     return typ
 
-    def _parse_request(self, enc_request, request_cls, service, binding):
+    def _parse_request(self, enc_request, request_cls, service, binding,
+                       relay_state=None, sigalg=None, signature=None):
         """Parse a Request
 
         :param enc_request: The request in its transport format
@@ -1070,7 +1071,9 @@ class Entity(HTTPBase):
         if only_valid_cert:
             must = True
         _request = _request.loads(xmlstr, binding, origdoc=enc_request,
-                                  must=must, only_valid_cert=only_valid_cert)
+                                  must=must, only_valid_cert=only_valid_cert,
+                                  relay_state=relay_state, sigalg=sigalg,
+                                  signature=signature)
 
         _log_debug("Loaded request")
 
