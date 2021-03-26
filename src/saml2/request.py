@@ -7,6 +7,8 @@ from saml2.s_utils import OtherError
 from saml2.validate import valid_instance
 from saml2.validate import NotValid
 from saml2.response import IncorrectlySigned
+from saml2.sigver import verify_redirect_signature
+from saml2.sigver import SignatureError
 
 logger = logging.getLogger(__name__)
 
@@ -37,20 +39,56 @@ class Request(object):
         self.not_on_or_after = 0
 
     def _loads(self, xmldata, binding=None, origdoc=None, must=None,
-               only_valid_cert=False):
-        if binding == BINDING_HTTP_REDIRECT:
-            pass
-
+               only_valid_cert=False, relayState=None, sigalg=None, signature=None):
         # own copy
         self.xmlstr = xmldata[:]
-        logger.debug("xmlstr: %s", self.xmlstr)
+        logger.debug("xmlstr: %s, relayState: %s, sigalg: %s, signature: %s",
+                     self.xmlstr, relayState, sigalg, signature)
         try:
+            # If redirect binding, and provided SigAlg, Signature use that to verify
+            # and skip signatureCheck withing SAMLRequest/xmldata
+            _do_redirect_sig_check = False
+            _saml_msg = {}
+            if binding == BINDING_HTTP_REDIRECT and must \
+                and sigalg is not None and signature is not None:
+                logger.debug("Request signature check will be done using query param,"
+                             " instead of SAMLRequest content")
+                _do_redirect_sig_check = True
+                must = False
+                _saml_msg = {
+                    "SAMLRequest": origdoc,
+                    "SigAlg": sigalg,
+                    "Signature": signature
+                }
+                # RelayState is optional so only add when available,
+                # signature validate fails if passed as None
+                if relayState is not None:
+                    _saml_msg["RelayState"] = relayState
+
             self.message = self.signature_check(xmldata, origdoc=origdoc,
                                                 must=must,
                                                 only_valid_cert=only_valid_cert)
+
+            if _do_redirect_sig_check:
+                _issuer = self.message.issuer.text.strip()
+                _certs = self.sec.metadata.certs(_issuer, "any", "signing")
+                logger.debug("Certs: %s, _saml_msg: %s", _certs, _saml_msg)
+                _verified_ok = False
+                for cert in _certs:
+                    if verify_redirect_signature(_saml_msg, self.sec.sec_backend, cert):
+                        _verified_ok = True
+                        break
+
+                logger.info("Redirect request signature check: %s", _verified_ok)
+                # Set self.message to None, it shall raise error further down.
+                if not _verified_ok:
+                    self.message = None
+                    raise SignatureError('Failed to verify signature')
+
         except TypeError:
             raise
         except Exception as excp:
+            self.message = None
             logger.info("EXCEPTION: %s", excp)
 
         if not self.message:
@@ -97,9 +135,10 @@ class Request(object):
         return valid
 
     def loads(self, xmldata, binding, origdoc=None, must=None,
-              only_valid_cert=False):
+              only_valid_cert=False, relay_state=None, sigalg=None, signature=None):
         return self._loads(xmldata, binding, origdoc, must,
-                           only_valid_cert=only_valid_cert)
+                           only_valid_cert=only_valid_cert, relayState=relay_state,
+                           sigalg=sigalg, signature=signature)
 
     def verify(self):
         try:

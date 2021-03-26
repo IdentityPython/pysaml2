@@ -123,6 +123,7 @@ venv.bak/
 
 # PyCharm project files
 .idea/
+*.iml
 
 # mkdocs documentation
 /site
