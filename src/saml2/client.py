@@ -280,6 +280,7 @@ class Saml2Client(Base):
                 except KeyError:
                     session_indexes = None
 
+                sign = sign if sign is not None else self.logout_requests_signed
                 sign_post = False if binding == BINDING_HTTP_REDIRECT else sign
                 sign_redirect = False if binding == BINDING_HTTP_POST and sign else sign
 

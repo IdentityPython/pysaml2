@@ -241,7 +241,11 @@ class Entity(HTTPBase):
         :return: A dictionary
         """
 
-        # XXX sig-allowed should be configurable
+        # XXX SIG_ALLOWED_ALG should be configurable
+        # XXX should_sign stems from authn_requests_signed and sign_response
+        # XXX based on the type of the entity
+        # XXX but should also take into account the type of message (Authn/Logout/etc)
+        # XXX should_sign should be split and the exact config options should be checked
         sign = sign if sign is not None else self.should_sign
         sign_alg = sigalg or self.signing_algorithm
         if sign_alg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
