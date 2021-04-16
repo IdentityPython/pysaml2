@@ -1,12 +1,15 @@
 from contextlib import closing
-from saml2 import sigver
+
+from pathutils import full_path
 from saml2 import config
+from saml2 import sigver
 from saml2.assertion import Policy
 from saml2.attribute_converter import ac_factory
-from pathutils import full_path
+from saml2.extension import mdattr
+from saml2.mdie import to_dict
 from saml2.mdstore import MetadataStore
+from saml2.saml import Attribute, NAME_FORMAT_URI
 from saml2.server import Server
-
 
 ATTRCONV = ac_factory(full_path("attributemaps"))
 sec_config = config.Config()
@@ -228,3 +231,41 @@ def test_entity_category_import_from_path():
             "sn"
         ]
     )
+
+
+def test_filter_ava_required_attributes_with_no_friendly_name():
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    mds.imp(
+        [
+            {
+                "class": "saml2.mdstore.MetaDataFile",
+                "metadata": [(full_path("entity_no_friendly_name_sp.xml"),)]
+            }
+        ]
+    )
+
+    policy_conf = {
+        "default": {
+            "lifetime": {"minutes": 15},
+            "entity_categories": ["swamid"]
+        }
+    }
+
+    policy = Policy(policy_conf, mds)
+
+    ava = {
+        "givenName": ["Derek"],
+        "sn": ["Jeter"],
+        "mail": ["derek@nyy.mlb.com"],
+        "c": ["USA"],
+        "eduPersonTargetedID": "foo!bar!xyz",
+        "norEduPersonNIN": "19800101134"
+    }
+
+    # Require attribute eduPersonTargetedID but leave out friendlyName in attribute creation
+    edu_person_targeted_id_oid = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.10'
+    edu_person_targeted_id = to_dict(
+        Attribute(name=edu_person_targeted_id_oid,
+                  name_format=NAME_FORMAT_URI), onts=[mdattr])
+    ava = policy.filter(ava, "https://no-friendly-name.example.edu/saml2/metadata/", required=[edu_person_targeted_id])
+    assert _eq(list(ava.keys()), ["eduPersonTargetedID"])
