@@ -454,12 +454,16 @@ class Policy(object):
 
         def post_entity_categories(maps, sp_entity_id=None, mds=None, required=None):
             restrictions = {}
-            if required is not None:
-                _req = []
-                for d in required:
-                    local_name = get_local_name(acs=self.acs, attr=d['name'], name_format=d['name_format'])
-                    _req.append(local_name.lower())
-                required = _req
+            required_friendly_names = [
+                d.get('friendly_name') or get_local_name(
+                    acs=self.acs, attr=d['name'], name_format=d['name_format']
+                )
+                for d in (required or [])
+            ]
+            required = [
+                friendly_name.lower()
+                for friendly_name in required_friendly_names
+            ]
 
             if mds:
                 ecs = mds.entity_categories(sp_entity_id)

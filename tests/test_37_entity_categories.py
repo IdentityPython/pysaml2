@@ -10,6 +10,8 @@ from saml2.mdie import to_dict
 from saml2.mdstore import MetadataStore
 from saml2.saml import Attribute, NAME_FORMAT_URI
 from saml2.server import Server
+from saml2.md import RequestedAttribute
+
 
 ATTRCONV = ac_factory(full_path("attributemaps"))
 sec_config = config.Config()
@@ -234,6 +236,7 @@ def test_entity_category_import_from_path():
 
 
 def test_filter_ava_required_attributes_with_no_friendly_name():
+    entity_id = "https://no-friendly-name.example.edu/saml2/metadata/"
     mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
     mds.imp(
         [
@@ -250,7 +253,6 @@ def test_filter_ava_required_attributes_with_no_friendly_name():
             "entity_categories": ["swamid"]
         }
     }
-
     policy = Policy(policy_conf, mds)
 
     ava = {
@@ -259,13 +261,20 @@ def test_filter_ava_required_attributes_with_no_friendly_name():
         "mail": ["derek@nyy.mlb.com"],
         "c": ["USA"],
         "eduPersonTargetedID": "foo!bar!xyz",
-        "norEduPersonNIN": "19800101134"
+        "norEduPersonNIN": "19800101134",
     }
 
-    # Require attribute eduPersonTargetedID but leave out friendlyName in attribute creation
-    edu_person_targeted_id_oid = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.10'
-    edu_person_targeted_id = to_dict(
-        Attribute(name=edu_person_targeted_id_oid,
-                  name_format=NAME_FORMAT_URI), onts=[mdattr])
-    ava = policy.filter(ava, "https://no-friendly-name.example.edu/saml2/metadata/", required=[edu_person_targeted_id])
+    attribute_requirements = mds.attribute_requirement(entity_id)
+    required = attribute_requirements.get("required", [])
+    optional = attribute_requirements.get("optional", [])
+
+    # ensure the requirements define the eduPersonTargetedID
+    # without the friendlyName attribute
+    oid_eptid = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.10'
+    requested_attribute_eptid = RequestedAttribute(
+        name=oid_eptid, name_format=NAME_FORMAT_URI, is_required='true'
+    )
+    assert required == [to_dict(requested_attribute_eptid, onts=[mdattr])]
+
+    ava = policy.filter(ava, entity_id, required=required, optional=optional)
     assert _eq(list(ava.keys()), ["eduPersonTargetedID"])
