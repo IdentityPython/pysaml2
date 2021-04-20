@@ -663,7 +663,10 @@ class Entity(HTTPBase):
                     delete_tmpfiles=self.config.delete_tmpfiles,
                 )
                 response = self.sec.encrypt_assertion(
-                    response, tmp.name, pre_encryption_part(), node_xpath=node_xpath
+                    response,
+                    tmp.name,
+                    pre_encryption_part(encrypt_cert=unwrapped_cert),
+                    node_xpath=node_xpath,
                 )
                 return response
             except Exception as ex:

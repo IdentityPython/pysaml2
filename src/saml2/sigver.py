@@ -1882,24 +1882,28 @@ def pre_signature_part(
 
 
 def pre_encryption_part(
+    *,
     msg_enc=TRIPLE_DES_CBC,
     key_enc=RSA_OAEP_MGF1P,
     key_name='my-rsa-key',
     encrypted_key_id=None,
     encrypted_data_id=None,
+    encrypt_cert=None,
 ):
-    """
-
-    :param msg_enc:
-    :param key_enc:
-    :param key_name:
-    :return:
-    """
     ek_id = encrypted_key_id or "EK_{id}".format(id=gen_random_key())
     ed_id = encrypted_data_id or "ED_{id}".format(id=gen_random_key())
     msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
     key_encryption_method = EncryptionMethod(algorithm=key_enc)
-    key_info = ds.KeyInfo(key_name=ds.KeyName(text=key_name))
+
+    x509_data = (
+        ds.X509Data(x509_certificate=ds.X509Certificate(text=encrypt_cert))
+        if encrypt_cert
+        else None
+    )
+    key_info = ds.KeyInfo(
+        key_name=ds.KeyName(text=key_name),
+        x509_data=x509_data,
+    )
 
     encrypted_key = EncryptedKey(
         id=ek_id,
