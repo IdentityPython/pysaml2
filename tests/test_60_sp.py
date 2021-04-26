@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import base64
+from base64 import encodebytes as b64encode
+
 import pytest
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
@@ -73,7 +74,7 @@ class TestSP():
             "urn:mace:example.com:saml:roland:sp", trans_name_policy,
             "foba0001@example.com", authn=AUTHN)
 
-        resp_str = base64.encodestring(resp_str.encode('utf-8'))
+        resp_str = b64encode(resp_str.encode('utf-8'))
         self.sp.outstanding_queries = {"id1": "http://www.example.com/service"}
         session_info = self.sp._eval_authn_response(
             {}, {"SAMLResponse": [resp_str]})
