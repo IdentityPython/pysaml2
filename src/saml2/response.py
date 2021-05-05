@@ -435,7 +435,10 @@ class StatusResponse(object):
         self.response = mold.response
 
     def issuer(self):
-        return self.response.issuer.text.strip()
+        if self.response.issuer is None:
+            return ""
+        else:
+            return self.response.issuer.text.strip()
 
 
 class LogoutResponse(StatusResponse):

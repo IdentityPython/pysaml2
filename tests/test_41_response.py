@@ -71,6 +71,16 @@ class TestResponse:
                 name_id=name_id,
                 authn=AUTHN)
 
+            self._resp_issuer_none = server.create_authn_response(
+                IDENTITY,
+                "id12",  # in_response_to
+                "http://lingon.catalogix.se:8087/",
+                # consumer_url
+                "urn:mace:example.com:saml:roland:sp",
+                # sp_entity_id
+                name_id=name_id)
+            self._resp_issuer_none.issuer = None
+
             conf = config.SPConfig()
             conf.load_file("server_conf")
             self.conf = conf
@@ -98,6 +108,19 @@ class TestResponse:
 
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
+
+    def test_issuer_none(self):
+        xml_response = ("%s" % (self._resp_issuer_none,))
+        resp = response_factory(xml_response, self.conf,
+                                return_addrs=[
+                                    "http://lingon.catalogix.se:8087/"],
+                                outstanding_queries={
+                                    "id12": "http://localhost:8088/sso"},
+                                timeslack=TIMESLACK, decode=False)
+
+        assert isinstance(resp, StatusResponse)
+        assert isinstance(resp, AuthnResponse)
+        assert resp.issuer() == ""
 
     @mock.patch('saml2.time_util.datetime')
     def test_false_sign(self, mock_datetime):
