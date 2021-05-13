@@ -5,8 +5,8 @@ PySAML2 - SAML2 in Python
 :Version: see VERSION_
 :Documentation: https://pysaml2.readthedocs.io/
 
-.. image:: https://api.travis-ci.org/IdentityPython/pysaml2.png?branch=master
-    :target: https://travis-ci.org/IdentityPython/pysaml2
+.. image:: https://api.travis-ci.com/IdentityPython/pysaml2.png?branch=master
+    :target: https://travis-ci.com/IdentityPython/pysaml2
 
 .. image:: https://img.shields.io/pypi/pyversions/pysaml2.svg
     :target: https://pypi.org/project/pysaml2/
