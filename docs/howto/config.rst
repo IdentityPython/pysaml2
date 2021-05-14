@@ -662,8 +662,8 @@ True or False. Default is False.
 want_authn_requests_signed
 """"""""""""""""""""""""""
 
-Indicates that the AuthnRequest received by this IdP should be signed. Can be True or False.
-The default value is False.
+Indicates that the AuthnRequest received by this IdP should be signed. Can be ``True`` or ``False``.
+The default value is ``False``.
 
 want_authn_requests_only_with_valid_cert
 """"""""""""""""""""""""""""""""""""""""
@@ -768,7 +768,7 @@ scope
 """""
 
 A list of string values that will be used to set the ``<Scope>`` element
-The default value of regexp is ``false``.
+The default value of regexp is ``False``.
 
 Example::
 
