@@ -1121,7 +1121,7 @@ class AuthnResponse(StatusResponse):
             raise StatusInvalidAuthnResponseStatement(
                 "The Authn Response Statement is not valid"
             )
-        
+
     def __str__(self):
         return self.xmlstr
 
