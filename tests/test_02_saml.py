@@ -226,11 +226,11 @@ class TestSAMLBase:
         foo = saml2.make_vals("lions", AttributeValue, part=True)
         txt = foo.to_string().decode('utf-8')
         nsstr = foo.to_string({"saml": saml.NAMESPACE}).decode('utf-8')
-        assert nsstr != txt
+        assert nsstr == txt # this must be the same
         print(txt)
         print(nsstr)
         assert "saml:AttributeValue" in nsstr
-        assert "saml:AttributeValue" not in txt
+        assert "saml:AttributeValue" in txt # this must be contained
 
     def test_set_text_empty(self):
         av = AttributeValue()

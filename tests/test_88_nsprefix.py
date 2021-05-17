@@ -10,13 +10,15 @@ __author__ = 'roland'
 def test_nsprefix():
     status_message = samlp.StatusMessage()
     status_message.text = "OK"
-
+                                           
+    status_message.register_prefix(nspair={"samla": saml.NAMESPACE,
+                                           "samla": samlp.NAMESPACE})
     txt = "%s" % status_message
 
-    assert "ns0:StatusMessage" in txt
+    assert "samla:StatusMessage" in txt
 
-    status_message.register_prefix({"saml2": saml.NAMESPACE,
-                                    "saml2p": samlp.NAMESPACE})
+    status_message.register_prefix(nspair={"saml2p": samlp.NAMESPACE,
+                                           "saml2": saml.NAMESPACE})
 
     txt = "%s" % status_message
 
