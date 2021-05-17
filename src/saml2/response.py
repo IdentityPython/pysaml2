@@ -435,7 +435,12 @@ class StatusResponse(object):
         self.response = mold.response
 
     def issuer(self):
-        return self.response.issuer.text.strip()
+        issuer_value = (
+            self.response.issuer.text
+            if self.response.issuer is not None
+            else ""
+        ).strip()
+        return issuer_value
 
 
 class LogoutResponse(StatusResponse):
@@ -1116,7 +1121,7 @@ class AuthnResponse(StatusResponse):
             raise StatusInvalidAuthnResponseStatement(
                 "The Authn Response Statement is not valid"
             )
-        
+
     def __str__(self):
         return self.xmlstr
 
