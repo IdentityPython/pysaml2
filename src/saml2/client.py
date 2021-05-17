@@ -251,6 +251,11 @@ class Saml2Client(Base):
         not_done = entity_ids[:]
         responses = {}
 
+        if expected_binding is None:
+            expected_binding = next(
+                iter(self.config.preferred_binding["single_logout_service"]),
+                None,
+            )
         for entity_id in entity_ids:
             logger.debug("Logout from '%s'", entity_id)
             # for all where I can use the SOAP binding, do those first
