@@ -3,9 +3,14 @@
 #
 # Generated Mon May  2 14:23:33 2011 by parse_xsd.py version 0.4.
 #
+# A summary of available specifications can be found at:
+# https://wiki.oasis-open.org/security/FrontPage
+#
 # saml core specifications to be found at:
 # if any question arise please query the following pdf.
 # http://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf
+# The specification was later updated with errata, and the new version is here:
+# https://www.oasis-open.org/committees/download.php/56776/sstc-saml-core-errata-2.0-wd-07.pdf
 #
 
 
@@ -81,15 +86,14 @@ NAMEID_FORMATS_SAML2 = (
 
 # a profile outlines a set of rules describing how to embed SAML assertions.
 # https://docs.oasis-open.org/security/saml/v2.0/saml-profiles-2.0-os.pdf
+# The specification was later updated with errata, and the new version is here:
+# https://www.oasis-open.org/committees/download.php/56782/sstc-saml-profiles-errata-2.0-wd-07.pdf
 
 # XML based values for SAML attributes  
 PROFILE_ATTRIBUTE_BASIC = (
     "urn:oasis:names:tc:SAML:2.0:profiles:attribute:basic")
 
 # an AuthnRequest is made to initiate authentication
-# TODO: it is not clear that the request sets the context
-#       for the AuthnRequest, maybe rename to AUTHN_CONTEXT_PASSWORD
-
 # authenticate the request with login credentials
 AUTHN_PASSWORD = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password"
 # authenticate the request with login credentials, over tls/https

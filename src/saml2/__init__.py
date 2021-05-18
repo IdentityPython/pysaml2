@@ -61,6 +61,8 @@ DECISION_TYPE_INDETERMINATE = "Indeterminate"
 
 VERSION = "2.0"
 # http://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf
+# The specification was later updated with errata, and the new version is here:
+# http://www.oasis-open.org/committees/download.php/56779/sstc-saml-bindings-errata-2.0-wd-06.pdf
 # parse a SOAP header, make a SOAP request, and receive a SOAP response
 BINDING_SOAP = 'urn:oasis:names:tc:SAML:2.0:bindings:SOAP'
 # parse a PAOS header, make a PAOS request, and receive a PAOS response
