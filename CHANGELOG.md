@@ -1,6 +1,26 @@
 # Changelog
 
 
+## 6.5.2 (2021-05-18)
+
+- Add shibmd_scopes metadata extractor
+- Allow the Issuer element on a Response to be missing
+- Respect the preferred_binding configuration for the single_logout_service
+- Fix logout signature flags for redirect, post and soap requests
+- Respect the logout_requests_signed configuration option
+- Fix crash when applying policy on RequestedAttribute without a friendlyName
+- Correctly validate IssueInstant
+- Correctly handle AudienceRestriction elements with no value
+- Raise InvalidAssertion exception when assertion requirements are not met
+- Raise SAMLError on failure to parse a metadata file
+- Raise StatusInvalidAuthnResponseStatement when the AuthnStatement is not valid
+- Handle all forms of ACS endpoint specifications
+- tests: Always use base64.encodebytes; base64.encodestring has been dropped
+- build: Set minimum version needed for xmlschema
+- docs: Update Travis CI badge from travis-ci.org to travis-ci.com
+- examples: Fix example code
+
+
 ## 6.5.1 (2021-01-21)
 
 - Fix the parser to take into account both the xs and xsd namespace prefixes
