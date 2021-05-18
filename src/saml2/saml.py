@@ -3,6 +3,17 @@
 #
 # Generated Mon May  2 14:23:33 2011 by parse_xsd.py version 0.4.
 #
+# A summary of available specifications can be found at:
+# https://wiki.oasis-open.org/security/FrontPage
+#
+# saml core specifications to be found at:
+# if any question arise please query the following pdf.
+# http://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf
+# The specification was later updated with errata, and the new version is here:
+# https://www.oasis-open.org/committees/download.php/56776/sstc-saml-core-errata-2.0-wd-07.pdf
+#
+
+
 import base64
 
 from saml2.validate import valid_ipv4, MustValueError
@@ -17,32 +28,53 @@ import six
 from saml2 import xmldsig as ds
 from saml2 import xmlenc as xenc
 
+# authentication information fields
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
 
-XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+# xmlschema definition
+XSD = "xs"
+# xmlschema templates and extensions
 XS_NAMESPACE = 'http://www.w3.org/2001/XMLSchema'
-
+# xmlschema-instance, which contains several builtin attributes
+XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+# xml soap namespace
+NS_SOAP_ENC = "http://schemas.xmlsoap.org/soap/encoding/"
+# type definitions for xmlschemas
 XSI_TYPE = '{%s}type' % XSI_NAMESPACE
+# nil type definition for xmlschemas 
 XSI_NIL = '{%s}nil' % XSI_NAMESPACE
 
+# idp and sp communicate usually about a subject(NameID)
+# the format determines the category the subject is in
+
+# custom subject
 NAMEID_FORMAT_UNSPECIFIED = (
     "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified")
+# subject as email address
 NAMEID_FORMAT_EMAILADDRESS = (
     "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
+# subject as x509 key
 NAMEID_FORMAT_X509SUBJECTNAME = (
     "urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName")
+# subject as windows domain name
 NAMEID_FORMAT_WINDOWSDOMAINQUALIFIEDNAME = (
     "urn:oasis:names:tc:SAML:1.1:nameid-format:WindowsDomainQualifiedName")
+# subject from a kerberos instance
 NAMEID_FORMAT_KERBEROS = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:kerberos")
+# subject as name
 NAMEID_FORMAT_ENTITY = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:entity")
+# linked subject
 NAMEID_FORMAT_PERSISTENT = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent")
+# annonymous subject
 NAMEID_FORMAT_TRANSIENT = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:transient")
+# subject avaiable in encrypted format
 NAMEID_FORMAT_ENCRYPTED = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:encrypted")
+# dicc for avaiable formats
 NAMEID_FORMATS_SAML2 = (
     ('NAMEID_FORMAT_EMAILADDRESS', NAMEID_FORMAT_EMAILADDRESS),
     ('NAMEID_FORMAT_ENCRYPTED', NAMEID_FORMAT_ENCRYPTED),
@@ -51,40 +83,79 @@ NAMEID_FORMATS_SAML2 = (
     ('NAMEID_FORMAT_TRANSIENT', NAMEID_FORMAT_TRANSIENT),
     ('NAMEID_FORMAT_UNSPECIFIED', NAMEID_FORMAT_UNSPECIFIED),
 )
+
+# a profile outlines a set of rules describing how to embed SAML assertions.
+# https://docs.oasis-open.org/security/saml/v2.0/saml-profiles-2.0-os.pdf
+# The specification was later updated with errata, and the new version is here:
+# https://www.oasis-open.org/committees/download.php/56782/sstc-saml-profiles-errata-2.0-wd-07.pdf
+
+# XML based values for SAML attributes  
 PROFILE_ATTRIBUTE_BASIC = (
     "urn:oasis:names:tc:SAML:2.0:profiles:attribute:basic")
 
+# an AuthnRequest is made to initiate authentication
+# authenticate the request with login credentials
 AUTHN_PASSWORD = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password"
+# authenticate the request with login credentials, over tls/https
 AUTHN_PASSWORD_PROTECTED = \
     "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
 
+# attribute statements is key:value metadata shared with your app
+
+# custom format
 NAME_FORMAT_UNSPECIFIED = (
     "urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified")
+# uri format
 NAME_FORMAT_URI = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+# XML-based format
 NAME_FORMAT_BASIC = "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+# dicc for avaiable formats
 NAME_FORMATS_SAML2 = (
     ('NAME_FORMAT_BASIC', NAME_FORMAT_BASIC),
     ('NAME_FORMAT_URI', NAME_FORMAT_URI),
     ('NAME_FORMAT_UNSPECIFIED', NAME_FORMAT_UNSPECIFIED),
 )
+
+# the SAML authority's decision can be predetermined by arbitrary context
+
+# the specified action is permitted
 DECISION_TYPE_PERMIT = "Permit"
+# the specified action is denied
 DECISION_TYPE_DENY = "Deny"
+# the SAML authority cannot determine if the action is permitted or denied
 DECISION_TYPE_INDETERMINATE = "Indeterminate"
 
+
+# consent attributes determine wether consent has been given and under
+# what conditions
+
+# no claim to consent is made
 CONSENT_UNSPECIFIED = "urn:oasis:names:tc:SAML:2.0:consent:unspecified"
+# consent has been obtained
 CONSENT_OBTAINED = "urn:oasis:names:tc:SAML:2.0:consent:obtained"
+# consent has been obtained before the message has been initiated
 CONSENT_PRIOR = "urn:oasis:names:tc:SAML:2.0:consent:prior"
+# consent has been obtained implicitly
 CONSENT_IMPLICIT = "urn:oasis:names:tc:SAML:2.0:consent:current-implicit"
+# consent has been obtained explicitly
 CONSENT_EXPLICIT = "urn:oasis:names:tc:SAML:2.0:consent:current-explicit"
+# no consent has been obtained
 CONSENT_UNAVAILABLE = "urn:oasis:names:tc:SAML:2.0:consent:unavailable"
+# no consent is needed.
 CONSENT_INAPPLICABLE = "urn:oasis:names:tc:SAML:2.0:consent:inapplicable"
 
-SCM_HOLDER_OF_KEY = "urn:oasis:names:tc:SAML:2.0:cm:holder-of-key"
-SCM_SENDER_VOUCHES = "urn:oasis:names:tc:SAML:2.0:cm:sender-vouches"
-SCM_BEARER = "urn:oasis:names:tc:SAML:2.0:cm:bearer"
 
-XSD = "xs"
-NS_SOAP_ENC = "http://schemas.xmlsoap.org/soap/encoding/"
+# Subject confirmation methods(scm), can be issued, besides the subject itself
+# by third parties.
+# http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.0.pdf
+
+# the 3rd party is identified on behalf of the subject given private/public key
+SCM_HOLDER_OF_KEY = "urn:oasis:names:tc:SAML:2.0:cm:holder-of-key"
+# the 3rd party is identified by subject confirmation and must include a security header
+# signing its content.
+SCM_SENDER_VOUCHES = "urn:oasis:names:tc:SAML:2.0:cm:sender-vouches"
+# a bearer token is issued instead.
+SCM_BEARER = "urn:oasis:names:tc:SAML:2.0:cm:bearer"
 
 
 class AttributeValueBase(SamlBase):
