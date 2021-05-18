@@ -10,6 +10,7 @@ from warnings import warn as _warn
 from hashlib import sha1
 from os.path import isfile
 from os.path import join
+from re import compile as regex_compile
 
 import requests
 
@@ -58,6 +59,8 @@ from saml2.extension.mdui import Logo
 from saml2.extension.mdrpi import NAMESPACE as NS_MDRPI
 from saml2.extension.mdrpi import RegistrationInfo
 from saml2.extension.mdrpi import RegistrationPolicy
+from saml2.extension.shibmd import NAMESPACE as NS_SHIBMD
+from saml2.extension.shibmd import Scope
 
 
 logger = logging.getLogger(__name__)
@@ -83,6 +86,7 @@ classnames = {
     "service_nameid_mapping": "{ns}&{tag}".format(ns=NS_MD, tag=NameIDMappingService.c_tag),
     "mdrpi_registration_info": "{ns}&{tag}".format(ns=NS_MDRPI, tag=RegistrationInfo.c_tag),
     "mdrpi_registration_policy": "{ns}&{tag}".format(ns=NS_MDRPI, tag=RegistrationPolicy.c_tag),
+    "shibmd_scope": "{ns}&{tag}".format(ns=NS_SHIBMD, tag=Scope.c_tag)
 }
 
 ENTITY_CATEGORY = "http://macedir.org/entity-category"
@@ -1478,6 +1482,41 @@ class MetadataStore(MetaData):
             for element in elements
         )
         return elements
+
+    def sbibmd_scopes(self, entity_id, typ=None):
+        try:
+            md = self[entity_id]
+        except KeyError:
+            md = {}
+
+        descriptor_scopes = (
+            {
+                "regexp": is_regexp,
+                "text": regex_compile(text) if is_regexp else text,
+            }
+            for elem in md.get("extensions", {}).get("extension_elements", [])
+            if elem.get("__class__") == classnames["shibmd_scope"]
+            for is_regexp, text in [
+                (elem.get("regexp", "").lower() == "true", elem.get("text", "")),
+            ]
+        )
+
+        services_of_type = md.get(typ) or []
+        services_of_type_scopes = (
+            {
+                "regexp": is_regexp,
+                "text": regex_compile(text) if is_regexp else text,
+            }
+            for srv in services_of_type
+            for elem in srv.get("extensions", {}).get("extension_elements", [])
+            if elem.get("__class__") == classnames["shibmd_scope"]
+            for is_regexp, text in [
+                (elem.get("regexp", "").lower() == "true", elem.get("text", "")),
+            ]
+        )
+
+        scopes = chain(descriptor_scopes, services_of_type_scopes)
+        return scopes
 
     def mdui_uiinfo(self, entity_id):
         try:
