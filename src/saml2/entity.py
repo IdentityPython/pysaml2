@@ -65,6 +65,7 @@ from saml2.sigver import security_context
 from saml2.sigver import SigverError
 from saml2.sigver import SignatureError
 from saml2.sigver import make_temp
+from saml2.sigver import get_pem_wrapped_unwrapped
 from saml2.sigver import pre_encryption_part
 from saml2.sigver import pre_signature_part
 from saml2.sigver import pre_encrypt_assertion
@@ -654,19 +655,19 @@ class Entity(HTTPBase):
             _certs = self.metadata.certs(sp_entity_id, "any", "encryption")
         exception = None
         for _cert in _certs:
+            wrapped_cert, unwrapped_cert = get_pem_wrapped_unwrapped(_cert)
             try:
-                begin_cert = "-----BEGIN CERTIFICATE-----\n"
-                end_cert = "\n-----END CERTIFICATE-----\n"
-                if begin_cert not in _cert:
-                    _cert = "%s%s" % (begin_cert, _cert)
-                if end_cert not in _cert:
-                    _cert = "%s%s" % (_cert, end_cert)
-                tmp = make_temp(_cert.encode('ascii'),
-                                decode=False,
-                                delete_tmpfiles=self.config.delete_tmpfiles)
-                response = self.sec.encrypt_assertion(response, tmp.name,
-                                                      pre_encryption_part(),
-                                                      node_xpath=node_xpath)
+                tmp = make_temp(
+                    wrapped_cert.encode('ascii'),
+                    decode=False,
+                    delete_tmpfiles=self.config.delete_tmpfiles,
+                )
+                response = self.sec.encrypt_assertion(
+                    response,
+                    tmp.name,
+                    pre_encryption_part(encrypt_cert=unwrapped_cert),
+                    node_xpath=node_xpath,
+                )
                 return response
             except Exception as ex:
                 exception = ex

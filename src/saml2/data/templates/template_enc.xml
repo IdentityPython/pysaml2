@@ -2,12 +2,10 @@
 <EncryptedData
         xmlns="http://www.w3.org/2001/04/xmlenc#"
         Type="http://www.w3.org/2001/04/xmlenc#Element">
-    <EncryptionMethod Algorithm=
-                              "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"/>
+    <EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc"/>
     <KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
         <EncryptedKey xmlns="http://www.w3.org/2001/04/xmlenc#">
-            <EncryptionMethod Algorithm=
-                                      "http://www.w3.org/2001/04/xmlenc#rsa-1_5"/>
+            <EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"/>
             <KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
                 <KeyName/>
             </KeyInfo>
