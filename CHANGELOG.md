@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 7.0.0 (2021-05-18)
+
+- **BREAKING** Replace encryption method rsa-1_5 with rsa-oaep-mgf1p
+- Add documentation next to the code
+
+
 ## 6.5.2 (2021-05-18)
 
 - Add shibmd_scopes metadata extractor
