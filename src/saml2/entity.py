@@ -305,7 +305,7 @@ class Entity(HTTPBase):
 
         sfunc = getattr(self.metadata, service)
 
-        if bindings is None:
+        if not bindings:
             if request and request.protocol_binding:
                 bindings = [request.protocol_binding]
             else:
