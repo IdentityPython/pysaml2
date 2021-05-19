@@ -268,7 +268,8 @@ Example::
 verify_ssl_cert
 ^^^^^^^^^^^^^^^
 
-A boolean value (``True`` or ``False``). The default configuration is ``False``.
+Specifies if the SSL certificates should be verified. Can be ``True`` or ``False``.
+The default configuration is ``False``.
 
 Example::
 
@@ -327,7 +328,8 @@ Indicates which certificates will be used for encryption capabilities::
 generate_cert_info
 ^^^^^^^^^^^^^^^^^^
 
-A boolean value.
+Specifies if information about the certificate should be generated.
+A boolean value can be ``True`` or ``False``.
 
 Example::
 
@@ -612,7 +614,8 @@ Example::
 verify_encrypt_advice
 ^^^^^^^^^^^^^^^^^^^^^
 
-A boolean value.
+Specifies if the encrypted assertions in the advice element should be verified.
+Can be ``True`` or ``False``.
 
 Example::
 
@@ -630,7 +633,8 @@ Example::
 verify_encrypt_cert_assertion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A boolean value.
+Specifies if the encrypted assertions should be verified.
+Can be ``True`` or ``False``.
 
 Example::
 
@@ -658,6 +662,23 @@ sign_response
 
 Specifies if the IdP should sign the authentication response or not. Can be
 True or False. Default is False.
+
+encrypt_assertion
+"""""""""""""""""
+
+Specifies if the IdP should encrypt the assertions. Can be ``True`` or ``False``.
+Default is ``False``.
+
+encrypted_advice_attributes
+"""""""""""""""""""""""""""
+Specifies if assertions in the advice element should be encrypted.
+Can be ``True`` or ``False``. Default is ``False``.
+
+encrypt_assertion_self_contained
+""""""""""""""""""""""""""""""""
+
+Specifies if all encrypted assertions should have all namespaces self contained.
+Can be ``True`` or ``False``. Default is ``True``.
 
 want_authn_requests_signed
 """"""""""""""""""""""""""
