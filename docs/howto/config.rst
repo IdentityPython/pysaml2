@@ -400,6 +400,7 @@ The available services are:
 * assertion_id_request_service
 * artifact_resolution_service
 * attribute_consuming_service
+* single_logout_service
 
 
 service
