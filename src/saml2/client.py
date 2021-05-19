@@ -666,12 +666,12 @@ class Saml2Client(Base):
             status = status_message_factory("Wrong user",
                                             STATUS_UNKNOWN_PRINCIPAL)
 
-        if binding == BINDING_SOAP:
-            response_bindings = [BINDING_SOAP]
-        elif binding in [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]:
-            response_bindings = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]
-        else:
-            response_bindings = self.config.preferred_binding["single_logout_service"]
+        preferred_binding = self.config.preferred_binding.get("single_logout_service")
+        response_bindings = {
+            BINDING_SOAP: [BINDING_SOAP],
+            BINDING_HTTP_POST: [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT],
+            BINDING_HTTP_REDIRECT: [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST],
+        }.get(binding, preferred_binding)
 
         if sign is None:
             sign = self.logout_responses_signed
