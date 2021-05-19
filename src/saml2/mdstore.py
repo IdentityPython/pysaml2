@@ -1233,8 +1233,6 @@ class MetadataStore(MetaData):
         # IDP + SP
         if typ is None:
             raise AttributeError("Missing type specification")
-        if binding is None:
-            binding = BINDING_HTTP_REDIRECT
         return self.service(entity_id, "%s_descriptor" % typ,
                             "single_logout_service", binding)
 
