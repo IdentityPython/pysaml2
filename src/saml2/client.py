@@ -251,93 +251,122 @@ class Saml2Client(Base):
         not_done = entity_ids[:]
         responses = {}
 
-        if expected_binding is None:
-            expected_binding = next(
-                iter(self.config.preferred_binding["single_logout_service"]),
-                None,
-            )
+        bindings_slo_preferred = self.config.preferred_binding["single_logout_service"]
+
         for entity_id in entity_ids:
             logger.debug("Logout from '%s'", entity_id)
-            # for all where I can use the SOAP binding, do those first
-            for binding in [BINDING_SOAP, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]:
-                if expected_binding and binding != expected_binding:
-                    continue
 
-                try:
-                    srvs = self.metadata.single_logout_service(
-                        entity_id, binding, "idpsso"
-                    )
-                except:
-                    srvs = None
-
-                if not srvs:
-                    logger.debug("No SLO '%s' service", binding)
-                    continue
-
-                destination = next(locations(srvs), None)
-                logger.info("destination to provider: %s", destination)
-
-                try:
-                    session_info = self.users.get_info_from(
-                        name_id, entity_id, False
-                    )
-                    session_indexes = [session_info['session_index']]
-                except KeyError:
-                    session_indexes = None
-
-                sign = sign if sign is not None else self.logout_requests_signed
-                sign_post = sign and (
-                    binding == BINDING_HTTP_POST or binding == BINDING_SOAP
+            bindings_slo_supported = self.metadata.single_logout_service(
+                entity_id=entity_id, typ="idpsso"
+            )
+            bindings_slo_preferred_and_supported = (
+                binding
+                for binding in bindings_slo_preferred
+                if binding in bindings_slo_supported
+            )
+            bindings_slo_choices = filter(
+                lambda x: x,
+                (
+                    expected_binding,
+                    *bindings_slo_preferred_and_supported,
+                    *bindings_slo_supported,
                 )
-                sign_redirect = sign and binding == BINDING_HTTP_REDIRECT
-
-                req_id, request = self.create_logout_request(
-                    destination,
-                    entity_id,
-                    name_id=name_id,
-                    reason=reason,
-                    expire=expire,
-                    session_indexes=session_indexes,
-                    sign=sign_post,
-                    sign_alg=sign_alg,
-                    digest_alg=digest_alg,
-                )
-
-                relay_state = self._relay_state(req_id)
-                http_info = self.apply_binding(
-                    binding,
-                    str(request),
-                    destination,
-                    relay_state,
-                    sign=sign_redirect,
-                    sigalg=sign_alg,
-                )
-
-                if binding == BINDING_SOAP:
-                    response = self.send(**http_info)
-                    if response and response.status_code == 200:
-                        not_done.remove(entity_id)
-                        response = response.text
-                        logger.info("Response: %s", response)
-                        res = self.parse_logout_request_response(response, binding)
-                        responses[entity_id] = res
-                    else:
-                        logger.info("NOT OK response from %s", destination)
-                else:
-                    self.state[req_id] = {
-                        "entity_id": entity_id,
-                        "operation": "SLO",
-                        "entity_ids": entity_ids,
-                        "name_id": code(name_id),
-                        "reason": reason,
-                        "not_on_or_after": expire,
-                        "sign": sign,
+            )
+            binding = next(bindings_slo_choices, None)
+            if not binding:
+                logger.info(
+                    {
+                        "message": "Entity does not support SLO",
+                        "entity": entity_id,
                     }
-                    responses[entity_id] = (binding, http_info)
-                    not_done.remove(entity_id)
+                )
+                continue
 
-                # only try one binding
-                break
+            service_info = bindings_slo_supported[binding]
+            service_location = next(locations(service_info), None)
+            if not service_location:
+                logger.info(
+                    {
+                        "message": "Entity SLO service does not have a location",
+                        "entity": entity_id,
+                        "service_location": service_location,
+                    }
+                )
+                continue
+
+            session_info = self.users.get_info_from(name_id, entity_id, False)
+            session_index = session_info.get('session_index')
+            session_indexes = [session_index] if session_index else None
+
+            sign = sign if sign is not None else self.logout_requests_signed
+            sign_post = sign and (
+                binding == BINDING_HTTP_POST or binding == BINDING_SOAP
+            )
+            sign_redirect = sign and binding == BINDING_HTTP_REDIRECT
+
+            log_report = {
+                "message": "Invoking SLO on entity",
+                "entity": entity_id,
+                "binding": binding,
+                "location": service_location,
+                "session_indexes": session_indexes,
+                "sign": sign,
+            }
+            logger.info(log_report)
+
+            req_id, request = self.create_logout_request(
+                service_location,
+                entity_id,
+                name_id=name_id,
+                reason=reason,
+                expire=expire,
+                session_indexes=session_indexes,
+                sign=sign_post,
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
+            )
+            relay_state = self._relay_state(req_id)
+            http_info = self.apply_binding(
+                binding,
+                str(request),
+                service_location,
+                relay_state,
+                sign=sign_redirect,
+                sigalg=sign_alg,
+            )
+
+            if binding == BINDING_SOAP:
+                response = self.send(**http_info)
+                if response and response.status_code == 200:
+                    not_done.remove(entity_id)
+                    response_text = response.text
+                    log_report_response = {
+                        **log_report,
+                        "message": "Response from SLO service",
+                        "response_text": response_text,
+                    }
+                    logger.debug(log_report_response)
+                    res = self.parse_logout_request_response(response_text, binding)
+                    responses[entity_id] = res
+                else:
+                    log_report_response = {
+                        **log_report,
+                        "message": "Bad status_code response from SLO service",
+                        "status_code": (response and response.status_code),
+                    }
+                    logger.info(log_report_response)
+            else:
+                self.state[req_id] = {
+                    "entity_id": entity_id,
+                    "operation": "SLO",
+                    "entity_ids": entity_ids,
+                    "name_id": code(name_id),
+                    "reason": reason,
+                    "not_on_or_after": expire,
+                    "sign": sign,
+                }
+                responses[entity_id] = (binding, http_info)
+                not_done.remove(entity_id)
 
         if not_done:
             # upstream should try later
