@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 7.0.1 (2021-05-20)
+
+- Preserve order of response bindings on IdP-initiated logout
+- Fix use of expected binding on SP logout
+
+
 ## 7.0.0 (2021-05-18)
 
 - **BREAKING** Replace encryption method rsa-1_5 with rsa-oaep-mgf1p
