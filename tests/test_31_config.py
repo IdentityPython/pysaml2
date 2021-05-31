@@ -7,7 +7,8 @@ from saml2.mdstore import MetadataStore, name
 
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP, BINDING_HTTP_POST
 from saml2.config import SPConfig, IdPConfig, Config
-
+from saml2.saml import AUTHN_PASSWORD_PROTECTED, AuthnContextClassRef
+from saml2.samlp import RequestedAuthnContext
 from saml2 import logger
 
 from pathutils import dotname, full_path
@@ -26,8 +27,14 @@ sp1 = {
                 "urn:mace:example.com:saml:roland:idp": {
                     'single_sign_on_service':
                         {'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect':
-                             'http://localhost:8088/sso/'}},
-            }
+                            'http://localhost:8088/sso/'}},
+            },
+            "requested_authn_context": RequestedAuthnContext(
+                    authn_context_class_ref=[
+                        AuthnContextClassRef(AUTHN_PASSWORD_PROTECTED),
+                    ],
+                    comparison="exact",
+                ),
         }
     },
     "key_file": full_path("test.key"),
@@ -217,6 +224,7 @@ def test_1():
                                              'http://localhost:8088/sso/'}}]
 
     assert c.only_use_keys_in_metadata
+    assert 'PasswordProtectedTransport' in c._sp_requested_authn_context.to_string().decode()
 
 
 def test_2():
