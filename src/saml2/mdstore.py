@@ -1693,4 +1693,5 @@ class MetadataStore(MetaData):
 
             return "%s" % res
         elif format == "md":
-            return json.dumps(self.items(), indent=2)
+            # self.items() returns dictitems(), convert that back into a dict
+            return json.dumps(dict(self.items()), indent=2)
