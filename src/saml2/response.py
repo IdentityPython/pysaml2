@@ -409,12 +409,9 @@ class StatusResponse(object):
                 raise RequestVersionTooHigh()
 
         destination = self.response.destination
-        if self.asynchop:
+        if self.asynchop and destination:
             # Destination must be present
-            if (
-                not destination
-                or destination not in self.return_addrs
-            ):
+            if destination not in self.return_addrs:
                 logger.error(
                     f"{destination} not in {self.return_addrs}"
                 )
