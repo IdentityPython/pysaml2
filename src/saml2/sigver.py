@@ -1536,20 +1536,25 @@ class SecurityContext(object):
         # - or the exclusive canonicalization transforms
         #   (with the identifier http://www.w3.org/2001/10/xml-exc-c14n#
         #   or http://www.w3.org/2001/10/xml-exc-c14n#WithComments).
-        transform_alogs = [
+        transform_algos = [
             transform.algorithm
             for transform in references[0].transforms.transform
         ]
-        transform_alogs_n = len(transform_alogs)
-        only_up_to_two_transforms_are_defined = (
+        tranform_algos_valid = ALLOWED_TRANSFORMS.intersection(transform_algos)
+        transform_algos_n = len(transform_algos)
+        tranform_algos_valid_n = len(tranform_algos_valid)
+
+        the_number_of_transforms_is_one_or_two = (
             signatures_must_have_a_single_reference_element
-            and 1 <= transform_alogs_n <= 2
+            and 1 <= transform_algos_n <= 2
         )
         all_transform_algs_are_allowed = (
-            only_up_to_two_transforms_are_defined
-            and transform_alogs_n == len(
-                ALLOWED_TRANSFORMS.intersection(transform_alogs)
-            )
+            the_number_of_transforms_is_one_or_two
+            and transform_algos_n == tranform_algos_valid_n
+        )
+        the_enveloped_signature_transform_is_defined = (
+            the_number_of_transforms_is_one_or_two
+            and TRANSFORM_ENVELOPED in transform_algos
         )
 
         # The <ds:Object> element is not defined for use with SAML signatures,
@@ -1572,10 +1577,13 @@ class SecurityContext(object):
                 the_anchor_points_to_the_enclosing_element_ID_attribute
             ),
             "canonicalization method is c14n": canonicalization_method_is_c14n,
-            "only up to two transforms are defined": (
-                only_up_to_two_transforms_are_defined
+            "the number of transforms is one or two": (
+                the_number_of_transforms_is_one_or_two
             ),
             "all transform algs are allowed": all_transform_algs_are_allowed,
+            "the enveloped signature transform is defined": (
+                the_enveloped_signature_transform_is_defined
+            ),
             "object element is not present": object_element_is_not_present,
         }
         if not all(validators.values()):
