@@ -42,6 +42,10 @@ from saml2.s_utils import sid
 from saml2.s_utils import Unsupported
 from saml2.time_util import instant
 from saml2.time_util import str_to_time
+from saml2.xmldsig import ALLOWED_CANONICALIZATIONS
+from saml2.xmldsig import ALLOWED_TRANSFORMS
+from saml2.xmldsig import TRANSFORM_C14N
+from saml2.xmldsig import TRANSFORM_ENVELOPED
 from saml2.xmldsig import SIG_RSA_SHA1
 from saml2.xmldsig import SIG_RSA_SHA224
 from saml2.xmldsig import SIG_RSA_SHA256
@@ -1503,7 +1507,8 @@ class SecurityContext(object):
         # * the Reference element must have a URI attribute
         # * the URI attribute contains an anchor
         # * the anchor points to the enclosing element's ID attribute
-        references = item.signature.signed_info.reference
+        signed_info = item.signature.signed_info
+        references = signed_info.reference
         signatures_must_have_a_single_reference_element = len(references) == 1
         the_Reference_element_must_have_a_URI_attribute = (
             signatures_must_have_a_single_reference_element
@@ -1518,6 +1523,41 @@ class SecurityContext(object):
             the_URI_attribute_contains_an_anchor
             and references[0].uri == "#{id}".format(id=item.id)
         )
+
+        # SAML implementations SHOULD use Exclusive Canonicalization,
+        # with or without comments
+        canonicalization_method_is_c14n = (
+            signed_info.canonicalization_method.algorithm in ALLOWED_CANONICALIZATIONS
+        )
+
+        # Signatures in SAML messages SHOULD NOT contain transforms other than the
+        # - enveloped signature transform
+        #   (with the identifier http://www.w3.org/2000/09/xmldsig#enveloped-signature)
+        # - or the exclusive canonicalization transforms
+        #   (with the identifier http://www.w3.org/2001/10/xml-exc-c14n#
+        #   or http://www.w3.org/2001/10/xml-exc-c14n#WithComments).
+        transform_alogs = [
+            transform.algorithm
+            for transform in references[0].transforms.transform
+        ]
+        transform_alogs_n = len(transform_alogs)
+        only_up_to_two_transforms_are_defined = (
+            signatures_must_have_a_single_reference_element
+            and 1 <= transform_alogs_n <= 2
+        )
+        all_transform_algs_are_allowed = (
+            only_up_to_two_transforms_are_defined
+            and transform_alogs_n == len(
+                ALLOWED_TRANSFORMS.intersection(transform_alogs)
+            )
+        )
+
+        # The <ds:Object> element is not defined for use with SAML signatures,
+        # and SHOULD NOT be present.
+        # Since it can be used in service of an attacker by carrying unsigned data,
+        # verifiers SHOULD reject signatures that contain a <ds:Object> element.
+        object_element_is_not_present = not item.signature.object
+
         validators = {
             "signatures must have a single reference element": (
                 signatures_must_have_a_single_reference_element
@@ -1531,6 +1571,12 @@ class SecurityContext(object):
             "the anchor points to the enclosing element ID attribute": (
                 the_anchor_points_to_the_enclosing_element_ID_attribute
             ),
+            "canonicalization method is c14n": canonicalization_method_is_c14n,
+            "only up to two transforms are defined": (
+                only_up_to_two_transforms_are_defined
+            ),
+            "all transform algs are allowed": all_transform_algs_are_allowed,
+            "object element is not present": object_element_is_not_present,
         }
         if not all(validators.values()):
             error_context = {
@@ -1818,10 +1864,9 @@ def pre_signature_part(
         sign_alg = ds.DefaultSignature().get_sign_alg()
 
     signature_method = ds.SignatureMethod(algorithm=sign_alg)
-    canonicalization_method = ds.CanonicalizationMethod(
-        algorithm=ds.ALG_EXC_C14N)
-    trans0 = ds.Transform(algorithm=ds.TRANSFORM_ENVELOPED)
-    trans1 = ds.Transform(algorithm=ds.ALG_EXC_C14N)
+    canonicalization_method = ds.CanonicalizationMethod(algorithm=TRANSFORM_C14N)
+    trans0 = ds.Transform(algorithm=TRANSFORM_ENVELOPED)
+    trans1 = ds.Transform(algorithm=TRANSFORM_C14N)
     transforms = ds.Transforms(transform=[trans0, trans1])
     digest_method = ds.DigestMethod(algorithm=digest_alg)
 
