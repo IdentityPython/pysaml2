@@ -153,7 +153,7 @@ assurance_certification
 
 Example::
 
-    "assurance_specification": [
+    "assurance_certification": [
         "https://refeds.org/sirtfi",
     ]
 
