@@ -1071,23 +1071,27 @@ class AuthnResponse(StatusResponse):
 
     def authn_info(self):
         res = []
-        for astat in self.assertion.authn_statement:
-            context = astat.authn_context
+        for statement in self.assertion.authn_statement:
             try:
-                authn_instant = astat.authn_instant
+                authn_instant = statement.authn_instant
             except AttributeError:
                 authn_instant = ""
-            if context:
-                try:
-                    aclass = context.authn_context_class_ref.text
-                except AttributeError:
-                    aclass = ""
-                try:
-                    authn_auth = [a.text for a in
-                                  context.authenticating_authority]
-                except AttributeError:
-                    authn_auth = []
-                res.append((aclass, authn_auth, authn_instant))
+
+            context = statement.authn_context
+            if not context:
+                continue
+
+            try:
+                authn_class = context.authn_context_class_ref.text
+            except AttributeError:
+                authn_class = ""
+
+            try:
+                authn_auth = [a.text for a in context.authenticating_authority]
+            except AttributeError:
+                authn_auth = []
+
+            res.append((authn_class, authn_auth, authn_instant))
         return res
 
     def authz_decision_info(self):
