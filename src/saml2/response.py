@@ -1082,7 +1082,10 @@ class AuthnResponse(StatusResponse):
                 continue
 
             try:
-                authn_class = context.authn_context_class_ref.text
+                authn_class = (
+                    context.authn_context_class_ref.text
+                    or context.authn_context_decl_ref.text
+                )
             except AttributeError:
                 authn_class = ""
 
