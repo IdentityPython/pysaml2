@@ -207,7 +207,7 @@ class Entity(HTTPBase):
         """
         Reload metadata configuration.
 
-	Load a new metadata configuration as defined by metadata_conf (by
+        Load a new metadata configuration as defined by metadata_conf (by
         passing this to Config.load_metadata) and make this entity (as well as
         subordinate objects with own metadata reference) use the new metadata.
 
