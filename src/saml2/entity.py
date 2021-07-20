@@ -226,11 +226,10 @@ class Entity(HTTPBase):
 
         logger.debug("Applying new metadata to main config")
         ( self.metadata, self.sec.metadata, self.config.metadata ) = [new_metadata]*3
-        for typ in ["aa", "idp", "sp", "pdp", "aq"]:
-            policy = getattr(self.config, "_%s_policy" % typ, None)
-            if policy and policy.metadata_store:
-                logger.debug("Applying new metadata to %s policy", typ)
-                policy.metadata_store = self.metadata
+        policy = getattr(self.config, "_%s_policy" % self.entity_type, None)
+        if policy and policy.metadata_store:
+            logger.debug("Applying new metadata to %s policy", self.entity_type)
+            policy.metadata_store = self.metadata
 
         logger.debug("Applying new metadata source_id")
         self.sourceid = self.metadata.construct_source_id()
