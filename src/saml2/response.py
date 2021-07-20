@@ -409,11 +409,17 @@ class StatusResponse(object):
                 raise RequestVersionTooHigh()
 
         if self.asynchop:
-            if (
-                self.response.destination
-                and self.response.destination not in self.return_addrs
+            if not (
+                 getattr(self.response, 'destination')
             ):
-                logger.error("%s not in %s", self.response.destination, self.return_addrs)
+                logger.error(
+                    f"Invalid response destination in asynchop"
+                )
+                return None
+            elif self.response.destination not in self.return_addrs:
+                logger.error(
+                    f"{self.response.destination} not in {self.return_addrs}"
+                )
                 return None
 
         valid = self.issue_instant_ok() and self.status_ok()
