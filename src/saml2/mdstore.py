@@ -618,9 +618,13 @@ class InMemoryMetaData(MetaData):
         try:
             self.entities_descr = md.entities_descriptor_from_string(xmlstr)
         except Exception as e:
-            _md_desc = (f'metadata file: {self.filename}' if isinstance(self,MetaDataFile) else
-                       f'remote metadata: {self.url}' if isinstance(self, MetaDataExtern) else
-                       'metadata')
+            _md_desc = (
+                f'metadata file: {self.filename}'
+                if isinstance(self,MetaDataFile)
+                else f'remote metadata: {self.url}'
+                if isinstance(self, MetaDataExtern)
+                else 'metadata'
+            )
             raise SAMLError(f'Failed to parse {_md_desc}') from e
 
         if not self.entities_descr:
