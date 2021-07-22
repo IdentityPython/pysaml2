@@ -409,11 +409,9 @@ class StatusResponse(object):
                 raise RequestVersionTooHigh()
 
         if self.asynchop:
-            if not (
-                 getattr(self.response, 'destination')
-            ):
+            if not getattr(self.response, 'destination', None):
                 logger.error(
-                    f"Invalid response destination in asynchop"
+                    "Invalid response destination in asynchop"
                 )
                 return None
             elif self.response.destination not in self.return_addrs:
