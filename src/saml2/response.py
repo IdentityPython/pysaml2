@@ -414,10 +414,10 @@ class StatusResponse(object):
                 and self.response.destination not in self.return_addrs
             ):
                 logger.error("destination %s not in %s", self.response.destination, self.return_addrs)
-                if self.response.destination != self.response.destination.trim():
+                if self.response.destination != self.response.destination.strip():
                     logger.error("please check destination %s: trimmable", self.response.destination)                
                 for r in self.return_addrs:
-                    if r != r.trim():
+                    if r != r.strip():
                         logger.error("Please check return_addrs %s: trimmable", r)                
                 return None
 
