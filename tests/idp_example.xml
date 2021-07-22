@@ -2,7 +2,7 @@
 <ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata"
                       xmlns:ns1="http://www.w3.org/2000/09/xmldsig#"
                       entityID="http://localhost:8088/idp.xml"
-                      validUntil="2014-04-12T06:06:13Z">
+                      validUntil="2036-04-12T06:06:13Z">
     <ns0:IDPSSODescriptor WantAuthnRequestsOnlyWithValidCert="false"
                           WantAuthnRequestsSigned="false"
                           protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">

@@ -7,6 +7,10 @@ example/*/modules/
 
 tests/*.log.*
 tests/*.db
+tests/*.dir
+tests/*.dat
+tests/*.bak
+
 
 eptid
 
@@ -116,6 +120,9 @@ venv.bak/
 
 # Visual Studio Code files
 .vscode/
+
+# PyCharm project files
+.idea/
 
 # mkdocs documentation
 /site

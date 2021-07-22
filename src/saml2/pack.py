@@ -111,7 +111,7 @@ def http_form_post_message(message, location, relay_state="",
         relay_state_input=relay_state_input,
         action=location)
 
-    return {"headers": [("Content-type", "text/html")], "data": response}
+    return {"headers": [("Content-type", "text/html")], "data": response, "status": 200}
 
 
 def http_post_message(message, relay_state="", typ="SAMLRequest", **kwargs):
@@ -137,11 +137,19 @@ def http_post_message(message, relay_state="", typ="SAMLRequest", **kwargs):
         part["RelayState"] = relay_state
 
     return {"headers": [("Content-type", 'application/x-www-form-urlencoded')],
-            "data": urlencode(part)}
+            "data": urlencode(part),
+            "status": 200}
 
 
-def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
-                          sigalg='', signer=None, **kwargs):
+def http_redirect_message(
+    message,
+    location,
+    relay_state="",
+    typ="SAMLRequest",
+    sigalg=None,
+    sign=None,
+    backend=None,
+):
     """The HTTP Redirect binding defines a mechanism by which SAML protocol
     messages can be transmitted within URL parameters.
     Messages are encoded for use with this binding using a URL encoding
@@ -155,7 +163,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     :param typ: What type of message it is SAMLRequest/SAMLResponse/SAMLart
     :param sigalg: Which algorithm the signature function will use to sign
         the message
-    :param signer: A signature function that can be used to sign the message
+    :param sign: Whether the message should be signed
     :return: A tuple containing header information and a HTML message.
     """
 
@@ -177,27 +185,28 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     if relay_state:
         args["RelayState"] = relay_state
 
-    if signer:
+    if sign:
         # sigalgs, should be one defined in xmldsig
         if sigalg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
             raise Exception(
                 "Signature algo not in allowed list: {algo}".format(algo=sigalg)
             )
+        signer = backend.get_signer(sigalg) if sign and sigalg else None
+        if not signer:
+            raise Exception("Could not init signer fro algo {algo}".format(algo=sigalg))
+
         args["SigAlg"] = sigalg
+        string = "&".join(urlencode({k: args[k]}) for k in _order if k in args)
+        string_enc = string.encode('ascii')
+        args["Signature"] = base64.b64encode(signer.sign(string_enc))
 
-        string = "&".join([urlencode({k: args[k]})
-                           for k in _order if k in args]).encode('ascii')
-        args["Signature"] = base64.b64encode(signer.sign(string))
-        string = urlencode(args)
-    else:
-        string = urlencode(args)
-
+    string = urlencode(args)
     glue_char = "&" if urlparse(location).query else "?"
     login_url = glue_char.join([location, string])
     headers = [('Location', str(login_url))]
     body = []
 
-    return {"headers": headers, "data": body}
+    return {"headers": headers, "data": body, "status": 303}
 
 
 DUMMY_NAMESPACE = "http://example.org/"
@@ -257,12 +266,14 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
 
 def http_soap_message(message):
     return {"headers": [("Content-type", "application/soap+xml")],
-            "data": make_soap_enveloped_saml_thingy(message)}
+            "data": make_soap_enveloped_saml_thingy(message),
+            "status": 200}
 
 
 def http_paos(message, extra=None):
     return {"headers": [("Content-type", "application/soap+xml")],
-            "data": make_soap_enveloped_saml_thingy(message, extra)}
+            "data": make_soap_enveloped_saml_thingy(message, extra),
+            "status": 200}
 
 
 def parse_soap_enveloped_saml(text, body_class, header_class=None):

@@ -6,6 +6,7 @@ import os
 from contextlib import closing
 from six.moves.urllib.parse import parse_qs
 import uuid
+import re
 
 from saml2.cert import OpenSSLWrapper
 from saml2.sigver import make_temp, DecryptError, EncryptError, CertificateError
@@ -23,12 +24,15 @@ from saml2 import extension_elements_to_elements
 from saml2 import s_utils
 from saml2 import sigver
 from saml2 import time_util
+from saml2 import VERSION
 from saml2.s_utils import OtherError
 from saml2.s_utils import do_attribute_statement
 from saml2.s_utils import factory
+from saml2.s_utils import sid
 from saml2.soap import make_soap_enveloped_saml_thingy
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
+from saml2.time_util import instant
 
 from pytest import raises
 from pathutils import full_path
@@ -43,6 +47,14 @@ AUTHN = {
     "authn_auth": "http://www.example.com/login"
 }
 
+
+def response_factory(**kwargs):
+    response = samlp.Response(id=sid(), version=VERSION, issue_instant=instant())
+
+    for key, val in kwargs.items():
+        setattr(response, key, val)
+
+    return response
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
@@ -118,8 +130,10 @@ class TestServer1():
         self.verify_assertion(assertion)
         assert assertion[0].signature is None
 
-        assert 'EncryptedAssertion><encas1:Assertion xmlns:encas0="http://www.w3.org/2001/XMLSchema-instance" ' \
-               'xmlns:encas1="urn:oasis:names:tc:SAML:2.0:assertion"' in decr_text
+        assert re.search(
+            r':EncryptedAssertion><encas[0-9]:Assertion ([^ >]* )*xmlns:encas[0-9]="urn:oasis:names:tc:SAML:2.0:assertion"',
+            decr_text,
+        )
 
     def verify_advice_assertion(self, resp, decr_text):
         assert resp.assertion[0].signature is None
@@ -179,7 +193,7 @@ class TestServer1():
         assert subject.name_id.format == saml.NAMEID_FORMAT_TRANSIENT
 
     def test_response(self):
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="https:#www.example.com",
             status=s_utils.success_status_factory(),
@@ -1177,9 +1191,10 @@ class TestServer1NonAsciiAva():
     def verify_encrypted_assertion(self, assertion, decr_text):
         self.verify_assertion(assertion)
         assert assertion[0].signature is None
-
-        assert 'EncryptedAssertion><encas1:Assertion xmlns:encas0="http://www.w3.org/2001/XMLSchema-instance" ' \
-               'xmlns:encas1="urn:oasis:names:tc:SAML:2.0:assertion"' in decr_text
+        assert re.search(
+            r':EncryptedAssertion><encas[0-9]:Assertion ([^ >]* )*xmlns:encas[0-9]="urn:oasis:names:tc:SAML:2.0:assertion"',
+            decr_text,
+        )
 
     def verify_advice_assertion(self, resp, decr_text):
         assert resp.assertion[0].signature is None
@@ -1239,7 +1254,7 @@ class TestServer1NonAsciiAva():
         assert subject.name_id.format == saml.NAMEID_FORMAT_TRANSIENT
 
     def test_response(self):
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="https:#www.example.com",
             status=s_utils.success_status_factory(),
@@ -2303,16 +2318,39 @@ class TestServerLogout():
             print(request)
             bindings = [BINDING_HTTP_REDIRECT]
             response = server.create_logout_response(request, bindings)
-            binding, destination = server.pick_binding("single_logout_service",
-                                                       bindings, "spsso",
-                                                       request)
 
-            http_args = server.apply_binding(binding, "%s" % response, destination,
-                                             "relay_state", response=True)
+            binding, destination = server.pick_binding(
+                "single_logout_service", bindings, "spsso", request
+            )
+            http_args = server.apply_binding(
+                binding, "%s" % response, destination, "relay_state", response=True
+            )
 
-            assert len(http_args) == 4
+            assert len(http_args) == 5
             assert http_args["headers"][0][0] == "Location"
             assert http_args["data"] == []
+            assert http_args["status"] == 303
+            assert http_args['url'] == 'http://lingon.catalogix.se:8087/sloresp'
+
+    def test_2(self):
+        with closing(Server("idp_slo_redirect_conf")) as server:
+            req_id, request = _logout_request("sp_slo_redirect_conf")
+            print(request)
+            bindings = [BINDING_HTTP_POST]
+            response = server.create_logout_response(request, bindings)
+
+            binding, destination = server.pick_binding(
+                "single_logout_service", bindings, "spsso", request
+            )
+            http_args = server.apply_binding(
+                binding, "%s" % response, destination, "relay_state", response=True
+            )
+
+            assert len(http_args) == 5
+            assert len(http_args["data"]) > 0
+            assert http_args["method"] == "POST"
+            assert http_args['url'] == 'http://lingon.catalogix.se:8087/slo'
+            assert http_args['status'] == 200
 
 
 if __name__ == "__main__":

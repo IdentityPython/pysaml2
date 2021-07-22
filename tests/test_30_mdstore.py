@@ -3,9 +3,12 @@
 import datetime
 import os
 import re
+from re import compile as regex_compile
 from collections import OrderedDict
 from unittest.mock import Mock
 from unittest.mock import patch
+
+from pytest import raises
 
 import responses
 
@@ -15,10 +18,11 @@ from saml2.config import Config
 from saml2.mdstore import MetadataStore, MetaDataExtern
 from saml2.mdstore import MetaDataMDX
 from saml2.mdstore import SAML_METADATA_CONTENT_TYPE
-from saml2.mdstore import destinations
+from saml2.mdstore import locations
 from saml2.mdstore import name
 from saml2 import sigver
 from saml2.httpbase import HTTPBase
+from saml2 import SAMLError
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
@@ -152,6 +156,18 @@ METADATACONF = {
         "class": "saml2.mdstore.MetaDataFile",
         "metadata": [(full_path("uu.xml"),)],
     }],
+    "13": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("swamid-2.0.xml"),)],
+    }],
+    "14": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("invalid_metadata_file.xml"),)],
+    }],
+    "15": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("idp_uiinfo.xml"),)],
+    }],
 }
 
 
@@ -166,6 +182,12 @@ def _fix_valid_until(xmlstring):
                   xmlstring)
 
 
+def test_invalid_metadata():
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    with raises(SAMLError):
+        mds.imp(METADATACONF["14"])
+
+
 def test_swami_1():
     UMU_IDP = 'https://idp.umu.se/saml2/idp/metadata.php'
     mds = MetadataStore(ATTRCONV, sec_config,
@@ -177,8 +199,9 @@ def test_swami_1():
     assert idps.keys()
     idpsso = mds.single_sign_on_service(UMU_IDP)
     assert len(idpsso) == 1
-    assert destinations(idpsso) == [
-        'https://idp.umu.se/saml2/idp/SSOService.php']
+    assert list(locations(idpsso)) == [
+        'https://idp.umu.se/saml2/idp/SSOService.php'
+    ]
 
     _name = name(mds[UMU_IDP])
     assert _name == u'Umeå University (SAML2)'
@@ -219,8 +242,9 @@ def test_incommon_1():
     idpsso = mds.single_sign_on_service('urn:mace:incommon:alaska.edu')
     assert len(idpsso) == 1
     print(idpsso)
-    assert destinations(idpsso) == [
-        'https://idp.alaska.edu/idp/profile/SAML2/Redirect/SSO']
+    assert list(locations(idpsso)) == [
+        'https://idp.alaska.edu/idp/profile/SAML2/Redirect/SSO'
+    ]
 
     sps = mds.with_descriptor("spsso")
 
@@ -279,8 +303,9 @@ def test_switch_1():
         'https://aai-demo-idp.switch.ch/idp/shibboleth')
     assert len(idpsso) == 1
     print(idpsso)
-    assert destinations(idpsso) == [
-        'https://aai-demo-idp.switch.ch/idp/profile/SAML2/Redirect/SSO']
+    assert list(locations(idpsso)) == [
+        'https://aai-demo-idp.switch.ch/idp/profile/SAML2/Redirect/SSO'
+    ]
     assert len(idps) > 30
     aas = mds.with_descriptor("attribute_authority")
     print(aas.keys())
@@ -557,6 +582,27 @@ def test_supported_algorithms():
     assert 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256' in algs['signing_methods']
 
 
+def test_registration_info():
+    mds = MetadataStore(ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+    mds.imp(METADATACONF["13"])
+    registration_info = mds.registration_info(entity_id='https://aai-idp.unibe.ch/idp/shibboleth')
+    assert 'http://rr.aai.switch.ch/' == registration_info['registration_authority']
+    assert '2013-06-15T18:15:03Z' == registration_info['registration_instant']
+    assert 'https://www.switch.ch/aai/federation/switchaai/metadata-registration-practice-statement-20110711.txt' == \
+           registration_info['registration_policy']['en']
+
+
+def test_registration_info_no_policy():
+    mds = MetadataStore(ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+    mds.imp(METADATACONF["13"])
+    registration_info = mds.registration_info(entity_id='https://idp.szie.hu/idp/shibboleth')
+    assert 'http://eduid.hu' == registration_info['registration_authority']
+    assert registration_info['registration_instant'] is None
+    assert registration_info['registration_policy'] == {}
+
+
 def test_extension():
     mds = MetadataStore(ATTRCONV, None)
     # use ordered dict to force expected entity to be last
@@ -565,6 +611,51 @@ def test_extension():
     metadata["2"] = {"entity2": {"idpsso_descriptor": [{"extensions": {"extension_elements": [{"__class__": "test"}]}}]}}
     mds.metadata = metadata
     assert mds.extension("entity2", "idpsso_descriptor", "test")
+
+
+def test_shibmd_scope_no_regex_no_descriptor_type():
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    mds.imp(METADATACONF["15"])
+
+    scopes = mds.sbibmd_scopes(entity_id='http://example.com/saml2/idp.xml')
+    all_scopes = list(scopes)
+
+    expected = [
+        {
+            "regexp": False,
+            "text": "descriptor-example.org",
+        },
+        {
+            "regexp": True,
+            "text": regex_compile("descriptor-example[^0-9]*\.org"),
+        },
+    ]
+    assert len(all_scopes) == 2
+    assert all_scopes == expected
+
+
+def test_shibmd_scope_no_regex_all_descriptors():
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    mds.imp(METADATACONF["15"])
+
+    scopes = mds.sbibmd_scopes(entity_id='http://example.com/saml2/idp.xml', typ="idpsso_descriptor")
+    all_scopes = list(scopes)
+    expected = [
+        {
+            "regexp": False,
+            "text": "descriptor-example.org",
+        },
+        {
+            "regexp": True,
+            "text": regex_compile("descriptor-example[^0-9]*\.org"),
+        },
+        {
+            "regexp": False,
+            "text": "idpssodescriptor-example.org",
+        },
+    ]
+    assert len(all_scopes) == 3
+    assert all_scopes == expected
 
 
 if __name__ == "__main__":

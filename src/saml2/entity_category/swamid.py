@@ -24,7 +24,6 @@ OTHER = [
 ]
 
 R_AND_S = [
-    'eduPersonTargetedID',
     'eduPersonPrincipalName',
     'eduPersonUniqueID',
     'mail',
@@ -71,7 +70,7 @@ NREN = 'http://www.swamid.se/category/nren-service'          # Deprecated from 2
 HEI = 'http://www.swamid.se/category/hei-service'            # Deprecated from 2021-03-31
 
 RELEASE = {
-    '': ['eduPersonTargetedID'],
+    '': [],
     SFS_1993_1153: ['norEduPersonNIN', 'eduPersonAssurance'],
     (RESEARCH_AND_EDUCATION, EU): NAME + STATIC_ORG_INFO + OTHER,
     (RESEARCH_AND_EDUCATION, NREN): NAME + STATIC_ORG_INFO + OTHER,
@@ -79,3 +78,5 @@ RELEASE = {
     RESEARCH_AND_SCHOLARSHIP: R_AND_S,
     COCO: GEANT_COCO,
 }
+
+ONLY_REQUIRED = {COCO: True}

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import base64
+from base64 import encodebytes as b64encode
+from base64 import decodebytes as b64decode
 import uuid
 import six
 from six.moves.urllib import parse
@@ -9,6 +10,7 @@ from pytest import raises
 
 from saml2.argtree import add_path
 from saml2.cert import OpenSSLWrapper
+from saml2.xmldsig import sig_default
 from saml2.xmldsig import SIG_RSA_SHA256
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
@@ -19,6 +21,7 @@ from saml2 import saml
 from saml2 import samlp
 from saml2 import sigver
 from saml2 import s_utils
+from saml2 import VERSION
 from saml2.assertion import Assertion
 from saml2.extension.requested_attributes import RequestedAttributes
 from saml2.extension.requested_attributes import RequestedAttribute
@@ -38,7 +41,10 @@ from saml2.sigver import verify_redirect_signature
 from saml2.sigver import SignatureError, SigverError
 from saml2.s_utils import do_attribute_statement
 from saml2.s_utils import factory
-from saml2.time_util import in_a_while, a_while_ago
+from saml2.s_utils import sid
+from saml2.time_util import in_a_while
+from saml2.time_util import a_while_ago
+from saml2.time_util import instant
 
 from defusedxml.common import EntitiesForbidden
 
@@ -51,8 +57,13 @@ AUTHN = {
     "authn_auth": "http://www.example.com/login"
 }
 
-encode_fn = getattr(base64, 'encodebytes', base64.encodestring)
+def response_factory(**kwargs):
+    response = samlp.Response(id=sid(), version=VERSION, issue_instant=instant())
 
+    for key, val in kwargs.items():
+        setattr(response, key, val)
+
+    return response
 
 def generate_cert():
     sn = uuid.uuid4().urn
@@ -415,6 +426,36 @@ class TestClient:
         except Exception:  # missing certificate
             self.client.sec.verify_signature(ar_str, node_name=class_name(ar))
 
+    def test_logout_response(self):
+        req_id, req = self.server.create_logout_request(
+            "http://localhost:8088/slo", "urn:mace:example.com:saml:roland:sp",
+            name_id=nid, reason="Tired", expire=in_a_while(minutes=15),
+            session_indexes=["_foo"])
+
+        info = self.client.apply_binding(
+            BINDING_HTTP_REDIRECT, req, destination="",
+            relay_state="relay2")
+        loc = info["headers"][0][1]
+        qs = parse.parse_qs(loc[1:])
+        samlreq = qs['SAMLRequest'][0]
+        resphttp = self.client.handle_logout_request(samlreq, nid,
+                BINDING_HTTP_REDIRECT)
+        _dic = unpack_form(resphttp['data'], "SAMLResponse")
+        xml = b64decode(_dic['SAMLResponse'].encode('UTF-8'))
+
+        # Signature found
+        assert xml.decode('UTF-8').find(r"Signature") > 0
+
+        # Try again with logout_responses_signed=False
+        self.client.logout_responses_signed = False
+        resphttp = self.client.handle_logout_request(samlreq, nid,
+                BINDING_HTTP_REDIRECT)
+        _dic = unpack_form(resphttp['data'], "SAMLResponse")
+        xml = b64decode(_dic['SAMLResponse'].encode('UTF-8'))
+
+        # Signature not found
+        assert xml.decode('UTF-8').find(r"Signature") < 0
+
     def test_create_logout_request(self):
         req_id, req = self.client.create_logout_request(
             "http://localhost:8088/slo", "urn:mace:example.com:saml:roland:idp",
@@ -449,7 +490,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -491,7 +532,7 @@ class TestClient:
             userid="also0001@example.com",
             authn=AUTHN)
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -540,7 +581,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -575,7 +616,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -610,7 +651,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -654,7 +695,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -707,7 +748,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -743,7 +784,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -786,7 +827,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -837,7 +878,7 @@ class TestClient:
 
         # Cast the response to a string and encode it to mock up the payload
         # the SP client is expected to receive via HTTP POST binding.
-        resp_str = encode_fn(str(resp).encode())
+        resp_str = b64encode(str(resp).encode())
 
         # We do not need the client to verify a signature for this test.
         client.want_assertions_signed = False
@@ -914,7 +955,7 @@ class TestClient:
         # Create an Assertion instance from the signed assertion
         _ass = saml.assertion_from_string(sigass)
 
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="https:#www.example.com",
             status=s_utils.success_status_factory(),
@@ -922,10 +963,11 @@ class TestClient:
             assertion=_ass
         )
 
-        enctext = _sec.crypto.encrypt_assertion(response,
-                                                self.client.sec.encryption_keypairs[
-                                                    0]["cert_file"],
-                                                pre_encryption_part())
+        enctext = _sec.crypto.encrypt_assertion(
+            response,
+            self.client.sec.encryption_keypairs[0]["cert_file"],
+            pre_encryption_part(),
+        )
 
         seresp = samlp.response_from_string(enctext)
 
@@ -994,7 +1036,7 @@ class TestClient:
                                      node_id=assertion.id)
 
         sigass = rm_xmltag(sigass)
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),
@@ -1014,7 +1056,7 @@ class TestClient:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = encode_fn(enctext.encode())
+        resp_str = b64encode(enctext.encode())
         # Now over to the client side
         # Explicitely allow unsigned responses for this and the following 2 tests
         self.client.want_response_signed = False
@@ -1087,7 +1129,7 @@ class TestClient:
         assertion.advice.encrypted_assertion[0].add_extension_element(
             a_assertion)
 
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),
@@ -1117,7 +1159,7 @@ class TestClient:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = encode_fn(enctext.encode())
+        resp_str = b64encode(enctext.encode())
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -1238,7 +1280,7 @@ class TestClient:
         assertion_2.signature = sigver.pre_signature_part(assertion_2.id,
                                                           _sec.my_cert, 1)
 
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),
@@ -1402,7 +1444,7 @@ class TestClient:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = encode_fn(str(response).encode())
+        resp_str = b64encode(str(response).encode())
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -1417,28 +1459,70 @@ class TestClient:
                 'givenName': ['Derek'], 'email':
                     ['test.testsson@test.se'], 'sn': ['Jeter']}
 
-    def test_signed_redirect(self):
-
+    def test_signed_with_default_algo_redirect(self):
         # Revert configuration change to disallow unsinged responses
         self.client.want_response_signed = True
 
-        msg_str = "%s" % self.client.create_authn_request(
-            "http://localhost:8088/sso", message_id="id1")[1]
+        reqid, req = self.client.create_authn_request(
+            "http://localhost:8088/sso", message_id="id1"
+        )
+        msg_str = str(req)
 
         info = self.client.apply_binding(
-            BINDING_HTTP_REDIRECT, msg_str, destination="",
-            relay_state="relay2", sign=True, sigalg=SIG_RSA_SHA256)
-
+            BINDING_HTTP_REDIRECT,
+            msg_str,
+            destination="",
+            relay_state="relay2",
+            sign=True,
+        )
         loc = info["headers"][0][1]
         qs = parse.parse_qs(loc[1:])
-        assert _leq(qs.keys(),
-                    ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
-        assert verify_redirect_signature(list_values2simpletons(qs),
-                                         self.client.sec.sec_backend)
+        expected_query_params = ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature']
 
-        res = self.server.parse_authn_request(qs["SAMLRequest"][0],
-                                              BINDING_HTTP_REDIRECT)
+        assert _leq(qs.keys(), expected_query_params)
+        assert all(len(qs[k]) == 1 for k in expected_query_params)
+        assert qs["SigAlg"] == [sig_default]
+        assert verify_redirect_signature(
+            list_values2simpletons(qs), self.client.sec.sec_backend
+        )
+
+        res = self.server.parse_authn_request(
+            qs["SAMLRequest"][0], BINDING_HTTP_REDIRECT
+        )
+
+    def test_signed_redirect(self):
+        # Revert configuration change to disallow unsinged responses
+        self.client.want_response_signed = True
+
+        reqid, req = self.client.create_authn_request(
+            "http://localhost:8088/sso", message_id="id1"
+        )
+        msg_str = str(req)
+
+        info = self.client.apply_binding(
+            BINDING_HTTP_REDIRECT,
+            msg_str,
+            destination="",
+            relay_state="relay2",
+            sign=True,
+            sigalg=SIG_RSA_SHA256,
+        )
+        loc = info["headers"][0][1]
+        qs = parse.parse_qs(loc[1:])
+
+        expected_query_params = ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature']
+
+        assert _leq(qs.keys(), expected_query_params)
+        assert all(len(qs[k]) == 1 for k in expected_query_params)
+        assert qs["SigAlg"] == [SIG_RSA_SHA256]
+        assert verify_redirect_signature(
+            list_values2simpletons(qs), self.client.sec.sec_backend
+        )
+
+        res = self.server.parse_authn_request(
+            qs["SAMLRequest"][0], BINDING_HTTP_REDIRECT
+        )
 
     def test_do_logout_signed_redirect(self):
         conf = config.SPConfig()
@@ -1566,7 +1650,7 @@ class TestClient:
         outstanding = {"id1": "http://foo.example.com/service"}
 
         def create_authn_response(**kwargs):
-            return encode_fn(
+            return b64encode(
                     str(self.server.create_authn_response(**kwargs)).encode())
 
         def parse_authn_response(response):
@@ -1955,7 +2039,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode('utf-8'))
+        resp_str = b64encode(resp_str.encode('utf-8'))
 
         authn_response = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -1995,7 +2079,7 @@ class TestClientNonAsciiAva:
             userid="also0001@example.com",
             authn=AUTHN)
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2044,7 +2128,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2079,7 +2163,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2114,7 +2198,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2158,7 +2242,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2211,7 +2295,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2247,7 +2331,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2290,7 +2374,7 @@ class TestClientNonAsciiAva:
 
         resp_str = "%s" % resp
 
-        resp_str = encode_fn(resp_str.encode())
+        resp_str = b64encode(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -2347,9 +2431,9 @@ class TestClientNonAsciiAva:
         # Cast the response to a string and encode it to mock up the payload
         # the SP client is expected to receive via HTTP POST binding.
         if six.PY2:
-            resp_str = encode_fn(str(resp))
+            resp_str = b64encode(str(resp))
         else:
-            resp_str = encode_fn(bytes(str(resp), 'utf-8'))
+            resp_str = b64encode(bytes(str(resp), 'utf-8'))
 
 
         # We do not need the client to verify a signature for this test.
@@ -2381,9 +2465,9 @@ class TestClientNonAsciiAva:
         # Cast the response to a string and encode it to mock up the payload
         # the SP client is expected to receive via HTTP POST binding.
         if six.PY2:
-            resp_str = encode_fn(str(resp))
+            resp_str = b64encode(str(resp))
         else:
-            resp_str = encode_fn(bytes(str(resp), 'utf-8'))
+            resp_str = b64encode(bytes(str(resp), 'utf-8'))
 
         # We do not need the client to verify a signature for this test.
         client.want_assertions_signed = False
@@ -2412,9 +2496,9 @@ class TestClientNonAsciiAva:
         # Cast the response to a string and encode it to mock up the payload
         # the SP client is expected to receive via HTTP POST binding.
         if six.PY2:
-            resp_str = encode_fn(str(resp))
+            resp_str = b64encode(str(resp))
         else:
-            resp_str = encode_fn(bytes(str(resp), 'utf-8'))
+            resp_str = b64encode(bytes(str(resp), 'utf-8'))
 
         # We do not need the client to verify a signature for this test.
         client.want_assertions_signed = False
@@ -2489,7 +2573,7 @@ class TestClientNonAsciiAva:
         # Create an Assertion instance from the signed assertion
         _ass = saml.assertion_from_string(sigass)
 
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="https:#www.example.com",
             status=s_utils.success_status_factory(),
@@ -2569,7 +2653,7 @@ class TestClientNonAsciiAva:
                                      node_id=assertion.id)
 
         sigass = rm_xmltag(sigass)
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),
@@ -2589,7 +2673,7 @@ class TestClientNonAsciiAva:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = encode_fn(enctext.encode())
+        resp_str = b64encode(enctext.encode())
         # Now over to the client side
         # Explicitely allow unsigned responses for this and the following 2 tests
         self.client.want_response_signed = False
@@ -2662,7 +2746,7 @@ class TestClientNonAsciiAva:
         assertion.advice.encrypted_assertion[0].add_extension_element(
             a_assertion)
 
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),
@@ -2693,9 +2777,9 @@ class TestClientNonAsciiAva:
         # seresp = samlp.response_from_string(enctext)
 
         if six.PY2:
-            resp_str = encode_fn(enctext.encode('utf-8'))
+            resp_str = b64encode(enctext.encode('utf-8'))
         else:
-            resp_str = encode_fn(bytes(enctext, 'utf-8'))
+            resp_str = b64encode(bytes(enctext, 'utf-8'))
 
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
@@ -2814,7 +2898,7 @@ class TestClientNonAsciiAva:
         assertion_2.signature = sigver.pre_signature_part(assertion_2.id,
                                                           _sec.my_cert, 1)
 
-        response = sigver.response_factory(
+        response = response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),
@@ -2978,7 +3062,7 @@ class TestClientNonAsciiAva:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = encode_fn(response.to_string())
+        resp_str = b64encode(response.to_string())
 
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
@@ -3139,9 +3223,10 @@ class TestClientWithDummy():
             binding=binding, response_binding=response_binding)
 
         assert isinstance(sid, six.string_types)
-        assert len(http_args) == 4
+        assert len(http_args) == 5
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
+        assert http_args["status"] == 303
         redirect_url = http_args["headers"][0][1]
         _, _, _, _, qs, _ = parse.urlparse(redirect_url)
         qs_dict = parse.parse_qs(qs)
@@ -3160,9 +3245,10 @@ class TestClientWithDummy():
 
         assert binding == auth_binding
         assert isinstance(sid, six.string_types)
-        assert len(http_args) == 4
+        assert len(http_args) == 5
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
+        assert http_args["status"] == 303
         redirect_url = http_args["headers"][0][1]
         _, _, _, _, qs, _ = parse.urlparse(redirect_url)
         qs_dict = parse.parse_qs(qs)

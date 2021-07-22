@@ -6,13 +6,17 @@ library. Reference: https://cryptography.io/en/latest/fernet/
 
 import base64 as _base64
 import os as _os
-import warnings as _warnings
+import logging
+from warnings import warn as _warn
 
 import cryptography.fernet as _fernet
 import cryptography.hazmat.backends as _backends
 import cryptography.hazmat.primitives.ciphers as _ciphers
 
 from .errors import SymmetricCryptographyError
+
+
+logger = logging.getLogger(__name__)
 
 
 class Fernet(object):
@@ -61,7 +65,8 @@ class Fernet(object):
                 "Remove any other arguements. "
                 "In the next version, this method will not allow them."
             )
-            _warnings.warn(_deprecation_msg, DeprecationWarning)
+            logger.warning(_deprecation_msg)
+            _warn(_deprecation_msg, DeprecationWarning)
 
         ciphertext = self._symmetric.encrypt(plaintext)
         return ciphertext
@@ -79,7 +84,8 @@ class Fernet(object):
                 "Remove any other arguements. "
                 "In the next version, this method will not allow them."
             )
-            _warnings.warn(_deprecation_msg, DeprecationWarning)
+            logger.warning(_deprecation_msg)
+            _warn(_deprecation_msg, DeprecationWarning)
 
         plaintext = self._symmetric.decrypt(ciphertext)
         return plaintext
@@ -90,7 +96,8 @@ class Fernet(object):
             "Remove any calls to this method. "
             "In the next version, this method will be removed."
         )
-        _warnings.warn(_deprecation_msg, DeprecationWarning)
+        logger.warning(_deprecation_msg)
+        _warn(_deprecation_msg, DeprecationWarning)
 
 
 class AESCipher(object):
@@ -116,7 +123,8 @@ class AESCipher(object):
             'or saml2.cryptography.symmetric.Fernet '
             'instead.'
         ).format(name=cls.__name__, type=type(cls).__name__)
-        _warnings.warn(_deprecation_msg, DeprecationWarning)
+        logger.warning(_deprecation_msg)
+        _warn(_deprecation_msg, DeprecationWarning)
 
     def __init__(self, key):
         """

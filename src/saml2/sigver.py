@@ -1,28 +1,31 @@
 """ Functions connected to signing and verifying.
 Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
-from OpenSSL import crypto
 
 import base64
 import hashlib
 import itertools
 import logging
 import os
-import uuid
+import re
 import six
-
+from uuid import uuid4 as gen_random_key
 from time import mktime
+from tempfile import NamedTemporaryFile
+from subprocess import Popen
+from subprocess import PIPE
+from importlib_resources import path as _resource_path
+
+from OpenSSL import crypto
+
 import pytz
 
 from six.moves.urllib import parse
 
 import saml2.cryptography.asymmetric
 import saml2.cryptography.pki
-
-from tempfile import NamedTemporaryFile
-from subprocess import Popen
-from subprocess import PIPE
-
+import saml2.xmldsig as ds
+import saml2.data.templates as _data_template
 from saml2 import samlp
 from saml2 import SamlBase
 from saml2 import SAMLError
@@ -31,20 +34,18 @@ from saml2 import class_name
 from saml2 import saml
 from saml2 import ExtensionElement
 from saml2 import VERSION
-
 from saml2.cert import OpenSSLWrapper
 from saml2.extension import pefim
 from saml2.extension.pefim import SPCertEnc
 from saml2.saml import EncryptedAssertion
-
-import saml2.xmldsig as ds
-
 from saml2.s_utils import sid
 from saml2.s_utils import Unsupported
-
 from saml2.time_util import instant
 from saml2.time_util import str_to_time
-
+from saml2.xmldsig import ALLOWED_CANONICALIZATIONS
+from saml2.xmldsig import ALLOWED_TRANSFORMS
+from saml2.xmldsig import TRANSFORM_C14N
+from saml2.xmldsig import TRANSFORM_ENVELOPED
 from saml2.xmldsig import SIG_RSA_SHA1
 from saml2.xmldsig import SIG_RSA_SHA224
 from saml2.xmldsig import SIG_RSA_SHA256
@@ -55,15 +56,18 @@ from saml2.xmlenc import EncryptedKey
 from saml2.xmlenc import CipherData
 from saml2.xmlenc import CipherValue
 from saml2.xmlenc import EncryptedData
+from saml2.xml.schema import node_to_schema
+from saml2.xml.schema import XMLSchemaError
 
 
 logger = logging.getLogger(__name__)
 
 SIG = '{{{ns}#}}{attribute}'.format(ns=ds.NAMESPACE, attribute='Signature')
 
+# RSA_1_5 is considered deprecated
 RSA_1_5 = 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
 TRIPLE_DES_CBC = 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc'
-
+RSA_OAEP_MGF1P = "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
 
 class SigverError(SAMLError):
     pass
@@ -100,6 +104,14 @@ class BadSignature(SigverError):
 
 class CertificateError(SigverError):
     pass
+
+
+def get_pem_wrapped_unwrapped(cert):
+    begin_cert = "-----BEGIN CERTIFICATE-----\n"
+    end_cert = "\n-----END CERTIFICATE-----\n"
+    unwrapped_cert = re.sub(f'{begin_cert}|{end_cert}', '', cert)
+    wrapped_cert = f'{begin_cert}{unwrapped_cert}{end_cert}'
+    return wrapped_cert, unwrapped_cert
 
 
 def read_file(*args, **kwargs):
@@ -301,6 +313,12 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
     return instance
 
 
+# XXX will actually sign the nodes
+# XXX assumes pre_signature_part has already been called
+# XXX calls sign without specifying sign_alg/digest_alg
+# XXX this is fine as the algs are embeded in the document
+# XXX as setup by pre_signature_part
+# XXX !!expects instance string!!
 def signed_instance_factory(instance, seccont, elements_to_sign=None):
     """
 
@@ -309,16 +327,19 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     :param elements_to_sign: Which parts if any that should be signed
     :return: A class instance if not signed otherwise a string
     """
-    if elements_to_sign:
-        signed_xml = instance
-        if not isinstance(instance, six.string_types):
-            signed_xml = instance.to_string()
-        for (node_name, nodeid) in elements_to_sign:
-            signed_xml = seccont.sign_statement(
-                signed_xml, node_name=node_name, node_id=nodeid)
-        return signed_xml
-    else:
+    if not elements_to_sign:
         return instance
+
+    signed_xml = instance
+    if not isinstance(instance, six.string_types):
+        signed_xml = instance.to_string()
+
+    for (node_name, nodeid) in elements_to_sign:
+        signed_xml = seccont.sign_statement(
+            signed_xml, node_name=node_name, node_id=nodeid
+        )
+
+    return signed_xml
 
 
 def make_temp(content, suffix="", decode=True, delete_tmpfiles=True):
@@ -566,8 +587,7 @@ def verify_redirect_signature(saml_msg, crypto, cert=None, sigkey=None):
     try:
         signer = crypto.get_signer(saml_msg['SigAlg'], sigkey)
     except KeyError:
-        raise Unsupported('Signature algorithm: {alg}'.format(
-            alg=saml_msg['SigAlg']))
+        raise Unsupported('Signature algorithm: {alg}'.format(alg=saml_msg['SigAlg']))
     else:
         if saml_msg['SigAlg'] in SIGNER_ALGS:
             if 'SAMLRequest' in saml_msg:
@@ -576,13 +596,18 @@ def verify_redirect_signature(saml_msg, crypto, cert=None, sigkey=None):
                 _order = RESP_ORDER
             else:
                 raise Unsupported(
-                    'Verifying signature on something that should not be '
-                    'signed')
+                    'Verifying signature on something that should not be signed'
+                )
+
             _args = saml_msg.copy()
             del _args['Signature']  # everything but the signature
             string = '&'.join(
-                [parse.urlencode({k: _args[k]}) for k in _order if k in
-                 _args]).encode('ascii')
+                [
+                    parse.urlencode({k: _args[k]})
+                    for k in _order
+                    if k in _args
+                ]
+            ).encode('ascii')
 
             if cert:
                 _key = extract_rsa_key_from_x509_cert(pem_format(cert))
@@ -860,6 +885,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             self.xmlsec,
             '--verify',
             '--enabled-reference-uris', 'empty,same-doc',
+            '--enabled-key-data', 'raw-x509-cert',
             '--pubkey-cert-{type}'.format(type=cert_type), cert_file,
             '--id-attr:ID', node_name,
         ]
@@ -1073,10 +1099,8 @@ def encrypt_cert_from_item(item):
         pass
 
     if _encrypt_cert is not None:
-        if _encrypt_cert.find('-----BEGIN CERTIFICATE-----\n') == -1:
-            _encrypt_cert = '-----BEGIN CERTIFICATE-----\n' + _encrypt_cert
-        if _encrypt_cert.find('\n-----END CERTIFICATE-----') == -1:
-            _encrypt_cert = _encrypt_cert + '\n-----END CERTIFICATE-----'
+        wrapped_cert, unwrapped_cert = get_pem_wrapped_unwrapped(_encrypt_cert)
+        _encrypt_cert = wrapped_cert
     return _encrypt_cert
 
 
@@ -1280,8 +1304,8 @@ class SecurityContext(object):
         self.only_use_keys_in_metadata = only_use_keys_in_metadata
 
         if not template:
-            this_dir, this_filename = os.path.split(__file__)
-            self.template = os.path.join(this_dir, 'xml_template', 'template.xml')
+            with _resource_path(_data_template, "template_enc.xml") as fp:
+                self.template = str(fp)
         else:
             self.template = template
 
@@ -1451,15 +1475,40 @@ class SecurityContext(object):
         if not certs:
             raise MissingKey(_issuer)
 
+        # validate XML with the appropriate schema
+        try:
+            _schema = node_to_schema[node_name]
+        except KeyError as e:
+            error_context = {
+                "message": "Signature verification failed. Unknown node type.",
+                "issuer": _issuer,
+                "type": node_name,
+                "document": decoded_xml,
+            }
+            raise SignatureError(error_context) from e
+
+        try:
+            _schema.validate(str(item))
+        except XMLSchemaError as e:
+            error_context = {
+                "message": "Signature verification failed. Invalid document format.",
+                "ID": item.id,
+                "issuer": _issuer,
+                "type": node_name,
+                "document": decoded_xml,
+            }
+            raise SignatureError(error_context) from e
+
         # saml-core section "5.4 XML Signature Profile" defines constrains on the
         # xmldsig-core facilities. It explicitly dictates that enveloped signatures
-        # are the only signatures allowed. This mean that:
+        # are the only signatures allowed. This means that:
         # * Assertion/RequestType/ResponseType elements must have an ID attribute
         # * signatures must have a single Reference element
         # * the Reference element must have a URI attribute
         # * the URI attribute contains an anchor
         # * the anchor points to the enclosing element's ID attribute
-        references = item.signature.signed_info.reference
+        signed_info = item.signature.signed_info
+        references = signed_info.reference
         signatures_must_have_a_single_reference_element = len(references) == 1
         the_Reference_element_must_have_a_URI_attribute = (
             signatures_must_have_a_single_reference_element
@@ -1474,6 +1523,46 @@ class SecurityContext(object):
             the_URI_attribute_contains_an_anchor
             and references[0].uri == "#{id}".format(id=item.id)
         )
+
+        # SAML implementations SHOULD use Exclusive Canonicalization,
+        # with or without comments
+        canonicalization_method_is_c14n = (
+            signed_info.canonicalization_method.algorithm in ALLOWED_CANONICALIZATIONS
+        )
+
+        # Signatures in SAML messages SHOULD NOT contain transforms other than the
+        # - enveloped signature transform
+        #   (with the identifier http://www.w3.org/2000/09/xmldsig#enveloped-signature)
+        # - or the exclusive canonicalization transforms
+        #   (with the identifier http://www.w3.org/2001/10/xml-exc-c14n#
+        #   or http://www.w3.org/2001/10/xml-exc-c14n#WithComments).
+        transform_algos = [
+            transform.algorithm
+            for transform in references[0].transforms.transform
+        ]
+        tranform_algos_valid = ALLOWED_TRANSFORMS.intersection(transform_algos)
+        transform_algos_n = len(transform_algos)
+        tranform_algos_valid_n = len(tranform_algos_valid)
+
+        the_number_of_transforms_is_one_or_two = (
+            signatures_must_have_a_single_reference_element
+            and 1 <= transform_algos_n <= 2
+        )
+        all_transform_algs_are_allowed = (
+            the_number_of_transforms_is_one_or_two
+            and transform_algos_n == tranform_algos_valid_n
+        )
+        the_enveloped_signature_transform_is_defined = (
+            the_number_of_transforms_is_one_or_two
+            and TRANSFORM_ENVELOPED in transform_algos
+        )
+
+        # The <ds:Object> element is not defined for use with SAML signatures,
+        # and SHOULD NOT be present.
+        # Since it can be used in service of an attacker by carrying unsigned data,
+        # verifiers SHOULD reject signatures that contain a <ds:Object> element.
+        object_element_is_not_present = not item.signature.object
+
         validators = {
             "signatures must have a single reference element": (
                 signatures_must_have_a_single_reference_element
@@ -1487,6 +1576,15 @@ class SecurityContext(object):
             "the anchor points to the enclosing element ID attribute": (
                 the_anchor_points_to_the_enclosing_element_ID_attribute
             ),
+            "canonicalization method is c14n": canonicalization_method_is_c14n,
+            "the number of transforms is one or two": (
+                the_number_of_transforms_is_one_or_two
+            ),
+            "all transform algs are allowed": all_transform_algs_are_allowed,
+            "the enveloped signature transform is defined": (
+                the_enveloped_signature_transform_is_defined
+            ),
+            "object element is not present": object_element_is_not_present,
         }
         if not all(validators.values()):
             error_context = {
@@ -1685,11 +1783,6 @@ class SecurityContext(object):
             node_id,
         )
 
-    def sign_assertion_using_xmlsec(self, statement, **kwargs):
-        """ Deprecated function. See sign_assertion(). """
-        return self.sign_statement(
-                statement, class_name(saml.Assertion()), **kwargs)
-
     def sign_assertion(self, statement, **kwargs):
         """Sign a SAML assertion.
 
@@ -1735,10 +1828,11 @@ class SecurityContext(object):
 
             if not item.signature:
                 item.signature = pre_signature_part(
-                        sid,
-                        self.cert_file,
-                        sign_alg=sign_alg,
-                        digest_alg=digest_alg)
+                    ident=sid,
+                    public_key=self.cert_file,
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg,
+                )
 
             statement = self.sign_statement(
                 statement,
@@ -1751,7 +1845,14 @@ class SecurityContext(object):
         return statement
 
 
-def pre_signature_part(ident, public_key=None, identifier=None, digest_alg=None, sign_alg=None):
+# XXX FIXME calls DefaultSignature - remove to unveil chain of calls without proper args
+def pre_signature_part(
+    ident,
+    public_key=None,
+    identifier=None,
+    digest_alg=None,
+    sign_alg=None,
+):
     """
     If an assertion is to be signed the signature part has to be preset
     with which algorithms to be used, this function returns such a
@@ -1764,15 +1865,16 @@ def pre_signature_part(ident, public_key=None, identifier=None, digest_alg=None,
     :return: A preset signature part
     """
 
+    # XXX
     if not digest_alg:
         digest_alg = ds.DefaultSignature().get_digest_alg()
     if not sign_alg:
         sign_alg = ds.DefaultSignature().get_sign_alg()
+
     signature_method = ds.SignatureMethod(algorithm=sign_alg)
-    canonicalization_method = ds.CanonicalizationMethod(
-        algorithm=ds.ALG_EXC_C14N)
-    trans0 = ds.Transform(algorithm=ds.TRANSFORM_ENVELOPED)
-    trans1 = ds.Transform(algorithm=ds.ALG_EXC_C14N)
+    canonicalization_method = ds.CanonicalizationMethod(algorithm=TRANSFORM_C14N)
+    trans0 = ds.Transform(algorithm=TRANSFORM_ENVELOPED)
+    trans1 = ds.Transform(algorithm=TRANSFORM_C14N)
     transforms = ds.Transforms(transform=[trans0, trans1])
     digest_method = ds.DigestMethod(algorithm=digest_alg)
 
@@ -1794,6 +1896,7 @@ def pre_signature_part(ident, public_key=None, identifier=None, digest_alg=None,
     if identifier:
         signature.id = 'Signature{n}'.format(n=identifier)
 
+    # XXX remove - do not embed the cert
     if public_key:
         x509_data = ds.X509Data(
             x509_certificate=[ds.X509Certificate(text=public_key)])
@@ -1831,33 +1934,44 @@ def pre_signature_part(ident, public_key=None, identifier=None, digest_alg=None,
 # </EncryptedData>
 
 
-def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_1_5, key_name='my-rsa-key',
-        encrypted_key_id=None, encrypted_data_id=None):
-    """
-
-    :param msg_enc:
-    :param key_enc:
-    :param key_name:
-    :return:
-    """
-    ek_id = encrypted_key_id or str(uuid.uuid4())
-    ed_id = encrypted_data_id or str(uuid.uuid4())
+def pre_encryption_part(
+    *,
+    msg_enc=TRIPLE_DES_CBC,
+    key_enc=RSA_OAEP_MGF1P,
+    key_name='my-rsa-key',
+    encrypted_key_id=None,
+    encrypted_data_id=None,
+    encrypt_cert=None,
+):
+    ek_id = encrypted_key_id or "EK_{id}".format(id=gen_random_key())
+    ed_id = encrypted_data_id or "ED_{id}".format(id=gen_random_key())
     msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
     key_encryption_method = EncryptionMethod(algorithm=key_enc)
+
+    x509_data = (
+        ds.X509Data(x509_certificate=ds.X509Certificate(text=encrypt_cert))
+        if encrypt_cert
+        else None
+    )
+    key_info = ds.KeyInfo(
+        key_name=ds.KeyName(text=key_name),
+        x509_data=x509_data,
+    )
+
     encrypted_key = EncryptedKey(
-            id=ek_id,
-            encryption_method=key_encryption_method,
-            key_info=ds.KeyInfo(
-                key_name=ds.KeyName(text=key_name)),
-            cipher_data=CipherData(
-                cipher_value=CipherValue(text='')))
+        id=ek_id,
+        encryption_method=key_encryption_method,
+        key_info=key_info,
+        cipher_data=CipherData(cipher_value=CipherValue(text='')),
+    )
     key_info = ds.KeyInfo(encrypted_key=encrypted_key)
     encrypted_data = EncryptedData(
         id=ed_id,
         type='http://www.w3.org/2001/04/xmlenc#Element',
         encryption_method=msg_encryption_method,
         key_info=key_info,
-        cipher_data=CipherData(cipher_value=CipherValue(text='')))
+        cipher_data=CipherData(cipher_value=CipherValue(text='')),
+    )
     return encrypted_data
 
 
@@ -1876,23 +1990,6 @@ def pre_encrypt_assertion(response):
             response.encrypted_assertion.add_extension_elements(assertion)
         else:
             response.encrypted_assertion.add_extension_element(assertion)
-    return response
-
-
-def response_factory(sign=False, encrypt=False, sign_alg=None, digest_alg=None,
-                     **kwargs):
-    response = samlp.Response(id=sid(), version=VERSION,
-                              issue_instant=instant())
-
-    if sign:
-        response.signature = pre_signature_part(
-            kwargs['id'], sign_alg=sign_alg, digest_alg=digest_alg)
-    if encrypt:
-        pass
-
-    for key, val in kwargs.items():
-        setattr(response, key, val)
-
     return response
 
 

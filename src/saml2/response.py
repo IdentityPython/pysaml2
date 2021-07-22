@@ -67,6 +67,10 @@ class IncorrectlySigned(SAMLError):
     pass
 
 
+class InvalidAssertion(SAMLError):
+    pass
+
+
 class DecryptionFailed(SAMLError):
     pass
 
@@ -92,6 +96,9 @@ class StatusAuthnFailed(StatusError):
 
 
 class StatusInvalidAttrNameOrValue(StatusError):
+    pass
+
+class StatusInvalidAuthnResponseStatement(StatusError):
     pass
 
 
@@ -209,10 +216,10 @@ def for_me(conditions, myself):
         if not restriction.audience:
             continue
         for audience in restriction.audience:
-            if audience.text.strip() == myself:
+            if audience.text and audience.text.strip() == myself:
                 return True
             else:
-                logger.debug("AudienceRestriction - One condition not satisfied: %s != %s" % (audience.text.strip(), myself))
+                logger.debug("AudienceRestriction - One condition not satisfied: {} != {}".format(audience.text, myself))
     logger.debug("AudienceRestrictions not satisfied!")
     return False
 
@@ -255,7 +262,7 @@ class StatusResponse(object):
     def __init__(self, sec_context, return_addrs=None, timeslack=0,
             request_id=0, asynchop=True, conv_info=None):
         self.sec = sec_context
-        self.return_addrs = return_addrs
+        self.return_addrs = return_addrs or []
 
         self.timeslack = timeslack
         self.request_id = request_id
@@ -402,10 +409,11 @@ class StatusResponse(object):
                 raise RequestVersionTooHigh()
 
         if self.asynchop:
-            if self.response.destination and \
-                            self.response.destination not in self.return_addrs:
-                logger.error("%s not in %s", self.response.destination,
-                             self.return_addrs)
+            if (
+                self.response.destination
+                and self.response.destination not in self.return_addrs
+            ):
+                logger.error("%s not in %s", self.response.destination, self.return_addrs)
                 return None
 
         valid = self.issue_instant_ok() and self.status_ok()
@@ -427,7 +435,12 @@ class StatusResponse(object):
         self.response = mold.response
 
     def issuer(self):
-        return self.response.issuer.text.strip()
+        issuer_value = (
+            self.response.issuer.text
+            if self.response.issuer is not None
+            else ""
+        ).strip()
+        return issuer_value
 
 
 class LogoutResponse(StatusResponse):
@@ -919,7 +932,7 @@ class AuthnResponse(StatusResponse):
             n_assertions = len(self.response.assertion)
             n_assertions_enc = len(self.response.encrypted_assertion)
             if n_assertions != 1 and n_assertions_enc != 1 and self.assertion is None:
-                raise Exception(
+                raise InvalidAssertion(
                     "Invalid number of assertions in Response: {n}".format(
                         n=n_assertions+n_assertions_enc
                     )
@@ -1036,7 +1049,7 @@ class AuthnResponse(StatusResponse):
             logger.error("Verification error on the response: %s", err)
             raise
         else:
-            if res is None:
+            if not res:
                 return None
 
         if not isinstance(self.response, samlp.Response):
@@ -1058,23 +1071,30 @@ class AuthnResponse(StatusResponse):
 
     def authn_info(self):
         res = []
-        for astat in self.assertion.authn_statement:
-            context = astat.authn_context
+        for statement in self.assertion.authn_statement:
             try:
-                authn_instant = astat.authn_instant
+                authn_instant = statement.authn_instant
             except AttributeError:
                 authn_instant = ""
-            if context:
-                try:
-                    aclass = context.authn_context_class_ref.text
-                except AttributeError:
-                    aclass = ""
-                try:
-                    authn_auth = [a.text for a in
-                                  context.authenticating_authority]
-                except AttributeError:
-                    authn_auth = []
-                res.append((aclass, authn_auth, authn_instant))
+
+            context = statement.authn_context
+            if not context:
+                continue
+
+            try:
+                authn_class = (
+                    context.authn_context_class_ref.text
+                    or context.authn_context_decl_ref.text
+                )
+            except AttributeError:
+                authn_class = ""
+
+            try:
+                authn_auth = [a.text for a in context.authenticating_authority]
+            except AttributeError:
+                authn_auth = []
+
+            res.append((authn_class, authn_auth, authn_instant))
         return res
 
     def authz_decision_info(self):
@@ -1098,12 +1118,16 @@ class AuthnResponse(StatusResponse):
             return {"name_id": self.name_id, "came_from": self.came_from,
                     "issuer": self.issuer(), "not_on_or_after": nooa,
                     "authz_decision_info": self.authz_decision_info()}
-        else:
+        elif getattr(self.assertion, 'authn_statement', None):
             authn_statement = self.assertion.authn_statement[0]
             return {"ava": self.ava, "name_id": self.name_id,
                     "came_from": self.came_from, "issuer": self.issuer(),
                     "not_on_or_after": nooa, "authn_info": self.authn_info(),
                     "session_index": authn_statement.session_index}
+        else:
+            raise StatusInvalidAuthnResponseStatement(
+                "The Authn Response Statement is not valid"
+            )
 
     def __str__(self):
         return self.xmlstr

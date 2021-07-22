@@ -5,12 +5,15 @@ import json
 import logging
 import os
 import sys
-
+from itertools import chain
+from warnings import warn as _warn
 from hashlib import sha1
 from os.path import isfile
 from os.path import join
+from re import compile as regex_compile
 
 import requests
+
 import six
 
 from saml2 import md
@@ -22,11 +25,14 @@ from saml2 import SAMLError
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
-
 from saml2.httpbase import HTTPBase
 from saml2.extension.idpdisc import BINDING_DISCO
 from saml2.extension.idpdisc import DiscoveryResponse
+from saml2.md import NAMESPACE as NS_MD
 from saml2.md import EntitiesDescriptor
+from saml2.md import ArtifactResolutionService
+from saml2.md import NameIDMappingService
+from saml2.md import SingleSignOnService
 from saml2.mdie import to_dict
 from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import UnknownSystemEntity
@@ -50,6 +56,11 @@ from saml2.extension.mdui import Description
 from saml2.extension.mdui import InformationURL
 from saml2.extension.mdui import PrivacyStatementURL
 from saml2.extension.mdui import Logo
+from saml2.extension.mdrpi import NAMESPACE as NS_MDRPI
+from saml2.extension.mdrpi import RegistrationInfo
+from saml2.extension.mdrpi import RegistrationPolicy
+from saml2.extension.shibmd import NAMESPACE as NS_SHIBMD
+from saml2.extension.shibmd import Scope
 
 
 logger = logging.getLogger(__name__)
@@ -70,6 +81,12 @@ classnames = {
         ns=NS_MDUI, tag=PrivacyStatementURL.c_tag
     ),
     "mdui_uiinfo_logo": "{ns}&{tag}".format(ns=NS_MDUI, tag=Logo.c_tag),
+    "service_artifact_resolution": "{ns}&{tag}".format(ns=NS_MD, tag=ArtifactResolutionService.c_tag),
+    "service_single_sign_on": "{ns}&{tag}".format(ns=NS_MD, tag=SingleSignOnService.c_tag),
+    "service_nameid_mapping": "{ns}&{tag}".format(ns=NS_MD, tag=NameIDMappingService.c_tag),
+    "mdrpi_registration_info": "{ns}&{tag}".format(ns=NS_MDRPI, tag=RegistrationInfo.c_tag),
+    "mdrpi_registration_policy": "{ns}&{tag}".format(ns=NS_MDRPI, tag=RegistrationPolicy.c_tag),
+    "shibmd_scope": "{ns}&{tag}".format(ns=NS_SHIBMD, tag=Scope.c_tag)
 }
 
 ENTITY_CATEGORY = "http://macedir.org/entity-category"
@@ -78,8 +95,6 @@ ASSURANCE_CERTIFICATION = "urn:oasis:names:tc:SAML:attribute:assurance-certifica
 
 SAML_METADATA_CONTENT_TYPE = "application/samlmetadata+xml"
 DEFAULT_FRESHNESS_PERIOD = "P0Y0M0DT12H0M0S"
-
-
 
 REQ2SRV = {
     # IDP
@@ -149,8 +164,54 @@ def metadata_modules():
     return _res
 
 
+def response_locations(srvs):
+    """
+    Return the ResponseLocation attributes mapped to the services.
+
+    ArtifactResolutionService, SingleSignOnService and NameIDMappingService MUST omit
+    the ResponseLocation attribute. This is enforced here, but metadata with such
+    service declarations and such attributes should not have been part of the metadata
+    store in the first place.
+    """
+    values = (
+        s["response_location"]
+        for s in srvs
+        if "response_location" in s
+        if s["__class__"] not in [
+            classnames["service_artifact_resolution"],
+            classnames["service_single_sign_on"],
+            classnames["service_nameid_mapping"],
+        ]
+    )
+    return values
+
+
+def locations(srvs):
+    values = (
+        s["location"]
+        for s in srvs
+        if "location" in s
+    )
+    return values
+
+
 def destinations(srvs):
-    return [s["location"] for s in srvs]
+    warn_msg = (
+        "`saml2.mdstore.destinations` function is deprecated; "
+        "instead, use `saml2.mdstore.locations` or `saml2.mdstore.all_locations`."
+    )
+    logger.warning(warn_msg)
+    _warn(warn_msg, DeprecationWarning)
+    values = list(locations(srvs))
+    return values
+
+
+def all_locations(srvs):
+    values = chain(
+        response_locations(srvs),
+        locations(srvs),
+    )
+    return values
 
 
 def attribute_requirement(entity, index=None):
@@ -554,7 +615,10 @@ class InMemoryMetaData(MetaData):
             self.entity[entity_descr.entity_id] = _ent
 
     def parse(self, xmlstr):
-        self.entities_descr = md.entities_descriptor_from_string(xmlstr)
+        try:
+            self.entities_descr = md.entities_descriptor_from_string(xmlstr)
+        except Exception as e:
+            raise SAMLError(f'Failed to parse metadata file: {self.filename}') from e
 
         if not self.entities_descr:
             self.entity_descr = md.entity_descriptor_from_string(xmlstr)
@@ -1169,8 +1233,6 @@ class MetadataStore(MetaData):
         # IDP + SP
         if typ is None:
             raise AttributeError("Missing type specification")
-        if binding is None:
-            binding = BINDING_HTTP_REDIRECT
         return self.service(entity_id, "%s_descriptor" % typ,
                             "single_logout_service", binding)
 
@@ -1353,6 +1415,52 @@ class MetadataStore(MetaData):
                 res['signing_methods'].append(elem['algorithm'])
         return res
 
+    def registration_info(self, entity_id):
+        """
+        Get all registration info for an entry in the metadata.
+
+        Example return data:
+
+        res = {
+            'registration_authority': 'http://www.example.com',
+            'registration_instant': '2013-06-15T18:15:03Z',
+            'registration_policy': {
+                'en': 'http://www.example.com/policy.html',
+                'sv': 'http://www.example.com/sv/policy.html',
+            }
+        }
+
+        :param entity_id: Entity id
+        :return: dict with keys and value-lists from metadata
+
+        :type entity_id: string
+        :rtype: dict
+        """
+        try:
+            ext = self.__getitem__(entity_id)
+        except KeyError:
+            ext = {}
+
+        ext_elems = ext.get("extensions", {}).get("extension_elements", [])
+        reg_info = next(
+            (
+                elem
+                for elem in ext_elems
+                if elem["__class__"] == classnames["mdrpi_registration_info"]
+            ),
+            {},
+        )
+        res = {
+            "registration_authority": reg_info.get("registration_authority"),
+            "registration_instant": reg_info.get("registration_instant"),
+            "registration_policy": {
+                policy["lang"]: policy["text"]
+                for policy in reg_info.get("registration_policy", [])
+                if policy["__class__"] == classnames["mdrpi_registration_policy"]
+            },
+        }
+        return res
+
     def _lookup_elements_by_cls(self, root, cls):
         elements = (
             element
@@ -1372,6 +1480,41 @@ class MetadataStore(MetaData):
             for element in elements
         )
         return elements
+
+    def sbibmd_scopes(self, entity_id, typ=None):
+        try:
+            md = self[entity_id]
+        except KeyError:
+            md = {}
+
+        descriptor_scopes = (
+            {
+                "regexp": is_regexp,
+                "text": regex_compile(text) if is_regexp else text,
+            }
+            for elem in md.get("extensions", {}).get("extension_elements", [])
+            if elem.get("__class__") == classnames["shibmd_scope"]
+            for is_regexp, text in [
+                (elem.get("regexp", "").lower() == "true", elem.get("text", "")),
+            ]
+        )
+
+        services_of_type = md.get(typ) or []
+        services_of_type_scopes = (
+            {
+                "regexp": is_regexp,
+                "text": regex_compile(text) if is_regexp else text,
+            }
+            for srv in services_of_type
+            for elem in srv.get("extensions", {}).get("extension_elements", [])
+            if elem.get("__class__") == classnames["shibmd_scope"]
+            for is_regexp, text in [
+                (elem.get("regexp", "").lower() == "true", elem.get("text", "")),
+            ]
+        )
+
+        scopes = chain(descriptor_scopes, services_of_type_scopes)
+        return scopes
 
     def mdui_uiinfo(self, entity_id):
         try:

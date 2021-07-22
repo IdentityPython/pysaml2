@@ -91,8 +91,16 @@ class Client(Entity):
         self.done_ecp = False
         self.cookie_jar = cookielib.LWPCookieJar()
 
-    def phase2(self, authn_request, rc_url, idp_entity_id, headers=None,
-               sign=False, **kwargs):
+    def phase2(
+        self,
+        authn_request,
+        rc_url,
+        idp_entity_id,
+        headers=None,
+        sign=False,
+        sign_alg=None,
+        **kwargs,
+    ):
         """
         Doing the second phase of the ECP conversation, the conversation
         with the IdP happens.
@@ -105,12 +113,13 @@ class Client(Entity):
         :return: The response from the IdP
         """
 
-        _, destination = self.pick_binding("single_sign_on_service",
-                                           [BINDING_SOAP], "idpsso",
-                                           entity_id=idp_entity_id)
+        _, destination = self.pick_binding(
+            "single_sign_on_service", [BINDING_SOAP], "idpsso", entity_id=idp_entity_id
+        )
 
-        ht_args = self.apply_binding(BINDING_SOAP, authn_request, destination,
-                                     sign=sign)
+        ht_args = self.apply_binding(
+            BINDING_SOAP, authn_request, destination, sign=sign, sigalg=sign_alg
+        )
 
         if headers:
             ht_args["headers"].extend(headers)
@@ -124,8 +133,10 @@ class Client(Entity):
 
         if response.status_code != 200:
             raise SAMLError(
-                "Request to IdP failed (%s): %s" % (response.status_code,
-                                                    response.text))
+                "Request to IdP failed ({status}): {text}".format(
+                    status=response.status_code, text=response.text
+                )
+            )
 
         # SAMLP response in a SOAP envelope body, ecp response in headers
         respdict = self.parse_soap_message(response.text)
@@ -195,8 +206,11 @@ class Client(Entity):
 
         _rc_url = _paos_request.response_consumer_url
 
-        return {"authn_request": authn_request, "rc_url": _rc_url,
-                "relay_state": _relay_state}
+        return {
+            "authn_request": authn_request,
+            "rc_url": _rc_url,
+            "relay_state": _relay_state,
+        }
 
     def ecp_conversation(self, respdict, idp_entity_id=None):
         """
@@ -218,8 +232,7 @@ class Client(Entity):
         # Phase 3 - back to the SP
         # **********************************
 
-        ht_args = self.use_soap(idp_response, args["rc_url"],
-                                [args["relay_state"]])
+        ht_args = self.use_soap(idp_response, args["rc_url"], [args["relay_state"]])
         ht_args["headers"][0] = ('Content-Type', MIME_PAOS)
         logger.debug("[P3] Post to SP: %s", ht_args["data"])
 
@@ -231,8 +244,7 @@ class Client(Entity):
             # url I started off with.
             pass
         else:
-            raise SAMLError(
-                "Error POSTing package to SP: %s" % response.text)
+            raise SAMLError("Error POSTing package to SP: %s" % response.text)
 
         logger.debug("[P3] SP response: %s", response.text)
 
