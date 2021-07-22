@@ -413,7 +413,12 @@ class StatusResponse(object):
                 self.response.destination
                 and self.response.destination not in self.return_addrs
             ):
-                logger.error("%s not in %s", self.response.destination, self.return_addrs)
+                logger.error("destination %s not in %s", self.response.destination, self.return_addrs)
+                if self.response.destination != self.response.destination.trim():
+                    logger.error("please check destination %s: trimmable", self.response.destination)                
+                for r in self.return_addrs:
+                    if r != r.trim():
+                        logger.error("Please check return_addrs %s: trimmable", r)                
                 return None
 
         valid = self.issue_instant_ok() and self.status_ok()
@@ -737,6 +742,9 @@ class AuthnResponse(StatusResponse):
     def get_subject(self):
         """ The assertion must contain a Subject
         """
+        if not self.assertion:
+            raise ValueError("Missing assertion")
+            
         if not self.assertion.subject:
             raise ValueError(
                 "Invalid assertion subject: {subject}".format(
