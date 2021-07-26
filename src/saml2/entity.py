@@ -203,6 +203,39 @@ class Entity(HTTPBase):
 
         self.msg_cb = msg_cb
 
+    def reload_metadata(self, metadata_conf):
+        """
+        Reload metadata configuration.
+
+        Load a new metadata configuration as defined by metadata_conf (by
+        passing this to Config.load_metadata) and make this entity (as well as
+        subordinate objects with own metadata reference) use the new metadata.
+
+        The structure of metadata_conf is the same as the 'metadata' entry in
+        the configuration passed to saml2.Config.
+
+        param metadata_conf: Metadata configuration as passed to Config.load_metadata
+        return: True if successfully reloaded
+        """
+        logger.debug("Loading new metadata")
+        try:
+            new_metadata = self.config.load_metadata(metadata_conf)
+        except Exception as ex:
+            logger.error("Loading metadata failed", exc_info=ex)
+            return False
+
+        logger.debug("Applying new metadata to main config")
+        ( self.metadata, self.sec.metadata, self.config.metadata ) = [new_metadata]*3
+        policy = getattr(self.config, "_%s_policy" % self.entity_type, None)
+        if policy and policy.metadata_store:
+            logger.debug("Applying new metadata to %s policy", self.entity_type)
+            policy.metadata_store = self.metadata
+
+        logger.debug("Applying new metadata source_id")
+        self.sourceid = self.metadata.construct_source_id()
+
+        return True
+
     def _issuer(self, entityid=None):
         """ Return an Issuer instance """
         if entityid:
