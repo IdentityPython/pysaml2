@@ -618,7 +618,14 @@ class InMemoryMetaData(MetaData):
         try:
             self.entities_descr = md.entities_descriptor_from_string(xmlstr)
         except Exception as e:
-            raise SAMLError(f'Failed to parse metadata file: {self.filename}') from e
+            _md_desc = (
+                f'metadata file: {self.filename}'
+                if isinstance(self,MetaDataFile)
+                else f'remote metadata: {self.url}'
+                if isinstance(self, MetaDataExtern)
+                else 'metadata'
+            )
+            raise SAMLError(f'Failed to parse {_md_desc}') from e
 
         if not self.entities_descr:
             self.entity_descr = md.entity_descriptor_from_string(xmlstr)
@@ -1693,4 +1700,5 @@ class MetadataStore(MetaData):
 
             return "%s" % res
         elif format == "md":
-            return json.dumps(self.items(), indent=2)
+            # self.items() returns dictitems(), convert that back into a dict
+            return json.dumps(dict(self.items()), indent=2)

@@ -35,6 +35,9 @@ def _filter_values(vals, vlist=None, must=False):
     if not vlist:  # No value specified equals any value
         return vals
 
+    if vals is None: # cannot iterate over None, return early
+        return vals
+
     if isinstance(vlist, six.string_types):
         vlist = [vlist]
 

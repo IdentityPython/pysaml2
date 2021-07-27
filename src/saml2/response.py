@@ -741,6 +741,10 @@ class AuthnResponse(StatusResponse):
     def get_subject(self):
         """ The assertion must contain a Subject
         """
+
+        if not self.assertion:
+            raise ValueError("Missing assertion")
+
         if not self.assertion.subject:
             raise ValueError(
                 "Invalid assertion subject: {subject}".format(

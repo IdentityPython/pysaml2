@@ -269,7 +269,7 @@ def utc_now():
 
 
 def before(point):
-    """ True if point datetime specification is before now.
+    """ True if current time is before point datetime specification.
 
     NOTE: If point is specified it is supposed to be in local time.
     Not UTC/GMT !! This is because that is what gmtime() expects.
@@ -286,7 +286,7 @@ def before(point):
 
 
 def after(point):
-    """ True if point datetime specification is equal or after now """
+    """ True if current time is after or equal to point datetime specification."""
     if not point:
         return True
     else:
