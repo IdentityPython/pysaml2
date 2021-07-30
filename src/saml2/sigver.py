@@ -1491,7 +1491,7 @@ class SecurityContext(object):
             _schema.validate(str(item))
         except XMLSchemaError as e:
             error_context = {
-                "message": "Signature verification failed. Invalid document format.",
+                "message": "Signature verification failed. Invalid document format: {}".format(str(e)),
                 "ID": item.id,
                 "issuer": _issuer,
                 "type": node_name,
