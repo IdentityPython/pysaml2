@@ -1,0 +1,59 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: pysaml2
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - '3.6'
+          - '3.7'
+          - '3.8'
+          - '3.9'
+          - '3.10-dev'
+          - 'pypy3'
+        mongodb-version:
+          - '4.4'
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update && sudo apt-get install xmlsec1
+        python -m pip install --upgrade pip tox rstcheck setuptools codecov pytest-cov flake8
+    - name: Install python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f tests/test-requirements.txt ]; then pip install -r tests/test-requirements.txt; fi
+        python setup.py install
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 ./src --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 ./src --count --exit-zero --statistics
+
+    - name: Start MongoDB
+      uses: supercharge/mongodb-github-action@1.6.0
+      with:
+        mongodb-version: ${{ matrix.mongodb-version }}
+
+    - name: PySAML2 tests
+      run: |
+        pytest --cov=saml2 tests
