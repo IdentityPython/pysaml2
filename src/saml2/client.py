@@ -134,7 +134,7 @@ class Saml2Client(Base):
             if expected_binding and binding != expected_binding:
                 continue
 
-            destination = self._sso_location(entityid, binding)
+            destination = self.sso_location(entityid, binding)
             logger.info("destination to provider: %s", destination)
 
             # XXX - sign_post will embed the signature to the xml doc
@@ -145,11 +145,11 @@ class Saml2Client(Base):
             sign_redirect = False if binding == BINDING_HTTP_POST and sign else sign
 
             reqid, request = self.create_authn_request(
-                destination,
-                vorg,
-                scoping,
-                response_binding,
-                nameid_format,
+                destination=destination,
+                vorg=vorg,
+                scoping=scoping,
+                binding=response_binding,
+                nameid_format=nameid_format,
                 consent=consent,
                 extensions=extensions,
                 sign=sign_post,
