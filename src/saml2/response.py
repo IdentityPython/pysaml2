@@ -628,7 +628,7 @@ class AuthnResponse(StatusResponse):
 
         return True
 
-    def decrypt_attributes(self, attribute_statement):
+    def decrypt_attributes(self, attribute_statement, keys=None):
         """
         Decrypts possible encrypted attributes and adds the decrypts to the
         list of attributes.
@@ -642,11 +642,11 @@ class AuthnResponse(StatusResponse):
 
         for encattr in attribute_statement.encrypted_attribute:
             if not encattr.encrypted_key:
-                _decr = self.sec.decrypt(encattr.encrypted_data)
+                _decr = self.sec.decrypt_keys(encattr.encrypted_data, keys=keys)
                 _attr = attribute_from_string(_decr)
                 attribute_statement.attribute.append(_attr)
             else:
-                _decr = self.sec.decrypt(encattr)
+                _decr = self.sec.decrypt_keys(encattr, keys=keys)
                 enc_attr = encrypted_attribute_from_string(_decr)
                 attrlist = enc_attr.extensions_as_elements("Attribute", saml)
                 attribute_statement.attribute.extend(attrlist)
@@ -734,7 +734,7 @@ class AuthnResponse(StatusResponse):
 
         return has_keyinfo
 
-    def get_subject(self):
+    def get_subject(self, keys=None):
         """ The assertion must contain a Subject
         """
 
@@ -785,8 +785,9 @@ class AuthnResponse(StatusResponse):
             self.name_id = subject.name_id
         elif subject.encrypted_id:
             # decrypt encrypted ID
-            _name_id_str = self.sec.decrypt(
-                subject.encrypted_id.encrypted_data.to_string())
+            _name_id_str = self.sec.decrypt_keys(
+                subject.encrypted_id.encrypted_data.to_string(), keys=keys
+            )
             _name_id = saml.name_id_from_string(_name_id_str)
             self.name_id = _name_id
 
@@ -958,7 +959,7 @@ class AuthnResponse(StatusResponse):
             while self.find_encrypt_data(resp) and decr_text_old != decr_text:
                 decr_text_old = decr_text
                 try:
-                    decr_text = self.sec.decrypt_keys(decr_text, keys)
+                    decr_text = self.sec.decrypt_keys(decr_text, keys=keys)
                 except DecryptError as e:
                     continue
                 else:
@@ -981,7 +982,7 @@ class AuthnResponse(StatusResponse):
             ) and decr_text_old != decr_text:
                 decr_text_old = decr_text
                 try:
-                    decr_text = self.sec.decrypt_keys(decr_text, keys)
+                    decr_text = self.sec.decrypt_keys(decr_text, keys=keys)
                 except DecryptError as e:
                     continue
                 else:
