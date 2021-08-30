@@ -1076,11 +1076,8 @@ class AuthnResponse(StatusResponse):
 
     def authn_info(self):
         res = []
-        for statement in self.assertion.authn_statement:
-            try:
-                authn_instant = statement.authn_instant
-            except AttributeError:
-                authn_instant = ""
+        for statement in getattr(self.assertion, 'authn_statement', []):
+            authn_instant = getattr(statement, "authn_instant", "")
 
             context = statement.authn_context
             if not context:
@@ -1094,10 +1091,10 @@ class AuthnResponse(StatusResponse):
             except AttributeError:
                 authn_class = ""
 
-            try:
-                authn_auth = [a.text for a in context.authenticating_authority]
-            except AttributeError:
-                authn_auth = []
+            authenticating_authorities = getattr(
+                context, "authenticating_authority", []
+            )
+            authn_auth = [authority.text for authority in authenticating_authorities]
 
             res.append((authn_class, authn_auth, authn_instant))
         return res
