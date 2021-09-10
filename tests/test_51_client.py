@@ -1594,6 +1594,30 @@ class TestClient:
                                                BINDING_HTTP_POST)
         assert b'<ns0:SessionIndex>_foo</ns0:SessionIndex>' in res.xmlstr
 
+    def test_do_logout_redirect_no_cache(self):
+        conf = config.SPConfig()
+        conf.load_file("sp_slo_redirect_conf")
+        client = Saml2Client(conf)
+
+        entity_ids = ["urn:mace:example.com:saml:roland:idp"]
+        resp = client.do_logout(nid, entity_ids, "urn:oasis:names:tc:SAML:2.0:logout:user",
+                                in_a_while(minutes=5),
+                                expected_binding=BINDING_HTTP_REDIRECT)
+        assert resp
+        assert len(resp) == 1
+        assert list(resp.keys()) == entity_ids
+        binding, info = resp[entity_ids[0]]
+        assert binding == BINDING_HTTP_REDIRECT
+
+        loc = info["headers"][0][1]
+        _, _, _, _, qs, _ = parse.urlparse(loc)
+        qs = parse.parse_qs(qs)
+        assert _leq(qs.keys(), ['SAMLRequest', 'RelayState'])
+
+        res = self.server.parse_logout_request(qs["SAMLRequest"][0],
+                                               BINDING_HTTP_REDIRECT)
+        assert res.subject_id() == nid
+
     def test_do_logout_session_expired(self):
         # information about the user from an IdP
         session_info = {

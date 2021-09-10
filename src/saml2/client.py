@@ -294,9 +294,12 @@ class Saml2Client(Base):
                 )
                 continue
 
-            session_info = self.users.get_info_from(name_id, entity_id, False)
-            session_index = session_info.get('session_index')
-            session_indexes = [session_index] if session_index else None
+            try:
+                session_info = self.users.get_info_from(name_id, entity_id, False)
+                session_index = session_info.get('session_index')
+                session_indexes = [session_index] if session_index else None
+            except KeyError:
+                session_indexes = None
 
             sign = sign if sign is not None else self.logout_requests_signed
             sign_post = sign and (
