@@ -477,6 +477,9 @@ class AttributeConverter(object):
         Returns a list of AttributeValue instances of NameID elements.
         """
 
+        if type(values) is not list:
+            values = [values]
+
         def _create_nameid_ext_el(value):
             text = value["text"] if isinstance(value, dict) else value
             attributes = (
