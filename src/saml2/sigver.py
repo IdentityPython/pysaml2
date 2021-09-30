@@ -9,12 +9,12 @@ import logging
 import os
 import re
 import six
+import sys
 from uuid import uuid4 as gen_random_key
 from time import mktime
 from tempfile import NamedTemporaryFile
 from subprocess import Popen
 from subprocess import PIPE
-from importlib_resources import path as _resource_path
 
 from OpenSSL import crypto
 
@@ -59,6 +59,11 @@ from saml2.xmlenc import EncryptedData
 from saml2.xml.schema import node_to_schema
 from saml2.xml.schema import XMLSchemaError
 
+# importlib.resources was introduced in python 3.7
+if sys.version_info[:2] >= (3, 7):
+    from importlib.resources import path as _resource_path
+else:
+    from importlib_resources import path as _resource_path
 
 logger = logging.getLogger(__name__)
 

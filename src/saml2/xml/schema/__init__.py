@@ -1,10 +1,15 @@
-from importlib_resources import path as _resource_path
+import sys
 
 from xmlschema import XMLSchema as _XMLSchema
 from xmlschema.exceptions import XMLSchemaException as XMLSchemaError
 
 import saml2.data.schemas as _data_schemas
 
+# importlib.resources was introduced in python 3.7
+if sys.version_info[:2] >= (3, 7):
+    from importlib.resources import path as _resource_path
+else:
+    from importlib_resources import path as _resource_path
 
 def _create_xml_schema_validator(source, **kwargs):
     kwargs = {
