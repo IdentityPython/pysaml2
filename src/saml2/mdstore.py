@@ -1032,9 +1032,9 @@ class MetadataStore(MetaData):
         MetaData.__init__(self, attrc, check_validity=check_validity)
 
         if disable_ssl_certificate_validation:
-            self.http = HTTPBase(verify=False, ca_bundle=ca_certs)
+            self.http = HTTPBase(verify=False, ca_bundle=ca_certs, timeout=config.timeout)
         else:
-            self.http = HTTPBase(verify=True, ca_bundle=ca_certs)
+            self.http = HTTPBase(verify=True, ca_bundle=ca_certs, timeout=config.timeout)
 
         self.security = security_context(config)
         self.ii = 0

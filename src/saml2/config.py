@@ -76,6 +76,7 @@ COMMON_ARGS = [
     "name_id_format",
     "signing_algorithm",
     "digest_algorithm",
+    "timeout",
 ]
 
 SP_ARGS = [
@@ -228,6 +229,7 @@ class Config(object):
         self.delete_tmpfiles = True
         self.signing_algorithm = None
         self.digest_algorithm = None
+        self.timeout = None
 
     def setattr(self, context, attr, val):
         if context == "":

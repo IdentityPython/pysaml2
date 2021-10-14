@@ -175,7 +175,7 @@ class Entity(HTTPBase):
 
         HTTPBase.__init__(self, self.config.verify_ssl_cert,
                           self.config.ca_certs, self.config.key_file,
-                          self.config.cert_file)
+                          self.config.cert_file, self.config.timeout)
 
         if self.config.vorg:
             for vo in self.config.vorg.values():
