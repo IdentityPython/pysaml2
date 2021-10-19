@@ -33,14 +33,11 @@ from saml2 import extension_elements_to_elements
 from saml2 import class_name
 from saml2 import saml
 from saml2 import ExtensionElement
-from saml2 import VERSION
 from saml2.cert import OpenSSLWrapper
 from saml2.extension import pefim
 from saml2.extension.pefim import SPCertEnc
 from saml2.saml import EncryptedAssertion
-from saml2.s_utils import sid
 from saml2.s_utils import Unsupported
-from saml2.time_util import instant
 from saml2.time_util import str_to_time
 from saml2.xmldsig import ALLOWED_CANONICALIZATIONS
 from saml2.xmldsig import ALLOWED_TRANSFORMS
