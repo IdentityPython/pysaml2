@@ -16,6 +16,13 @@ from tempfile import NamedTemporaryFile
 from subprocess import Popen
 from subprocess import PIPE
 
+# importlib.resources was introduced in python 3.7
+# files API from importlib.resources introduced in python 3.9
+if sys.version_info[:2] >= (3, 9):
+    from importlib.resources import files as _resource_files
+else:
+    from importlib_resources import files as _resource_files
+
 from OpenSSL import crypto
 
 import pytz
@@ -56,11 +63,6 @@ from saml2.xmlenc import EncryptedData
 from saml2.xml.schema import node_to_schema
 from saml2.xml.schema import XMLSchemaError
 
-# importlib.resources was introduced in python 3.7
-if sys.version_info[:2] >= (3, 7):
-    from importlib.resources import path as _resource_path
-else:
-    from importlib_resources import path as _resource_path
 
 logger = logging.getLogger(__name__)
 
@@ -1306,8 +1308,8 @@ class SecurityContext(object):
         self.only_use_keys_in_metadata = only_use_keys_in_metadata
 
         if not template:
-            with _resource_path(_data_template, "template_enc.xml") as fp:
-                self.template = str(fp)
+            fp = str(_resource_files(_data_template).joinpath("template_enc.xml"))
+            self.template = str(fp)
         else:
             self.template = template
 
