@@ -342,7 +342,7 @@ ca_certs
 This is the path to a file containing root CA certificates for SSL server certificate validation.
 
 Example::
-    
+
     "ca_certs": full_path("cacerts.txt"),
 
 
@@ -1220,6 +1220,34 @@ Example::
 ::
 
     "requested_attribute_name_format": NAME_FORMAT_BASIC
+
+
+requested_authn_context
+"""""""""""""""""""""""
+
+This configuration option defines the ``<RequestedAuthnContext>`` for an AuthnRequest by
+a client. The value is a dictionary with two fields
+
+- ``authn_context_class_ref`` a list of string values representing
+  ``<AuthnContextClassRef>`` elements.
+
+- ``comparison`` a string representing the Comparison xml-attribute value of the
+  ``<RequestedAuthnContext>`` element. Per the SAML core specificiation the value should
+  be one of "exact", "minimum", "maximum", or "better". The default is "exact".
+
+Example::
+
+    "service": {
+        "sp": {
+            "requested_authn_context": {
+                "authn_context_class_ref": [
+                    "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
+                    "urn:oasis:names:tc:SAML:2.0:ac:classes:TLSClient",
+                ],
+                "comparison": "minimum",
+            }
+        }
+    }
 
 
 idp/aa/sp
