@@ -104,6 +104,7 @@ SP_ARGS = [
     "sp_type",
     "sp_type_in_metadata",
     "requested_attributes",
+    "requested_authn_context",
 ]
 
 AA_IDP_ARGS = [
