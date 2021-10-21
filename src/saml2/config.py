@@ -383,11 +383,13 @@ class Config(object):
             disable_validation = False
 
         mds = MetadataStore(
-            acs, self, ca_certs, disable_ssl_certificate_validation=disable_validation
+            acs,
+            self,
+            ca_certs,
+            disable_ssl_certificate_validation=disable_validation,
+            timeout=self.timeout,
         )
-
         mds.imp(metadata_conf)
-
         return mds
 
     def endpoint(self, service, binding=None, context=None):

@@ -78,7 +78,7 @@ class Client(Entity):
         self._verbose = verbose
 
         if metadata_file:
-            self._metadata = MetadataStore([saml, samlp], None, config)
+            self._metadata = MetadataStore([saml, samlp], None, config, timeout=config.timeout)
             self._metadata.load("local", metadata_file)
             logger.debug("Loaded metadata from '%s'", metadata_file)
         else:
