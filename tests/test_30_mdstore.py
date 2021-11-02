@@ -99,7 +99,6 @@ TEST_METADATA_STRING = """
 </EntitiesDescriptor>
 """.format(cert_data=TEST_CERT)
 
-
 ATTRCONV = ac_factory(full_path("attributemaps"))
 
 METADATACONF = {
@@ -522,10 +521,45 @@ def test_load_string():
 def test_get_certs_from_metadata():
     mds = MetadataStore(ATTRCONV, None)
     mds.imp(METADATACONF["11"])
-    certs1 = mds.certs("http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "any")
-    certs2 = mds.certs("http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "idpsso")
 
-    assert certs1[0] == certs2[0] == TEST_CERT
+    cert_any_name, cert_any = mds.certs(
+        "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "any"
+    )[0]
+    cert_idpsso_name, cert_idpsso = mds.certs(
+        "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "idpsso"
+    )[0]
+
+    assert cert_any_name is None
+    assert cert_idpsso_name is None
+
+
+def test_get_unnamed_certs_from_metadata():
+    mds = MetadataStore(ATTRCONV, None)
+    mds.imp(METADATACONF["11"])
+
+    cert_any_name, cert_any = mds.certs(
+        "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "any"
+    )[0]
+    cert_idpsso_name, cert_idpsso = mds.certs(
+        "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "idpsso"
+    )[0]
+
+    assert cert_any_name is None
+    assert cert_idpsso_name is None
+
+
+def test_get_named_certs_from_metadata():
+    mds = MetadataStore(ATTRCONV, None)
+    mds.imp(METADATACONF["3"])
+
+    cert_sign_name, cert_sign = mds.certs(
+        "https://coip-test.sunet.se/shibboleth", "spsso", "signing"
+    )[0]
+    cert_enc_name, cert_enc = mds.certs(
+        "https://coip-test.sunet.se/shibboleth", "spsso", "encryption"
+    )[0]
+
+    assert cert_sign_name == cert_enc_name == "coip-test.sunet.se"
 
 
 def test_get_certs_from_metadata_without_keydescriptor():

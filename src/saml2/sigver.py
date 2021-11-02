@@ -1451,7 +1451,7 @@ class SecurityContext(object):
                 _certs = []
             certs = []
 
-            for cert in _certs:
+            for cert_name, cert in _certs:
                 if isinstance(cert, six.string_types):
                     content = pem_format(cert)
                     tmp = make_temp(content,
@@ -1943,7 +1943,7 @@ def pre_encryption_part(
     *,
     msg_enc=TRIPLE_DES_CBC,
     key_enc=RSA_OAEP_MGF1P,
-    key_name='my-rsa-key',
+    key_name=None,
     encrypted_key_id=None,
     encrypted_data_id=None,
     encrypt_cert=None,
@@ -1958,9 +1958,11 @@ def pre_encryption_part(
         if encrypt_cert
         else None
     )
-    key_info = ds.KeyInfo(
-        key_name=ds.KeyName(text=key_name),
-        x509_data=x509_data,
+    key_name = ds.KeyName(text=key_name) if key_name else None
+    key_info = (
+        ds.KeyInfo(key_name=key_name, x509_data=x509_data)
+        if key_name or x509_data
+        else None
     )
 
     encrypted_key = EncryptedKey(

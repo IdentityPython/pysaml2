@@ -30,7 +30,6 @@ from saml2.saml import NameID
 from saml2.saml import EncryptedAssertion
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
-from saml2.response import AuthnResponse
 from saml2.response import LogoutResponse
 from saml2.response import UnsolicitedResponse
 from saml2.time_util import instant
@@ -683,11 +682,11 @@ class Entity(HTTPBase):
         _certs = []
 
         if encrypt_cert:
-            _certs.append(encrypt_cert)
+            _certs.append((None, encrypt_cert))
         elif sp_entity_id is not None:
             _certs = self.metadata.certs(sp_entity_id, "any", "encryption")
         exception = None
-        for _cert in _certs:
+        for _cert_name, _cert in _certs:
             wrapped_cert, unwrapped_cert = get_pem_wrapped_unwrapped(_cert)
             try:
                 tmp = make_temp(
@@ -698,7 +697,9 @@ class Entity(HTTPBase):
                 response = self.sec.encrypt_assertion(
                     response,
                     tmp.name,
-                    pre_encryption_part(encrypt_cert=unwrapped_cert),
+                    pre_encryption_part(
+                        key_name=_cert_name, encrypt_cert=unwrapped_cert
+                    ),
                     node_xpath=node_xpath,
                 )
                 return response

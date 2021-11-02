@@ -49,7 +49,7 @@ def test():
                 for cert in _certs:
                     if verify_redirect_signature(
                             list_values2simpletons(_dict), sp.sec.sec_backend,
-                            cert):
+                            cert[1]):
                         verified_ok = True
 
         assert verified_ok
