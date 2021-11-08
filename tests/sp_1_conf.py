@@ -48,5 +48,5 @@ CONFIG = {
                        },
     ],
     "secret": "0123456789",
-    "timeout": 10,
+    "http_client_timeout": 10,
 }  

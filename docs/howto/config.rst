@@ -113,12 +113,12 @@ Example::
 
 Whether debug information should be sent to the log file.
 
-timeout
-^^^^^^^
+http_client_timeout
+^^^^^^^^^^^^^^^^^^^
 
 Example::
 
-    timeout: 10
+    http_client_timeout: 10
 
 The timeout of HTTP requests, in seconds. Defaults to None.
 

@@ -338,7 +338,7 @@ def test_3():
     assert cnf.secret == "0123456789"
     assert cnf.metadata is not None
     assert cnf.attribute_converters is not None
-    assert cnf.timeout == 10
+    assert cnf.http_client_timeout == 10
 
 
 def test_sp():

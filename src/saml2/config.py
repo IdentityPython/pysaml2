@@ -76,7 +76,7 @@ COMMON_ARGS = [
     "name_id_format",
     "signing_algorithm",
     "digest_algorithm",
-    "timeout",
+    "http_client_timeout",
 ]
 
 SP_ARGS = [
@@ -229,7 +229,7 @@ class Config(object):
         self.delete_tmpfiles = True
         self.signing_algorithm = None
         self.digest_algorithm = None
-        self.timeout = None
+        self.http_client_timeout = None
 
     def setattr(self, context, attr, val):
         if context == "":
@@ -387,7 +387,7 @@ class Config(object):
             self,
             ca_certs,
             disable_ssl_certificate_validation=disable_validation,
-            timeout=self.timeout,
+            http_client_timeout=self.http_client_timeout,
         )
         mds.imp(metadata_conf)
         return mds
