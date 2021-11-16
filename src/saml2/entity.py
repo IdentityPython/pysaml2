@@ -1024,8 +1024,16 @@ class Entity(HTTPBase):
                 else:
                     return typ
 
-    def _parse_request(self, enc_request, request_cls, service, binding,
-                       relay_state=None, sigalg=None, signature=None):
+    def _parse_request(
+        self,
+        enc_request,
+        request_cls,
+        service,
+        binding,
+        relay_state=None,
+        sigalg=None,
+        signature=None,
+    ):
         """Parse a Request
 
         :param enc_request: The request in its transport format
@@ -1040,8 +1048,7 @@ class Entity(HTTPBase):
         _log_debug = logger.debug
 
         # The addresses I should receive messages like this on
-        receiver_addresses = self.config.endpoint(service, binding,
-                                                  self.entity_type)
+        receiver_addresses = self.config.endpoint(service, binding, self.entity_type)
         if not receiver_addresses and self.entity_type == "idp":
             for typ in ["aa", "aq", "pdp"]:
                 receiver_addresses = self.config.endpoint(service, binding, typ)

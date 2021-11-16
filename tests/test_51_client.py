@@ -11,7 +11,8 @@ from pytest import raises
 from saml2.argtree import add_path
 from saml2.cert import OpenSSLWrapper
 from saml2.xmldsig import sig_default
-from saml2.xmldsig import SIG_RSA_SHA256, SIG_RSA_SHA1
+from saml2.xmldsig import SIG_RSA_SHA256
+from saml2.xmldsig import SIG_RSA_SHA1
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import config
@@ -29,8 +30,8 @@ from saml2.extension.requested_attributes import RequestedAttribute
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
 from saml2.pack import parse_soap_enveloped_saml
-from saml2.response import LogoutResponse, StatusInvalidNameidPolicy, StatusError, \
-    IncorrectlySigned
+from saml2.response import LogoutResponse, StatusInvalidNameidPolicy, StatusError
+from saml2.response import IncorrectlySigned
 from saml2.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion, Advice
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NameID
