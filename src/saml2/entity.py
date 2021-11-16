@@ -1584,7 +1584,14 @@ class Entity(HTTPBase):
 
     # ------------------------------------------------------------------------
 
-    def parse_logout_request(self, xmlstr, binding=BINDING_SOAP):
+    def parse_logout_request(
+        self,
+        xmlstr,
+        binding=BINDING_SOAP,
+        relay_state=None,
+        sigalg=None,
+        signature=None,
+    ):
         """ Deal with a LogoutRequest
 
         :param xmlstr: The response as a xml string
@@ -1594,8 +1601,15 @@ class Entity(HTTPBase):
             was not.
         """
 
-        return self._parse_request(xmlstr, saml_request.LogoutRequest,
-                                   "single_logout_service", binding)
+        return self._parse_request(
+            enc_request=xmlstr,
+            request_cls=saml_request.LogoutRequest,
+            service="single_logout_service",
+            binding=binding,
+            relay_state=relay_state,
+            sigalg=sigalg,
+            signature=signature,
+        )
 
     def use_artifact(self, message, endpoint_index=0):
         """

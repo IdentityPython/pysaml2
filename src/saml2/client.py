@@ -630,7 +630,9 @@ class Saml2Client(Base):
         sign=None,
         sign_alg=None,
         digest_alg=None,
-        relay_state="",
+        relay_state=None,
+        sigalg=None,
+        signature=None,
     ):
         """
         Deal with a LogoutRequest
@@ -639,6 +641,11 @@ class Saml2Client(Base):
         :param name_id: The id of the current user
         :param binding: Which binding the message came in over
         :param sign: Whether the response will be signed or not
+        :param sign_alg: The signing algorithm for the response
+        :param digest_alg: The digest algorithm for the the response
+        :param relay_state: The relay state of the request
+        :param sigalg: The SigAlg query param of the request
+        :param signature: The Signature query param of the request
         :return: Keyword arguments which can be used to send the response
             what's returned follow different patterns for different bindings.
             If the binding is BINDIND_SOAP, what is returned looks like this::
@@ -652,8 +659,13 @@ class Saml2Client(Base):
         """
         logger.info("logout request: %s", request)
 
-        _req = self._parse_request(request, LogoutRequest,
-                                   "single_logout_service", binding)
+        _req = self.parse_logout_request(
+            xmlstr=request,
+            binding=binding,
+            relay_state=relay_state,
+            sigalg=sigalg,
+            signature=signature,
+        )
 
         if _req.message.name_id == name_id:
             try:
