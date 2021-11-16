@@ -240,7 +240,7 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
         if thingy[0:5].lower() == '<?xml':
             logger.debug("thingy0: %s", thingy)
             _part = thingy.split("\n")
-            thingy = "".join(_part[1:])
+            thingy = "\n".join(_part[1:])
         thingy = thingy.replace(PREFIX, "")
         logger.debug("thingy: %s", thingy)
         _child = ElementTree.Element('')
