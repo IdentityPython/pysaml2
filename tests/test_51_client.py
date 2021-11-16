@@ -12,6 +12,7 @@ from saml2.argtree import add_path
 from saml2.cert import OpenSSLWrapper
 from saml2.xmldsig import sig_default
 from saml2.xmldsig import SIG_RSA_SHA256
+from saml2.xmldsig import SIG_RSA_SHA1
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import config
@@ -30,6 +31,7 @@ from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
 from saml2.pack import parse_soap_enveloped_saml
 from saml2.response import LogoutResponse, StatusInvalidNameidPolicy, StatusError
+from saml2.response import IncorrectlySigned
 from saml2.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion, Advice
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NameID
@@ -171,6 +173,9 @@ class TestClient:
         conf = config.SPConfig()
         conf.load_file("server_conf")
         self.client = Saml2Client(conf)
+
+    def setup_method(self):
+        self.server.config.setattr("idp", "want_authn_requests_signed", None)
 
     def teardown_class(self):
         self.server.close()
@@ -1524,6 +1529,90 @@ class TestClient:
             qs["SAMLRequest"][0], BINDING_HTTP_REDIRECT
         )
 
+    def test_signed_redirect_passes_if_needs_signed_requests(self):
+        # Revert configuration change to disallow unsinged responses
+        self.client.want_response_signed = True
+        self.server.config.setattr("idp", "want_authn_requests_signed", True)
+
+        reqid, req = self.client.create_authn_request(
+            "http://localhost:8088/sso", message_id="id1"
+        )
+
+        info = self.client.apply_binding(
+            BINDING_HTTP_REDIRECT,
+            str(req),
+            destination="",
+            relay_state="relay2",
+            sign=True,
+            sigalg=SIG_RSA_SHA256,
+        )
+        loc = info["headers"][0][1]
+        qs = list_values2simpletons(parse.parse_qs(loc[1:]))
+
+        res = self.server.parse_authn_request(
+            qs["SAMLRequest"],
+            BINDING_HTTP_REDIRECT,
+            relay_state=qs["RelayState"],
+            sigalg=qs["SigAlg"],
+            signature=qs["Signature"]
+        )
+        assert res.message.destination == "http://localhost:8088/sso"
+        assert res.message.id == "id1"
+
+    def test_signed_redirect_fail_if_needs_signed_request_but_received_unsigned(self):
+        # Revert configuration change to disallow unsinged responses
+        self.client.want_response_signed = True
+        self.server.config.setattr("idp", "want_authn_requests_signed", True)
+
+        reqid, req = self.client.create_authn_request(
+            "http://localhost:8088/sso", message_id="id1"
+        )
+
+        info = self.client.apply_binding(
+            BINDING_HTTP_REDIRECT,
+            str(req),
+            destination="",
+            relay_state="relay2",
+            sign=True,
+            sigalg=SIG_RSA_SHA256,
+        )
+        loc = info["headers"][0][1]
+        qs = list_values2simpletons(parse.parse_qs(loc[1:]))
+
+        with raises(IncorrectlySigned):
+            self.server.parse_authn_request(
+                qs["SAMLRequest"], BINDING_HTTP_REDIRECT
+            )
+
+    def test_signed_redirect_fail_if_needs_signed_request_but_sigalg_not_matches(self):
+        # Revert configuration change to disallow unsinged responses
+        self.client.want_response_signed = True
+        self.server.config.setattr("idp", "want_authn_requests_signed", True)
+
+        reqid, req = self.client.create_authn_request(
+            "http://localhost:8088/sso", message_id="id1"
+        )
+
+        info = self.client.apply_binding(
+            BINDING_HTTP_REDIRECT,
+            str(req),
+            destination="",
+            relay_state="relay2",
+            sign=True,
+            sigalg=SIG_RSA_SHA256,
+        )
+        loc = info["headers"][0][1]
+        qs = list_values2simpletons(parse.parse_qs(loc[1:]))
+
+        with raises(IncorrectlySigned):
+            self.server.parse_authn_request(
+                qs["SAMLRequest"],
+                BINDING_HTTP_REDIRECT,
+                relay_state=qs["RelayState"],
+                sigalg=SIG_RSA_SHA1,
+                signature=qs["Signature"]
+            )
+
     def test_do_logout_signed_redirect(self):
         conf = config.SPConfig()
         conf.load_file("sp_slo_redirect_conf")
@@ -1555,14 +1644,68 @@ class TestClient:
         loc = info["headers"][0][1]
         _, _, _, _, qs, _ = parse.urlparse(loc)
         qs = parse.parse_qs(qs)
-        assert _leq(qs.keys(),
-                    ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
+        assert _leq(qs.keys(), ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
-        assert verify_redirect_signature(list_values2simpletons(qs),
-                                         client.sec.sec_backend)
+        qs_simple = list_values2simpletons(qs)
+        assert verify_redirect_signature(qs_simple, client.sec.sec_backend)
 
-        res = self.server.parse_logout_request(qs["SAMLRequest"][0],
-                                               BINDING_HTTP_REDIRECT)
+        res = self.server.parse_logout_request(
+            qs_simple["SAMLRequest"],
+            BINDING_HTTP_REDIRECT,
+            relay_state=qs_simple['RelayState'],
+            sigalg=qs_simple['SigAlg'],
+            signature=qs_simple['Signature'],
+        )
+
+    def test_do_logout_signed_redirect_invalid(self):
+        conf = config.SPConfig()
+        conf.load_file("sp_slo_redirect_conf")
+        client = Saml2Client(conf)
+
+        session_info = {
+            "name_id": nid,
+            "issuer": "urn:mace:example.com:saml:roland:idp",
+            "not_on_or_after": in_a_while(minutes=15),
+            "ava": {
+                "givenName": "Anders",
+                "sn": "Andersson",
+                "mail": "anders.andersson@example.com"
+            }
+        }
+        client.users.add_information_about_person(session_info)
+        entity_ids = client.users.issuers_of_info(nid)
+
+        resp = client.do_logout(
+            nid,
+            entity_ids,
+            "Tired",
+            in_a_while(minutes=5),
+            sign=True,
+            expected_binding=BINDING_HTTP_REDIRECT,
+        )
+
+        binding, info = resp[entity_ids[0]]
+        loc = info["headers"][0][1]
+        _, _, _, _, qs, _ = parse.urlparse(loc)
+        qs = parse.parse_qs(qs)
+        qs_simple = list_values2simpletons(qs)
+
+        invalid_signature = 'ZEdMZUQ3SjBjQ2ozWmlGaHhyV3JZSzNkTWhQWU02bjA0dzVNeUd1UWgrVDhnYm1oc1R1TTFjPQo='
+        qs_simple_invalid = {
+            **qs_simple,
+            'Signature': invalid_signature,
+        }
+        assert not verify_redirect_signature(qs_simple_invalid, client.sec.sec_backend)
+
+        self.server.config.setattr("idp", "want_authn_requests_signed", True)
+        with raises(IncorrectlySigned):
+            res = self.server.parse_logout_request(
+                qs_simple["SAMLRequest"],
+                BINDING_HTTP_REDIRECT,
+                relay_state=qs_simple['RelayState'],
+                sigalg=qs_simple['SigAlg'],
+                signature=invalid_signature,
+            )
 
     def test_do_logout_post(self):
         # information about the user from an IdP
@@ -3156,14 +3299,18 @@ class TestClientNonAsciiAva:
         loc = info["headers"][0][1]
         _, _, _, _, qs, _ = parse.urlparse(loc)
         qs = parse.parse_qs(qs)
-        assert _leq(qs.keys(),
-                    ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
+        assert _leq(qs.keys(), ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
-        assert verify_redirect_signature(list_values2simpletons(qs),
-                                         client.sec.sec_backend)
+        qs_simple = list_values2simpletons(qs)
+        assert verify_redirect_signature(qs_simple, client.sec.sec_backend)
 
-        res = self.server.parse_logout_request(qs["SAMLRequest"][0],
-                                               BINDING_HTTP_REDIRECT)
+        res = self.server.parse_logout_request(
+            qs_simple["SAMLRequest"],
+            BINDING_HTTP_REDIRECT,
+            relay_state=qs_simple['RelayState'],
+            sigalg=qs_simple['SigAlg'],
+            signature=qs_simple['Signature'],
+        )
 
     def test_do_logout_post(self):
         # information about the user from an IdP

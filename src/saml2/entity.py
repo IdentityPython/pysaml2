@@ -1024,7 +1024,16 @@ class Entity(HTTPBase):
                 else:
                     return typ
 
-    def _parse_request(self, enc_request, request_cls, service, binding):
+    def _parse_request(
+        self,
+        enc_request,
+        request_cls,
+        service,
+        binding,
+        relay_state=None,
+        sigalg=None,
+        signature=None,
+    ):
         """Parse a Request
 
         :param enc_request: The request in its transport format
@@ -1039,8 +1048,7 @@ class Entity(HTTPBase):
         _log_debug = logger.debug
 
         # The addresses I should receive messages like this on
-        receiver_addresses = self.config.endpoint(service, binding,
-                                                  self.entity_type)
+        receiver_addresses = self.config.endpoint(service, binding, self.entity_type)
         if not receiver_addresses and self.entity_type == "idp":
             for typ in ["aa", "aq", "pdp"]:
                 receiver_addresses = self.config.endpoint(service, binding, typ)
@@ -1070,7 +1078,9 @@ class Entity(HTTPBase):
         if only_valid_cert:
             must = True
         _request = _request.loads(xmlstr, binding, origdoc=enc_request,
-                                  must=must, only_valid_cert=only_valid_cert)
+                                  must=must, only_valid_cert=only_valid_cert,
+                                  relay_state=relay_state, sigalg=sigalg,
+                                  signature=signature)
 
         _log_debug("Loaded request")
 
@@ -1574,7 +1584,14 @@ class Entity(HTTPBase):
 
     # ------------------------------------------------------------------------
 
-    def parse_logout_request(self, xmlstr, binding=BINDING_SOAP):
+    def parse_logout_request(
+        self,
+        xmlstr,
+        binding=BINDING_SOAP,
+        relay_state=None,
+        sigalg=None,
+        signature=None,
+    ):
         """ Deal with a LogoutRequest
 
         :param xmlstr: The response as a xml string
@@ -1584,8 +1601,15 @@ class Entity(HTTPBase):
             was not.
         """
 
-        return self._parse_request(xmlstr, saml_request.LogoutRequest,
-                                   "single_logout_service", binding)
+        return self._parse_request(
+            enc_request=xmlstr,
+            request_cls=saml_request.LogoutRequest,
+            service="single_logout_service",
+            binding=binding,
+            relay_state=relay_state,
+            sigalg=sigalg,
+            signature=signature,
+        )
 
     def use_artifact(self, message, endpoint_index=0):
         """
