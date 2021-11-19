@@ -129,12 +129,23 @@ class Saml2Client(Base):
         """
 
         expected_binding = binding
+        bindings_to_try = (
+            [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]
+            if not expected_binding
+            else [expected_binding]
+        )
 
-        for binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
-            if expected_binding and binding != expected_binding:
-                continue
+        binding_destinations = []
+        unsupported_bindings = []
+        for binding in bindings_to_try:
+            try:
+                destination = self._sso_location(entityid, binding)
+            except Exception as e:
+                unsupported_bindings.append(binding)
+            else:
+                binding_destinations.append((binding, destination))
 
-            destination = self.sso_location(entityid, binding)
+        for binding, destination in binding_destinations:
             logger.info("destination to provider: %s", destination)
 
             # XXX - sign_post will embed the signature to the xml doc
@@ -172,7 +183,12 @@ class Saml2Client(Base):
 
             return reqid, binding, http_info
         else:
-            raise SignOnError("No supported bindings available for authentication")
+            error_context = {
+                "message": "No supported bindings available for authentication",
+                "bindings_to_try": bindings_to_try,
+                "unsupported_bindings": unsupported_bindings,
+            }
+            raise SignOnError(error_context)
 
     def global_logout(
         self,
