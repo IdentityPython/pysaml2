@@ -2,7 +2,6 @@ import logging
 
 from saml2 import time_util
 from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
 from saml2.attribute_converter import to_local
 from saml2.s_utils import OtherError
 
@@ -55,22 +54,22 @@ class Request(object):
         logger.debug("xmlstr: %s, relay_state: %s, sigalg: %s, signature: %s",
                      self.xmlstr, relay_state, sigalg, signature)
 
-        signed_post = must and binding == BINDING_HTTP_POST
-        signed_redirect = must and binding == BINDING_HTTP_REDIRECT
+        sign_redirect = must and binding == BINDING_HTTP_REDIRECT
+        sign_post = must and not sign_redirect
         incorrectly_signed = IncorrectlySigned("Request was not signed correctly")
 
         try:
             self.message = self.signature_check(
                 xmldata,
                 origdoc=origdoc,
-                must=signed_post,
+                must=sign_post,
                 only_valid_cert=only_valid_cert,
             )
         except Exception as e:
             self.message = None
             raise incorrectly_signed from e
 
-        if signed_redirect:
+        if sign_redirect:
             if sigalg is None or signature is None:
                 raise incorrectly_signed
 

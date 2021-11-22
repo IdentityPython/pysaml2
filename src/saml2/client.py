@@ -152,8 +152,8 @@ class Saml2Client(Base):
             # XXX   ^through self.create_authn_request(...)
             # XXX - sign_redirect will add the signature to the query params
             # XXX   ^through self.apply_binding(...)
-            sign_post = False if binding == BINDING_HTTP_REDIRECT else sign
-            sign_redirect = False if binding == BINDING_HTTP_POST and sign else sign
+            sign_redirect = sign and binding == BINDING_HTTP_REDIRECT
+            sign_post = sign and not sign_redirect
 
             reqid, request = self.create_authn_request(
                 destination=destination,
@@ -318,10 +318,8 @@ class Saml2Client(Base):
                 session_indexes = None
 
             sign = sign if sign is not None else self.logout_requests_signed
-            sign_post = sign and (
-                binding == BINDING_HTTP_POST or binding == BINDING_SOAP
-            )
             sign_redirect = sign and binding == BINDING_HTTP_REDIRECT
+            sign_post = sign and not sign_redirect
 
             log_report = {
                 "message": "Invoking SLO on entity",

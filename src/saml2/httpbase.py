@@ -315,7 +315,7 @@ class HTTPBase(object):
 
         if sign and self.sec:
             _signed = self.sec.sign_statement(soap_message,
-                                              class_name=class_name(request),
+                                              node_name=class_name(request),
                                               node_id=request.id)
             soap_message = _signed
 
