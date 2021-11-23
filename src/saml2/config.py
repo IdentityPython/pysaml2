@@ -8,8 +8,6 @@ import sys
 from logging.config import dictConfig as configure_logging_by_dict
 from warnings import warn as _warn
 
-import six
-
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
@@ -375,15 +373,16 @@ class Config(object):
 
         try:
             ca_certs = self.ca_certs
-        except:
+        except Exception:
             ca_certs = None
         try:
             disable_validation = self.disable_ssl_certificate_validation
-        except:
+        except Exception:
             disable_validation = False
 
-        mds = MetadataStore(acs, self, ca_certs,
-            disable_ssl_certificate_validation=disable_validation)
+        mds = MetadataStore(
+            acs, self, ca_certs, disable_ssl_certificate_validation=disable_validation
+        )
 
         mds.imp(metadata_conf)
 

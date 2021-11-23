@@ -6,7 +6,6 @@
 or attribute authority (AA) may use to conclude its tasks.
 """
 import logging
-import os
 
 import importlib
 import dbm
@@ -482,9 +481,6 @@ class Server(Entity):
         :return: A response instance
         """
 
-        if farg is None:
-            assertion_args = {}
-
         # if identity:
         _issuer = self._issuer(issuer)
 
@@ -622,7 +618,7 @@ class Server(Entity):
 
             if attributes:
                 restr = restriction_from_attribute_spec(attributes)
-                ast = filter_attribute_value_assertions(ast)
+                ast = filter_attribute_value_assertions(ast, restr)
 
             assertion = ast.construct(
                 sp_entity_id, self.config.attribute_converters, policy,

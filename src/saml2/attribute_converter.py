@@ -11,7 +11,7 @@ from saml2.s_utils import do_ava
 from saml2 import saml, ExtensionElement, NAMESPACE
 from saml2 import extension_elements_to_elements
 from saml2 import SAMLError
-from saml2.saml import NAME_FORMAT_UNSPECIFIED, NAMEID_FORMAT_PERSISTENT, NameID
+from saml2.saml import NAME_FORMAT_UNSPECIFIED, NAMEID_FORMAT_PERSISTENT
 
 import logging
 logger = logging.getLogger(__name__)
@@ -136,12 +136,13 @@ def list_to_local(acs, attrlist, allow_unknown_attributes=False):
         try:
             _func = acsd[attr.name_format].ava_from
         except KeyError:
-            if attr.name_format == NAME_FORMAT_UNSPECIFIED or \
-                    allow_unknown_attributes:
+            if (
+                attr.name_format == NAME_FORMAT_UNSPECIFIED
+                or allow_unknown_attributes
+            ):
                 _func = acs[0].lcd_ava_from
             else:
-                logger.info("Unsupported attribute name format: %s",
-                    attr.name_format)
+                logger.info("Unsupported attribute name format: %s", attr.name_format)
                 continue
 
         try:
@@ -384,7 +385,7 @@ class AttributeConverter(object):
         except KeyError:
             try:
                 _attr = self._to[attr.lower()]
-            except:
+            except KeyError:
                 _attr = ''
 
         if _attr:

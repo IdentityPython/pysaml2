@@ -6,7 +6,6 @@ import six
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
-from saml2.request import LogoutRequest
 import saml2
 
 from saml2 import saml, SAMLError
@@ -140,7 +139,7 @@ class Saml2Client(Base):
         for binding in bindings_to_try:
             try:
                 destination = self._sso_location(entityid, binding)
-            except Exception as e:
+            except Exception:
                 unsupported_bindings.append(binding)
             else:
                 binding_destinations.append((binding, destination))

@@ -630,7 +630,7 @@ class Base(Entity):
         consent=None,
         extensions=None,
         sign=None,
-        sign_ag=None,
+        sign_alg=None,
         digest_alg=None,
         nsprefix=None,
     ):

@@ -740,17 +740,18 @@ class ContactType_(SamlBase):
     c_child_order.extend(['extensions', 'company', 'given_name', 'sur_name',
                           'email_address', 'telephone_number'])
 
-    def __init__(self,
-                 extensions=None,
-                 company=None,
-                 given_name=None,
-                 sur_name=None,
-                 email_address=None,
-                 telephone_number=None,
-                 contact_type=None,
-                 text=None,
-                 extension_elements=None,
-                 extension_attributes=None,
+    def __init__(
+        self,
+        extensions=None,
+        company=None,
+        given_name=None,
+        sur_name=None,
+        email_address=None,
+        telephone_number=None,
+        contact_type=None,
+        text=None,
+        extension_elements=None,
+        extension_attributes=None,
     ):
         SamlBase.__init__(self,
                           text=text,
@@ -1780,7 +1781,6 @@ def entity_descriptor_from_string(xml_string):
     return saml2.create_class_from_xml_string(EntityDescriptor, xml_string)
 
 
-#..................
 # ['EntitiesDescriptor', 'EntitiesDescriptorType']
 class EntitiesDescriptorType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:EntitiesDescriptorType
@@ -2012,6 +2012,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-
-
-

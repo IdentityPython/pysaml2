@@ -3,6 +3,8 @@ Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
 
 import base64
+import datetime
+import dateutil
 import hashlib
 import itertools
 import logging

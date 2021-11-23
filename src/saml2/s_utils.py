@@ -7,7 +7,6 @@ import logging
 import random
 import string
 import sys
-import time
 import traceback
 import zlib
 
@@ -215,7 +214,7 @@ def identity_attribute(form, attribute, forward_map=None):
     # default is name
     return attribute.name
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 
 def error_status_factory(info):

@@ -41,7 +41,7 @@ XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
 NS_SOAP_ENC = "http://schemas.xmlsoap.org/soap/encoding/"
 # type definitions for xmlschemas
 XSI_TYPE = '{%s}type' % XSI_NAMESPACE
-# nil type definition for xmlschemas 
+# nil type definition for xmlschemas
 XSI_NIL = '{%s}nil' % XSI_NAMESPACE
 
 # idp and sp communicate usually about a subject(NameID)
@@ -89,7 +89,7 @@ NAMEID_FORMATS_SAML2 = (
 # The specification was later updated with errata, and the new version is here:
 # https://www.oasis-open.org/committees/download.php/56782/sstc-saml-profiles-errata-2.0-wd-07.pdf
 
-# XML based values for SAML attributes  
+# XML based values for SAML attributes
 PROFILE_ATTRIBUTE_BASIC = (
     "urn:oasis:names:tc:SAML:2.0:profiles:attribute:basic")
 
@@ -349,7 +349,7 @@ class AttributeValueBase(SamlBase):
         if type(value) is str and valid_type is not str:
             try:
                 value = to_type(value)
-            except (TypeError, ValueError, KeyError) as e:
+            except (TypeError, ValueError, KeyError):
                 # the cast failed
                 _wrong_type_value(xsd=xsd_type, value=value)
 

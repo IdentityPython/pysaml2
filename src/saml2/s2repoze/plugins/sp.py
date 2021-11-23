@@ -386,8 +386,8 @@ class SAML2Plugin(object):
                     1
                 ] == "":
                     query = parse.parse_qs(environ["QUERY_STRING"])
-                    sid = query["sid"][0]
-                    came_from = self.outstanding_queries[sid]
+                    result_sid = query["sid"][0]
+                    came_from = self.outstanding_queries[result_sid]
             except:
                 pass
             # remember the request

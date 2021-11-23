@@ -245,10 +245,8 @@ def select_form(client, orig_response, content, **kwargs):
         _url = orig_response.url
     except KeyError:
         _url = kwargs["location"]
-    # content is a form to be filled in and returned
-    if isinstance(content, unicode):
-        content = content.encode("utf-8")
 
+    # content is a form to be filled in and returned
     response = DResponse(status=orig_response.status_code, url=_url)
     response.write(content)
 
