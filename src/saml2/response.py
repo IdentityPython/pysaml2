@@ -833,7 +833,7 @@ class AuthnResponse(StatusResponse):
 
         # if self.context == "AuthnReq" or self.context == "AttrQuery":
         #    self.ava = self.get_identity()
-        #    logger.debug("--- AVA: %s", self.ava)
+        #    logger.debug("--- AVA: {0}".format(self.ava))
 
         try:
             self.get_subject()
@@ -1036,7 +1036,7 @@ class AuthnResponse(StatusResponse):
 
         if self.context == "AuthnReq" or self.context == "AttrQuery":
             self.ava = self.get_identity()
-            logger.debug("--- AVA: %s", self.ava)
+            logger.debug("--- AVA: {0}".format(self.ava))
 
         return True
 
