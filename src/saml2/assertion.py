@@ -110,10 +110,9 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
 
 
     def _apply_attr_value_restrictions(attr, res, must=False):
-        try:
-            values = [av["text"] for av in attr["attribute_value"]]
-        except KeyError:
-            values = []
+        values = [
+            av["text"] for av in attr.get("attribute_value", [])
+        ]
 
         try:
             res[_fn].extend(_filter_values(ava[_fn], values))

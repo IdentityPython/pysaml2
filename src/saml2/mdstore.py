@@ -1379,13 +1379,15 @@ class MetadataStore(MetaData):
             ext = self.__getitem__(entity_id)["extensions"]
         except KeyError:
             return res
+
         for elem in ext["extension_elements"]:
-            if elem["__class__"] == classnames["mdattr_entityattributes"]:
-                for attr in elem["attribute"]:
-                    if attr["name"] not in res:
-                        res[attr["name"]] = []
-                    res[attr["name"]] += [v["text"] for v in attr[
-                        "attribute_value"]]
+            if elem["__class__"] != classnames["mdattr_entityattributes"]:
+                continue
+            for attr in elem["attribute"]:
+                res[attr["name"]] = [
+                    *res.get(attr["name"], []),
+                    *(v["text"] for v in attr.get("attribute_value", []))
+                ]
         return res
 
     def supported_algorithms(self, entity_id):
