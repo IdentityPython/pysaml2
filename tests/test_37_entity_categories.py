@@ -278,3 +278,51 @@ def test_filter_ava_required_attributes_with_no_friendly_name():
 
     ava = policy.filter(ava, entity_id, required=required, optional=optional)
     assert _eq(list(ava.keys()), ["eduPersonTargetedID"])
+
+
+def test_filter_ava_esi_coco():
+    entity_id = "https://esi-coco.example.edu/saml2/metadata/"
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    mds.imp(
+        [
+            {
+                "class": "saml2.mdstore.MetaDataFile",
+                "metadata": [(full_path("entity_esi_and_coco_sp.xml"),)]
+            }
+        ]
+    )
+
+    policy_conf = {
+        "default": {
+            "lifetime": {"minutes": 15},
+            "entity_categories": ["swamid"]
+        }
+    }
+    policy = Policy(policy_conf, mds)
+
+    ava = {
+        "givenName": ["Test"],
+        "sn": ["Testsson"],
+        "mail": ["test@example.com"],
+        "c": ["SE"],
+        "schacHomeOrganization": ["example.com"],
+        "eduPersonScopedAffiliation": ["student@example.com"],
+        "schacPersonalUniqueCode": [
+            "urn:schac:personalUniqueCode:int:esi:ladok.se:externtstudentuid-00000000-1111-2222-3333-444444444444"
+        ]
+    }
+
+    ava = policy.filter(ava, entity_id)
+
+    assert _eq(list(ava.keys()), [
+        'mail',
+        'givenName',
+        'sn',
+        'c',
+        'schacHomeOrganization',
+        'eduPersonScopedAffiliation',
+        'schacPersonalUniqueCode'
+    ])
+    assert _eq(ava["mail"], ["test@example.com"])
+    assert _eq(ava["schacPersonalUniqueCode"],
+               ["urn:schac:personalUniqueCode:int:esi:ladok.se:externtstudentuid-00000000-1111-2222-3333-444444444444"])
