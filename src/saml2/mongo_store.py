@@ -2,8 +2,7 @@ import datetime
 from hashlib import sha1
 import logging
 
-from pymongo import MongoClient
-from pymongo.mongo_replica_set_client import MongoReplicaSetClient
+from pymongo.mongo_client import MongoClient
 import pymongo.uri_parser
 import pymongo.errors
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
@@ -288,8 +287,6 @@ def _mdb_get_database(uri, **kwargs):
         _conn = MongoClient()
         pass
     else:
-        if "replicaset" in _parsed_uri["options"]:
-            connection_factory = MongoReplicaSetClient
         db_name = _parsed_uri.get("database", "pysaml2")
         _conn = connection_factory(uri, **kwargs)
 
