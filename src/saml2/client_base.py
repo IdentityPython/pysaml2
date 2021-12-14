@@ -9,6 +9,7 @@ import threading
 import six
 import time
 import logging
+from typing import Mapping
 from warnings import warn as _warn
 
 from saml2.entity import Entity
@@ -365,20 +366,29 @@ class Base(Entity):
             or self.config.getattr("requested_authn_context", "sp")
             or {}
         )
-        requested_authn_context_accrs = requested_authn_context.get(
-            "authn_context_class_ref", []
-        )
-        requested_authn_context_comparison = requested_authn_context.get(
-            "comparison", "exact"
-        )
-        if requested_authn_context_accrs:
-            args["requested_authn_context"] = RequestedAuthnContext(
-                authn_context_class_ref=[
-                    AuthnContextClassRef(accr)
-                    for accr in requested_authn_context_accrs
-                ],
-                comparison=requested_authn_context_comparison,
+        if isinstance(requested_authn_context, RequestedAuthnContext):
+            args["requested_authn_context"] = requested_authn_context
+        elif isinstance(requested_authn_context, Mapping):
+            requested_authn_context_accrs = requested_authn_context.get(
+                "authn_context_class_ref", []
             )
+            requested_authn_context_comparison = requested_authn_context.get(
+                "comparison", "exact"
+            )
+            if requested_authn_context_accrs:
+                args["requested_authn_context"] = RequestedAuthnContext(
+                    authn_context_class_ref=[
+                        AuthnContextClassRef(accr)
+                        for accr in requested_authn_context_accrs
+                    ],
+                    comparison=requested_authn_context_comparison,
+                )
+        else:
+            logger.warning({
+                "message": "Cannot process requested_authn_context",
+                "requested_authn_context": requested_authn_context,
+                "type_of_requested_authn_context": type(requested_authn_context),
+            })
 
         # Allow argument values either as class instances or as dictionaries
         # all of these have cardinality 0..1
