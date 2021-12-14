@@ -413,7 +413,7 @@ class StatusResponse(object):
                 self.response.destination
                 and self.response.destination not in self.return_addrs
             ):
-                logger.error("%s not in %s", self.response.destination, self.return_addrs)
+                logger.error("destination '%s' not in return addresses '%s'", self.response.destination, self.return_addrs)
                 return None
 
         valid = self.issue_instant_ok() and self.status_ok()
@@ -435,7 +435,12 @@ class StatusResponse(object):
         self.response = mold.response
 
     def issuer(self):
-        return self.response.issuer.text.strip()
+        issuer_value = (
+            self.response.issuer.text
+            if self.response.issuer is not None
+            else ""
+        ).strip()
+        return issuer_value
 
 
 class LogoutResponse(StatusResponse):
@@ -623,7 +628,7 @@ class AuthnResponse(StatusResponse):
 
         return True
 
-    def decrypt_attributes(self, attribute_statement):
+    def decrypt_attributes(self, attribute_statement, keys=None):
         """
         Decrypts possible encrypted attributes and adds the decrypts to the
         list of attributes.
@@ -637,11 +642,11 @@ class AuthnResponse(StatusResponse):
 
         for encattr in attribute_statement.encrypted_attribute:
             if not encattr.encrypted_key:
-                _decr = self.sec.decrypt(encattr.encrypted_data)
+                _decr = self.sec.decrypt_keys(encattr.encrypted_data, keys=keys)
                 _attr = attribute_from_string(_decr)
                 attribute_statement.attribute.append(_attr)
             else:
-                _decr = self.sec.decrypt(encattr)
+                _decr = self.sec.decrypt_keys(encattr, keys=keys)
                 enc_attr = encrypted_attribute_from_string(_decr)
                 attrlist = enc_attr.extensions_as_elements("Attribute", saml)
                 attribute_statement.attribute.extend(attrlist)
@@ -729,9 +734,13 @@ class AuthnResponse(StatusResponse):
 
         return has_keyinfo
 
-    def get_subject(self):
+    def get_subject(self, keys=None):
         """ The assertion must contain a Subject
         """
+
+        if not self.assertion:
+            raise ValueError("Missing assertion")
+
         if not self.assertion.subject:
             raise ValueError(
                 "Invalid assertion subject: {subject}".format(
@@ -776,8 +785,9 @@ class AuthnResponse(StatusResponse):
             self.name_id = subject.name_id
         elif subject.encrypted_id:
             # decrypt encrypted ID
-            _name_id_str = self.sec.decrypt(
-                subject.encrypted_id.encrypted_data.to_string())
+            _name_id_str = self.sec.decrypt_keys(
+                subject.encrypted_id.encrypted_data.to_string(), keys=keys
+            )
             _name_id = saml.name_id_from_string(_name_id_str)
             self.name_id = _name_id
 
@@ -823,7 +833,7 @@ class AuthnResponse(StatusResponse):
 
         # if self.context == "AuthnReq" or self.context == "AttrQuery":
         #    self.ava = self.get_identity()
-        #    logger.debug("--- AVA: %s", self.ava)
+        #    logger.debug("--- AVA: {0}".format(self.ava))
 
         try:
             self.get_subject()
@@ -949,7 +959,7 @@ class AuthnResponse(StatusResponse):
             while self.find_encrypt_data(resp) and decr_text_old != decr_text:
                 decr_text_old = decr_text
                 try:
-                    decr_text = self.sec.decrypt_keys(decr_text, keys)
+                    decr_text = self.sec.decrypt_keys(decr_text, keys=keys)
                 except DecryptError as e:
                     continue
                 else:
@@ -972,7 +982,7 @@ class AuthnResponse(StatusResponse):
             ) and decr_text_old != decr_text:
                 decr_text_old = decr_text
                 try:
-                    decr_text = self.sec.decrypt_keys(decr_text, keys)
+                    decr_text = self.sec.decrypt_keys(decr_text, keys=keys)
                 except DecryptError as e:
                     continue
                 else:
@@ -1026,7 +1036,7 @@ class AuthnResponse(StatusResponse):
 
         if self.context == "AuthnReq" or self.context == "AttrQuery":
             self.ava = self.get_identity()
-            logger.debug("--- AVA: %s", self.ava)
+            logger.debug("--- AVA: {0}".format(self.ava))
 
         return True
 
@@ -1044,7 +1054,7 @@ class AuthnResponse(StatusResponse):
             logger.error("Verification error on the response: %s", err)
             raise
         else:
-            if res is None:
+            if not res:
                 return None
 
         if not isinstance(self.response, samlp.Response):
@@ -1066,23 +1076,27 @@ class AuthnResponse(StatusResponse):
 
     def authn_info(self):
         res = []
-        for astat in self.assertion.authn_statement:
-            context = astat.authn_context
+        for statement in getattr(self.assertion, 'authn_statement', []):
+            authn_instant = getattr(statement, "authn_instant", "")
+
+            context = statement.authn_context
+            if not context:
+                continue
+
             try:
-                authn_instant = astat.authn_instant
+                authn_class = (
+                    context.authn_context_class_ref.text
+                    or context.authn_context_decl_ref.text
+                )
             except AttributeError:
-                authn_instant = ""
-            if context:
-                try:
-                    aclass = context.authn_context_class_ref.text
-                except AttributeError:
-                    aclass = ""
-                try:
-                    authn_auth = [a.text for a in
-                                  context.authenticating_authority]
-                except AttributeError:
-                    authn_auth = []
-                res.append((aclass, authn_auth, authn_instant))
+                authn_class = ""
+
+            authenticating_authorities = getattr(
+                context, "authenticating_authority", []
+            )
+            authn_auth = [authority.text for authority in authenticating_authorities]
+
+            res.append((authn_class, authn_auth, authn_instant))
         return res
 
     def authz_decision_info(self):
@@ -1116,7 +1130,7 @@ class AuthnResponse(StatusResponse):
             raise StatusInvalidAuthnResponseStatement(
                 "The Authn Response Statement is not valid"
             )
-        
+
     def __str__(self):
         return self.xmlstr
 

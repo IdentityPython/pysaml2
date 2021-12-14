@@ -1,6 +1,67 @@
 # Changelog
 
 
+## 7.1.0 (2021-11-16)
+
+- Fix signature verification for the redirect binding for AuthnRequest and
+  LogoutRequest.
+- Include encryption KeyName in encrypted assertions.
+- Add "reason" field in invalid signature errors due to invalid document format.
+- New SP configuration option requested_authn_context to set the preferred
+  RequestedAuthnContext class reference.
+- Add support for metadata refresh by adding a metadata_reload method into saml2.Entity.
+  This method is to be externally invoked, and to receive the same metadata
+  configuration as what was passed under the metadata key to saml2.Config. The method
+  loads a new metadata configuration and swaps it in (replacing the references across
+  several objects that hold a metadata reference).
+- Fix SessionIndex resolution during logout.
+- Fix AuthnResponse::get_subject to be able to decrypt a NameID with the given keys.
+- Refactor AuthnResponse::authn_info to consider DeclRef equivalent to ClassRef.
+- Ensure creation of multiple ePTIDs is handled correctly.
+- Improve signature checks by ensuring the Object element is absent, enforcing allowed
+  transform aglorithms, enforcing allowed canonicalization methods and requiring the
+  enveloped-signature transform to be present.
+- mdstore: Make unknown metadata extensions available through the internal metadata.
+- mdstore: Fix the exception handler of the InMemoryMetaData object.
+- mdstore: Fix the serialization of the MetadataStore object.
+- examples: Fix code to catter changes in interfaces.
+- examples: Update certificates to avoid SSL KEY TO SMALL errors.
+- docs: Significant improvement on the configuration options documentation.
+- docs: Fix typos.
+
+
+## 7.0.1 (2021-05-20)
+
+- Preserve order of response bindings on IdP-initiated logout
+- Fix use of expected binding on SP logout
+
+
+## 7.0.0 (2021-05-18)
+
+- **BREAKING** Replace encryption method rsa-1_5 with rsa-oaep-mgf1p
+- Add documentation next to the code
+
+
+## 6.5.2 (2021-05-18)
+
+- Add shibmd_scopes metadata extractor
+- Allow the Issuer element on a Response to be missing
+- Respect the preferred_binding configuration for the single_logout_service
+- Fix logout signature flags for redirect, post and soap requests
+- Respect the logout_requests_signed configuration option
+- Fix crash when applying policy on RequestedAttribute without a friendlyName
+- Correctly validate IssueInstant
+- Correctly handle AudienceRestriction elements with no value
+- Raise InvalidAssertion exception when assertion requirements are not met
+- Raise SAMLError on failure to parse a metadata file
+- Raise StatusInvalidAuthnResponseStatement when the AuthnStatement is not valid
+- Handle all forms of ACS endpoint specifications
+- tests: Always use base64.encodebytes; base64.encodestring has been dropped
+- build: Set minimum version needed for xmlschema
+- docs: Update Travis CI badge from travis-ci.org to travis-ci.com
+- examples: Fix example code
+
+
 ## 6.5.1 (2021-01-21)
 
 - Fix the parser to take into account both the xs and xsd namespace prefixes

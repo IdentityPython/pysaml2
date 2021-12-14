@@ -159,7 +159,7 @@ class UsernamePasswordMako(UserAuthnMethod):
             wants the user after authentication.
         """
 
-        #logger.debug("verify(%s)" % request)
+        # logger.debug("verify(%s)" % request)
         if isinstance(request, six.string_types):
             _dict = parse_qs(request)
         elif isinstance(request, dict):
@@ -235,6 +235,7 @@ class AuthnMethodChooser(object):
 
 try:
     import ldap
+
 
     class LDAPAuthn(UsernamePasswordMako):
         def __init__(self, srv, ldapsrv, return_to,

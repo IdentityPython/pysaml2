@@ -10,6 +10,7 @@ from warnings import warn as _warn
 from hashlib import sha1
 from os.path import isfile
 from os.path import join
+from re import compile as regex_compile
 
 import requests
 
@@ -58,6 +59,8 @@ from saml2.extension.mdui import Logo
 from saml2.extension.mdrpi import NAMESPACE as NS_MDRPI
 from saml2.extension.mdrpi import RegistrationInfo
 from saml2.extension.mdrpi import RegistrationPolicy
+from saml2.extension.shibmd import NAMESPACE as NS_SHIBMD
+from saml2.extension.shibmd import Scope
 
 
 logger = logging.getLogger(__name__)
@@ -83,6 +86,7 @@ classnames = {
     "service_nameid_mapping": "{ns}&{tag}".format(ns=NS_MD, tag=NameIDMappingService.c_tag),
     "mdrpi_registration_info": "{ns}&{tag}".format(ns=NS_MDRPI, tag=RegistrationInfo.c_tag),
     "mdrpi_registration_policy": "{ns}&{tag}".format(ns=NS_MDRPI, tag=RegistrationPolicy.c_tag),
+    "shibmd_scope": "{ns}&{tag}".format(ns=NS_SHIBMD, tag=Scope.c_tag)
 }
 
 ENTITY_CATEGORY = "http://macedir.org/entity-category"
@@ -486,20 +490,16 @@ class MetaData(object):
         def extract_certs(srvs):
             res = []
             for srv in srvs:
-                if "key_descriptor" in srv:
-                    for key in srv["key_descriptor"]:
-                        if "use" in key and key["use"] == use:
-                            for dat in key["key_info"]["x509_data"]:
-                                cert = repack_cert(
-                                    dat["x509_certificate"]["text"])
-                                if cert not in res:
-                                    res.append(cert)
-                        elif not "use" in key:
-                            for dat in key["key_info"]["x509_data"]:
-                                cert = repack_cert(
-                                    dat["x509_certificate"]["text"])
-                                if cert not in res:
-                                    res.append(cert)
+                for key in srv.get("key_descriptor", []):
+                    key_use = key.get("use")
+                    key_info = key.get("key_info") or {}
+                    key_name = (key_info.get("key_name") or [{"text": None}])[0]
+                    key_name_txt = key_name.get("text")
+                    if "use" not in key or key_use == use:
+                        for dat in key_info["x509_data"]:
+                            cert = repack_cert(dat["x509_certificate"]["text"])
+                            if cert not in res:
+                                res.append((key_name_txt, cert))
 
             return res
 
@@ -614,7 +614,14 @@ class InMemoryMetaData(MetaData):
         try:
             self.entities_descr = md.entities_descriptor_from_string(xmlstr)
         except Exception as e:
-            raise SAMLError(f'Failed to parse metadata file: {self.filename}') from e
+            _md_desc = (
+                f'metadata file: {self.filename}'
+                if isinstance(self,MetaDataFile)
+                else f'remote metadata: {self.url}'
+                if isinstance(self, MetaDataExtern)
+                else 'metadata'
+            )
+            raise SAMLError(f'Failed to parse {_md_desc}') from e
 
         if not self.entities_descr:
             self.entity_descr = md.entity_descriptor_from_string(xmlstr)
@@ -1229,8 +1236,6 @@ class MetadataStore(MetaData):
         # IDP + SP
         if typ is None:
             raise AttributeError("Missing type specification")
-        if binding is None:
-            binding = BINDING_HTTP_REDIRECT
         return self.service(entity_id, "%s_descriptor" % typ,
                             "single_logout_service", binding)
 
@@ -1374,13 +1379,15 @@ class MetadataStore(MetaData):
             ext = self.__getitem__(entity_id)["extensions"]
         except KeyError:
             return res
+
         for elem in ext["extension_elements"]:
-            if elem["__class__"] == classnames["mdattr_entityattributes"]:
-                for attr in elem["attribute"]:
-                    if attr["name"] not in res:
-                        res[attr["name"]] = []
-                    res[attr["name"]] += [v["text"] for v in attr[
-                        "attribute_value"]]
+            if elem["__class__"] != classnames["mdattr_entityattributes"]:
+                continue
+            for attr in elem["attribute"]:
+                res[attr["name"]] = [
+                    *res.get(attr["name"], []),
+                    *(v["text"] for v in attr.get("attribute_value", []))
+                ]
         return res
 
     def supported_algorithms(self, entity_id):
@@ -1478,6 +1485,41 @@ class MetadataStore(MetaData):
             for element in elements
         )
         return elements
+
+    def sbibmd_scopes(self, entity_id, typ=None):
+        try:
+            md = self[entity_id]
+        except KeyError:
+            md = {}
+
+        descriptor_scopes = (
+            {
+                "regexp": is_regexp,
+                "text": regex_compile(text) if is_regexp else text,
+            }
+            for elem in md.get("extensions", {}).get("extension_elements", [])
+            if elem.get("__class__") == classnames["shibmd_scope"]
+            for is_regexp, text in [
+                (elem.get("regexp", "").lower() == "true", elem.get("text", "")),
+            ]
+        )
+
+        services_of_type = md.get(typ) or []
+        services_of_type_scopes = (
+            {
+                "regexp": is_regexp,
+                "text": regex_compile(text) if is_regexp else text,
+            }
+            for srv in services_of_type
+            for elem in srv.get("extensions", {}).get("extension_elements", [])
+            if elem.get("__class__") == classnames["shibmd_scope"]
+            for is_regexp, text in [
+                (elem.get("regexp", "").lower() == "true", elem.get("text", "")),
+            ]
+        )
+
+        scopes = chain(descriptor_scopes, services_of_type_scopes)
+        return scopes
 
     def mdui_uiinfo(self, entity_id):
         try:
@@ -1656,4 +1698,5 @@ class MetadataStore(MetaData):
 
             return "%s" % res
         elif format == "md":
-            return json.dumps(self.items(), indent=2)
+            # self.items() returns dictitems(), convert that back into a dict
+            return json.dumps(dict(self.items()), indent=2)

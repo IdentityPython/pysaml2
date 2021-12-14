@@ -6,7 +6,6 @@ import six
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
-from saml2.request import LogoutRequest
 import saml2
 
 from saml2 import saml, SAMLError
@@ -129,27 +128,38 @@ class Saml2Client(Base):
         """
 
         expected_binding = binding
+        bindings_to_try = (
+            [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]
+            if not expected_binding
+            else [expected_binding]
+        )
 
-        for binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
-            if expected_binding and binding != expected_binding:
-                continue
+        binding_destinations = []
+        unsupported_bindings = []
+        for binding in bindings_to_try:
+            try:
+                destination = self._sso_location(entityid, binding)
+            except Exception:
+                unsupported_bindings.append(binding)
+            else:
+                binding_destinations.append((binding, destination))
 
-            destination = self._sso_location(entityid, binding)
+        for binding, destination in binding_destinations:
             logger.info("destination to provider: %s", destination)
 
             # XXX - sign_post will embed the signature to the xml doc
             # XXX   ^through self.create_authn_request(...)
             # XXX - sign_redirect will add the signature to the query params
             # XXX   ^through self.apply_binding(...)
-            sign_post = False if binding == BINDING_HTTP_REDIRECT else sign
-            sign_redirect = False if binding == BINDING_HTTP_POST and sign else sign
+            sign_redirect = sign and binding == BINDING_HTTP_REDIRECT
+            sign_post = sign and not sign_redirect
 
             reqid, request = self.create_authn_request(
-                destination,
-                vorg,
-                scoping,
-                response_binding,
-                nameid_format,
+                destination=destination,
+                vorg=vorg,
+                scoping=scoping,
+                binding=response_binding,
+                nameid_format=nameid_format,
                 consent=consent,
                 extensions=extensions,
                 sign=sign_post,
@@ -172,7 +182,12 @@ class Saml2Client(Base):
 
             return reqid, binding, http_info
         else:
-            raise SignOnError("No supported bindings available for authentication")
+            error_context = {
+                "message": "No supported bindings available for authentication",
+                "bindings_to_try": bindings_to_try,
+                "unsupported_bindings": unsupported_bindings,
+            }
+            raise SignOnError(error_context)
 
     def global_logout(
         self,
@@ -251,85 +266,123 @@ class Saml2Client(Base):
         not_done = entity_ids[:]
         responses = {}
 
+        bindings_slo_preferred = self.config.preferred_binding["single_logout_service"]
+
         for entity_id in entity_ids:
             logger.debug("Logout from '%s'", entity_id)
-            # for all where I can use the SOAP binding, do those first
-            for binding in [BINDING_SOAP, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]:
-                if expected_binding and binding != expected_binding:
-                    continue
 
-                try:
-                    srvs = self.metadata.single_logout_service(
-                        entity_id, binding, "idpsso"
-                    )
-                except:
-                    srvs = None
-
-                if not srvs:
-                    logger.debug("No SLO '%s' service", binding)
-                    continue
-
-                destination = next(locations(srvs), None)
-                logger.info("destination to provider: %s", destination)
-
-                try:
-                    session_info = self.users.get_info_from(
-                        name_id, entity_id, False
-                    )
-                    session_indexes = [session_info['session_index']]
-                except KeyError:
-                    session_indexes = None
-
-                sign_post = False if binding == BINDING_HTTP_REDIRECT else sign
-                sign_redirect = False if binding == BINDING_HTTP_POST and sign else sign
-
-                req_id, request = self.create_logout_request(
-                    destination,
-                    entity_id,
-                    name_id=name_id,
-                    reason=reason,
-                    expire=expire,
-                    session_indexes=session_indexes,
-                    sign=sign_post,
-                    sign_alg=sign_alg,
-                    digest_alg=digest_alg,
+            bindings_slo_supported = self.metadata.single_logout_service(
+                entity_id=entity_id, typ="idpsso"
+            )
+            bindings_slo_preferred_and_supported = (
+                binding
+                for binding in bindings_slo_preferred
+                if binding in bindings_slo_supported
+            )
+            bindings_slo_choices = filter(
+                lambda x: x,
+                (
+                    expected_binding,
+                    *bindings_slo_preferred_and_supported,
+                    *bindings_slo_supported,
                 )
-
-                relay_state = self._relay_state(req_id)
-                http_info = self.apply_binding(
-                    binding,
-                    str(request),
-                    destination,
-                    relay_state,
-                    sign=sign_redirect,
-                    sigalg=sign_alg,
-                )
-
-                if binding == BINDING_SOAP:
-                    response = self.send(**http_info)
-                    if response and response.status_code == 200:
-                        not_done.remove(entity_id)
-                        response = response.text
-                        logger.info("Response: %s", response)
-                        res = self.parse_logout_request_response(response, binding)
-                        responses[entity_id] = res
-                    else:
-                        logger.info("NOT OK response from %s", destination)
-                else:
-                    self.state[req_id] = {
-                        "entity_id": entity_id,
-                        "operation": "SLO",
-                        "entity_ids": entity_ids,
-                        "name_id": code(name_id),
-                        "reason": reason,
-                        "not_on_or_after": expire,
-                        "sign": sign,
+            )
+            binding = next(bindings_slo_choices, None)
+            if not binding:
+                logger.info(
+                    {
+                        "message": "Entity does not support SLO",
+                        "entity": entity_id,
                     }
-                    responses[entity_id] = (binding, http_info)
-                    not_done.remove(entity_id)
+                )
+                continue
 
-                # only try one binding
-                break
+            service_info = bindings_slo_supported[binding]
+            service_location = next(locations(service_info), None)
+            if not service_location:
+                logger.info(
+                    {
+                        "message": "Entity SLO service does not have a location",
+                        "entity": entity_id,
+                        "service_location": service_location,
+                    }
+                )
+                continue
+
+            try:
+                session_info = self.users.get_info_from(name_id, entity_id, False)
+                session_index = session_info.get('session_index')
+                session_indexes = [session_index] if session_index else None
+            except KeyError:
+                session_indexes = None
+
+            sign = sign if sign is not None else self.logout_requests_signed
+            sign_redirect = sign and binding == BINDING_HTTP_REDIRECT
+            sign_post = sign and not sign_redirect
+
+            log_report = {
+                "message": "Invoking SLO on entity",
+                "entity": entity_id,
+                "binding": binding,
+                "location": service_location,
+                "session_indexes": session_indexes,
+                "sign": sign,
+            }
+            logger.info(log_report)
+
+            req_id, request = self.create_logout_request(
+                service_location,
+                entity_id,
+                name_id=name_id,
+                reason=reason,
+                expire=expire,
+                session_indexes=session_indexes,
+                sign=sign_post,
+                sign_alg=sign_alg,
+                digest_alg=digest_alg,
+            )
+            relay_state = self._relay_state(req_id)
+            http_info = self.apply_binding(
+                binding,
+                str(request),
+                service_location,
+                relay_state,
+                sign=sign_redirect,
+                sigalg=sign_alg,
+            )
+
+            if binding == BINDING_SOAP:
+                response = self.send(**http_info)
+                if response and response.status_code == 200:
+                    not_done.remove(entity_id)
+                    response_text = response.text
+                    log_report_response = {
+                        **log_report,
+                        "message": "Response from SLO service",
+                        "response_text": response_text,
+                    }
+                    logger.debug(log_report_response)
+                    res = self.parse_logout_request_response(response_text, binding)
+                    responses[entity_id] = res
+                else:
+                    log_report_response = {
+                        **log_report,
+                        "message": "Bad status_code response from SLO service",
+                        "status_code": (response and response.status_code),
+                    }
+                    logger.info(log_report_response)
+            else:
+                self.state[req_id] = {
+                    "entity_id": entity_id,
+                    "operation": "SLO",
+                    "entity_ids": entity_ids,
+                    "name_id": code(name_id),
+                    "reason": reason,
+                    "not_on_or_after": expire,
+                    "sign": sign,
+                }
+                responses[entity_id] = (binding, http_info)
+                not_done.remove(entity_id)
 
         if not_done:
             # upstream should try later
@@ -590,7 +643,9 @@ class Saml2Client(Base):
         sign=None,
         sign_alg=None,
         digest_alg=None,
-        relay_state="",
+        relay_state=None,
+        sigalg=None,
+        signature=None,
     ):
         """
         Deal with a LogoutRequest
@@ -599,6 +654,11 @@ class Saml2Client(Base):
         :param name_id: The id of the current user
         :param binding: Which binding the message came in over
         :param sign: Whether the response will be signed or not
+        :param sign_alg: The signing algorithm for the response
+        :param digest_alg: The digest algorithm for the the response
+        :param relay_state: The relay state of the request
+        :param sigalg: The SigAlg query param of the request
+        :param signature: The Signature query param of the request
         :return: Keyword arguments which can be used to send the response
             what's returned follow different patterns for different bindings.
             If the binding is BINDIND_SOAP, what is returned looks like this::
@@ -612,8 +672,13 @@ class Saml2Client(Base):
         """
         logger.info("logout request: %s", request)
 
-        _req = self._parse_request(request, LogoutRequest,
-                                   "single_logout_service", binding)
+        _req = self.parse_logout_request(
+            xmlstr=request,
+            binding=binding,
+            relay_state=relay_state,
+            sigalg=sigalg,
+            signature=signature,
+        )
 
         if _req.message.name_id == name_id:
             try:
@@ -629,12 +694,11 @@ class Saml2Client(Base):
             status = status_message_factory("Wrong user",
                                             STATUS_UNKNOWN_PRINCIPAL)
 
-        if binding == BINDING_SOAP:
-            response_bindings = [BINDING_SOAP]
-        elif binding in [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]:
-            response_bindings = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]
-        else:
-            response_bindings = self.config.preferred_binding["single_logout_service"]
+        response_bindings = {
+            BINDING_SOAP: [BINDING_SOAP],
+            BINDING_HTTP_POST: [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT],
+            BINDING_HTTP_REDIRECT: [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST],
+        }.get(binding)
 
         if sign is None:
             sign = self.logout_responses_signed

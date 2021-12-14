@@ -35,6 +35,9 @@ def _filter_values(vals, vlist=None, must=False):
     if not vlist:  # No value specified equals any value
         return vals
 
+    if vals is None: # cannot iterate over None, return early
+        return vals
+
     if isinstance(vlist, six.string_types):
         vlist = [vlist]
 
@@ -107,10 +110,9 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
 
 
     def _apply_attr_value_restrictions(attr, res, must=False):
-        try:
-            values = [av["text"] for av in attr["attribute_value"]]
-        except KeyError:
-            values = []
+        values = [
+            av["text"] for av in attr.get("attribute_value", [])
+        ]
 
         try:
             res[_fn].extend(_filter_values(ava[_fn], values))
@@ -454,7 +456,16 @@ class Policy(object):
 
         def post_entity_categories(maps, sp_entity_id=None, mds=None, required=None):
             restrictions = {}
-            required = [d['friendly_name'].lower() for d in (required or [])]
+            required_friendly_names = [
+                d.get('friendly_name') or get_local_name(
+                    acs=self.acs, attr=d['name'], name_format=d['name_format']
+                )
+                for d in (required or [])
+            ]
+            required = [
+                friendly_name.lower()
+                for friendly_name in required_friendly_names
+            ]
 
             if mds:
                 ecs = mds.entity_categories(sp_entity_id)

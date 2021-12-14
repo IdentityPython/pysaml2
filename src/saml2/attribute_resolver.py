@@ -10,15 +10,15 @@ import logging
 #from saml2 import client
 from saml2 import BINDING_SOAP
 
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_BINDING = BINDING_SOAP
 
-class AttributeResolver(object):
 
+class AttributeResolver(object):
     def __init__(self, saml2client, metadata=None, config=None):
         self.metadata = metadata
-
         self.saml2client = saml2client
         self.metadata = saml2client.config.metadata
 
@@ -42,8 +42,8 @@ class AttributeResolver(object):
                         continue
                     # attribute query assumes SOAP binding
                     session_info = self.saml2client.attribute_query(
-                        name_id, attr_serv.location, issuer_id=issuer,
-)
+                        name_id, attr_serv.location, issuer_id=issuer
+                    )
                     if session_info:
                         result.append(session_info)
         return result

@@ -6,7 +6,6 @@
 or attribute authority (AA) may use to conclude its tasks.
 """
 import logging
-import os
 
 import importlib
 import dbm
@@ -226,17 +225,23 @@ class Server(Entity):
 
     # -------------------------------------------------------------------------
 
-    def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
+    def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT,
+                            relay_state=None, sigalg=None, signature=None):
         """Parse a Authentication Request
 
         :param enc_request: The request in its transport format
         :param binding: Which binding that was used to transport the message
+        :param relay_state: RelayState, when binding=redirect
+        :param sigalg: Signature Algorithm, when binding=redirect
+        :param signature: Signature, when binding=redirect
             to this entity.
         :return: A request instance
         """
 
         return self._parse_request(enc_request, AuthnRequest,
-                                   "single_sign_on_service", binding)
+                                   "single_sign_on_service", binding,
+                                   relay_state=relay_state, sigalg=sigalg,
+                                   signature=signature)
 
     def parse_attribute_query(self, xml_string, binding):
         """ Parse an attribute query
@@ -476,9 +481,6 @@ class Server(Entity):
         :return: A response instance
         """
 
-        if farg is None:
-            assertion_args = {}
-
         # if identity:
         _issuer = self._issuer(issuer)
 
@@ -616,7 +618,7 @@ class Server(Entity):
 
             if attributes:
                 restr = restriction_from_attribute_spec(attributes)
-                ast = filter_attribute_value_assertions(ast)
+                ast = filter_attribute_value_assertions(ast, restr)
 
             assertion = ast.construct(
                 sp_entity_id, self.config.attribute_converters, policy,

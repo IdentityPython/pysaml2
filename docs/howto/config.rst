@@ -1,9 +1,9 @@
 .. _howto_config:
 
-Configuration of pySAML2 entities
+Configuration of PySAML2 entities
 =================================
 
-Whether you plan to run a pySAML2 Service Provider, Identity Provider or an
+Whether you plan to run a PySAML2 Service Provider, Identity Provider or an
 attribute authority, you have to configure it. The format of the configuration
 file is the same regardless of which type of service you plan to run.
 What differs are some of the directives.
@@ -51,7 +51,7 @@ The basic structure of the configuration file is therefore like this::
     }
 
 .. note:: You can build the metadata file for your services directly from the
-    configuration. The make_metadata.py script in the pySAML2 tools directory
+    configuration. The make_metadata.py script in the PySAML2 tools directory
     will do that for you.
 
 Configuration directives
@@ -101,7 +101,7 @@ Example::
         },
     },
 
-The exapmle configuration above will enable DEBUG logging to stdout.
+The example configuration above will enable DEBUG logging to stdout.
 
 
 debug
@@ -153,7 +153,7 @@ assurance_certification
 
 Example::
 
-    "assurance_specification": [
+    "assurance_certification": [
         "https://refeds.org/sirtfi",
     ]
 
@@ -247,6 +247,33 @@ The globally unique identifier of the entity.
 .. note:: It is recommended that the entityid should point to a real
     webpage where the metadata for the entity can be found.
 
+name
+^^^^
+
+A string value that sets the name of the PySAML2 entity.
+
+Example::
+
+    "name": "Example IdP"
+
+description
+^^^^^^^^^^^
+
+A string value that sets the description of the PySAML2 entity.
+
+Example::
+
+    "description": "My IdP",
+
+verify_ssl_cert
+^^^^^^^^^^^^^^^
+
+Specifies if the SSL certificates should be verified. Can be ``True`` or ``False``.
+The default configuration is ``False``.
+
+Example::
+
+    "verify_ssl_cert": True
 
 key_file
 ^^^^^^^^
@@ -269,6 +296,21 @@ Example::
 This is the public part of the service private/public key pair.
 *cert_file* must be a PEM formatted file with a single certificate.
 
+tmp_cert_file
+^^^^^^^^^^^^^
+
+Example::
+    "tmp_cert_file": "tmp_cert.pem"
+
+*tmp_cert_file* is a PEM formatted certificate file
+
+tmp_key_file
+^^^^^^^^^^^^
+
+Example::
+    "tmp_key_file": "tmp_key.pem"
+
+*tmp_key_file* is a PEM formatted key file.
 
 encryption_keypairs
 ^^^^^^^^^^^^^^^^^^^
@@ -282,6 +324,27 @@ Indicates which certificates will be used for encryption capabilities::
             'cert_file': BASE_DIR + '/certificates/public.cert',
         },
     ],
+
+generate_cert_info
+^^^^^^^^^^^^^^^^^^
+
+Specifies if information about the certificate should be generated.
+A boolean value can be ``True`` or ``False``.
+
+Example::
+
+    "generate_cert_info": False
+
+
+ca_certs
+^^^^^^^^
+
+This is the path to a file containing root CA certificates for SSL server certificate validation.
+
+Example::
+
+    "ca_certs": full_path("cacerts.txt"),
+
 
 metadata
 ^^^^^^^^
@@ -400,6 +463,7 @@ The available services are:
 * assertion_id_request_service
 * artifact_resolution_service
 * attribute_consuming_service
+* single_logout_service
 
 
 service
@@ -449,7 +513,7 @@ difference you are prepared to accept.
     Hence your server may accept a statement that in fact is too old.
 
 allow_unknown_attributes
-""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Indicates that attributes that are not recognized (they are not configured in
 attribute-mapping), will not be discarded.
@@ -464,6 +528,28 @@ This option defines where the binary is situated.
 Example::
 
     "xmlsec_binary": "/usr/local/bin/xmlsec1",
+
+xmlsec_path
+^^^^^^^^^^^
+
+This option is used to define non-system paths where the xmlsec1 binary can be located.
+It can be used when the xmlsec_binary option is not defined.
+
+Example::
+
+    "xmlsec_path": ["/usr/local/bin", "/opt/local/bin"],
+
+OR::
+
+    from saml2.sigver import get_xmlsec_binary
+
+    if get_xmlsec_binary:
+        xmlsec_path = get_xmlsec_binary(["/opt/local/bin","/usr/local/bin"])
+    else:
+        xmlsec_path = '/usr/bin/xmlsec1'
+
+    "xmlsec_binary": xmlsec_path,
+
 
 delete_tmpfiles
 ^^^^^^^^^^^^^^^
@@ -486,6 +572,76 @@ How many *hours* this configuration is expected to be accurate.::
 This, of course, is only used by *make_metadata.py*.
 The server will not stop working when this amount of time has elapsed :-).
 
+
+metadata_key_usage
+^^^^^^^^^^^^^^^^^^^
+
+This specifies the purpose of the entity's cryptographic keys used to sign data.
+If this option is not configured it will default to ``"both"``.
+
+The possible options for this configuration are ``both``, ``signing``, ``encryption``.
+
+If metadata_key_usage is set to ``"signing"`` or ``"both"``, and a cert_file is provided
+the value of use in the KeyDescriptor element will be set to ``"signing"``.
+
+If metadata_key_usage is set to ``"both"`` or ``"encryption"`` and a enc_cert is provided
+the value of ``"use"`` in the KeyDescriptor will be set to ``"encryption"``.
+
+Example::
+
+    "metadata_key_usage" : "both",
+
+
+secret
+^^^^^^
+
+A string value that is used in the generation of the RelayState.
+
+Example::
+
+    "secret": "0123456789",
+
+crypto_backend
+^^^^^^^^^^^^^^
+Defines the crypto backend used for signing and encryption. The default is ``xmlsec1``.
+The options are ``xmlsec1`` and ``XMLSecurity``.
+
+If set to "XMLSecurity", the crypto backend will be pyXMLSecurity.
+
+Example::
+
+    "crypto_backend": "xmlsec1",
+
+verify_encrypt_advice
+^^^^^^^^^^^^^^^^^^^^^
+
+Specifies if the encrypted assertions in the advice element should be verified.
+Can be ``True`` or ``False``.
+
+Example::
+
+    def verify_encrypt_cert(cert_str):
+        osw = OpenSSLWrapper()
+        ca_cert_str = osw.read_str_from_file(full_path("root_cert/localhost.ca.crt"))
+        valid, mess = osw.verify(ca_cert_str, cert_str)
+        return valid
+
+::
+
+    "verify_encrypt_cert_advice": verify_encrypt_cert,
+
+
+verify_encrypt_cert_assertion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specifies if the encrypted assertions should be verified.
+Can be ``True`` or ``False``.
+
+Example::
+
+    "verify_encrypt_cert_assertion": verify_encrypt_cert
+
+
 Specific directives
 -------------------
 
@@ -507,6 +663,29 @@ sign_response
 
 Specifies if the IdP should sign the authentication response or not. Can be
 True or False. Default is False.
+
+encrypt_assertion
+"""""""""""""""""
+
+Specifies if the IdP should encrypt the assertions. Can be ``True`` or ``False``.
+Default is ``False``.
+
+encrypted_advice_attributes
+"""""""""""""""""""""""""""
+Specifies if assertions in the advice element should be encrypted.
+Can be ``True`` or ``False``. Default is ``False``.
+
+encrypt_assertion_self_contained
+""""""""""""""""""""""""""""""""
+
+Specifies if all encrypted assertions should have all namespaces self contained.
+Can be ``True`` or ``False``. Default is ``True``.
+
+want_authn_requests_signed
+""""""""""""""""""""""""""
+
+Indicates that the AuthnRequest received by this IdP should be signed. Can be ``True`` or ``False``.
+The default value is ``False``.
 
 want_authn_requests_only_with_valid_cert
 """"""""""""""""""""""""""""""""""""""""
@@ -606,6 +785,79 @@ regular expressions.::
     }
 
 Here only mail addresses that end with ".umu.se" will be returned.
+
+scope
+"""""
+
+A list of string values that will be used to set the ``<Scope>`` element
+The default value of regexp is ``False``.
+
+Example::
+
+    "scope": ["example.org", "example.com"],
+
+
+ui_info
+""""""""
+
+This determines what information to display about an entity by
+configuring its mdui:UIInfo element. The configurable options include;
+
+*privacy_statement_url*
+    The URL to information about the privacy practices of the entity.
+*information_url*
+    Which URL contains localized information about the entity.
+*logo*
+    The logo image for the entity. The value is a dictionary with keys
+    height, width and text.
+*display_name*
+    The localized name for the entity.
+*description*
+    The localized description of the entity. The value is a dictionary with keys
+    text and lang.
+*keywords*
+    The localized search keywords for the entity. The value is a dictionary with keys
+    lang and text.
+
+Example::
+
+    "ui_info": {
+    "privacy_statement_url": "http://example.com/saml2/privacyStatement.html",
+    "information_url": "http://example.com/saml2/info.html",
+    "logo": {
+        "height": "40",
+        "width" : "30",
+        "text": "http://example.com/logo.jpg"
+    },
+    "display_name": "Example Co.",
+    "description" : {"text":"Exempel Bolag","lang":"se"},
+    "keywords": {"lang":"en", "text":["foo", "bar"]}
+    }
+
+
+name_qualifier
+""""""""""""""
+
+A string value that sets the ``NameQualifier`` attribute of the ``<NameIdentifier>`` element.
+
+Example::
+
+    "name_qualifier": "http://authentic.example.com/saml/metadata",
+
+
+session_storage
+"""""""""""""""
+
+Example::
+
+    "session_storage": ("mongodb", "session")
+
+domain
+""""""
+
+Example::
+
+    "domain": "umu.se",
 
 sp
 ^^
@@ -928,6 +1180,75 @@ Example::
         }
     }
 
+discovery_response
+""""""""""""""""""
+
+This configuration allows the SP to include one or more Discovery Response Endpoints.
+The discovery_response can be the just the URL::
+
+    "discovery_response":["http://example.com/sp/ds"],
+
+or it can be a 2 tuple of the URL+Binding::
+
+    from saml2.extension.idpdisc import BINDING_DISCO
+
+    "discovery_response": [("http://example.com/sp/ds", BINDING_DISCO)]
+
+ecp
+"""
+
+This configuration option takes a dictionary with the ecp client IP address as the
+key and the entity ID as the value.
+
+Example::
+
+    "ecp": {
+        "203.0.113.254": "http://example.com/idp",
+    }
+
+requested_attribute_name_format
+"""""""""""""""""""""""""""""""
+
+This sets the NameFormat attribute in the ``<RequestedAttribute>`` element.
+The name formats are defined in saml2.saml.py. If not configured the default is ``NAME_FORMAT_URI``
+which corresponds to ``urn:oasis:names:tc:SAML:2.0:attrname-format:uri``.
+
+Example::
+
+    from saml2.saml import NAME_FORMAT_BASIC
+
+::
+
+    "requested_attribute_name_format": NAME_FORMAT_BASIC
+
+
+requested_authn_context
+"""""""""""""""""""""""
+
+This configuration option defines the ``<RequestedAuthnContext>`` for an AuthnRequest by
+a client. The value is a dictionary with two fields
+
+- ``authn_context_class_ref`` a list of string values representing
+  ``<AuthnContextClassRef>`` elements.
+
+- ``comparison`` a string representing the Comparison xml-attribute value of the
+  ``<RequestedAuthnContext>`` element. Per the SAML core specificiation the value should
+  be one of "exact", "minimum", "maximum", or "better". The default is "exact".
+
+Example::
+
+    "service": {
+        "sp": {
+            "requested_authn_context": {
+                "authn_context_class_ref": [
+                    "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
+                    "urn:oasis:names:tc:SAML:2.0:ac:classes:TLSClient",
+                ],
+                "comparison": "minimum",
+            }
+        }
+    }
+
 
 idp/aa/sp
 ^^^^^^^^^
@@ -1210,7 +1531,7 @@ Entity Categories
 
 Entity categories and their attributes are defined in
 src/saml2/entity_category/<registrar-of-entity-category>.py.
-We can configure Entity Categories in pysaml2 in two ways:
+We can configure Entity Categories in PySAML2 in two ways:
 
 1. Using the configuration options *entity_category_support* or
    *entity_category*, to generate the appropriate EntityAttribute metadata

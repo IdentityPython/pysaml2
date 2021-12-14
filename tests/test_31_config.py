@@ -5,13 +5,18 @@ import sys
 import logging
 from saml2.mdstore import MetadataStore, name
 
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP, BINDING_HTTP_POST
-from saml2.config import SPConfig, IdPConfig, Config
-
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
+from saml2.config import Config
+from saml2.config import IdPConfig
+from saml2.config import SPConfig
+from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT as AUTHN_PASSWORD_PROTECTED
+from saml2.authn_context import TIMESYNCTOKEN as AUTHN_TIME_SYNC_TOKEN
 from saml2 import logger
 
 from pathutils import dotname, full_path
 from saml2.sigver import security_context, CryptoBackendXMLSecurity
+
 
 sp1 = {
     "entityid": "urn:mace:umu.se:saml:roland:sp",
@@ -26,8 +31,15 @@ sp1 = {
                 "urn:mace:example.com:saml:roland:idp": {
                     'single_sign_on_service':
                         {'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect':
-                             'http://localhost:8088/sso/'}},
-            }
+                            'http://localhost:8088/sso/'}},
+            },
+            "requested_authn_context": {
+                "authn_context_class_ref": [
+                    AUTHN_PASSWORD_PROTECTED,
+                    AUTHN_TIME_SYNC_TOKEN,
+                ],
+                "comparison": "exact",
+            },
         }
     },
     "key_file": full_path("test.key"),
@@ -211,12 +223,23 @@ def test_1():
 
     assert len(c._sp_idp) == 1
     assert list(c._sp_idp.keys()) == ["urn:mace:example.com:saml:roland:idp"]
-    assert list(c._sp_idp.values()) == [{'single_sign_on_service':
-                                         {
-                                             'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect':
-                                             'http://localhost:8088/sso/'}}]
+    assert list(c._sp_idp.values()) == [
+        {
+            'single_sign_on_service': {
+                'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect': (
+                    'http://localhost:8088/sso/'
+                )
+            }
+        }
+    ]
 
     assert c.only_use_keys_in_metadata
+    assert type(c.getattr("requested_authn_context")) is dict
+    assert c.getattr("requested_authn_context").get("authn_context_class_ref") == [
+            AUTHN_PASSWORD_PROTECTED,
+            AUTHN_TIME_SYNC_TOKEN,
+    ]
+    assert c.getattr("requested_authn_context").get("comparison") == "exact"
 
 
 def test_2():

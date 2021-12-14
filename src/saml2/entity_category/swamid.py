@@ -58,11 +58,14 @@ GEANT_COCO = [
     'schacHomeOrganizationType',
 ]
 
+MYACADEMICID_ESI = ['schacPersonalUniqueCode']
+
 # These give you access to information
 RESEARCH_AND_EDUCATION = 'http://www.swamid.se/category/research-and-education'  # Deprecated from 2021-03-31
 SFS_1993_1153 = 'http://www.swamid.se/category/sfs-1993-1153'                    # Deprecated from 2021-03-31
 RESEARCH_AND_SCHOLARSHIP = 'http://refeds.org/category/research-and-scholarship'
 COCO = 'http://www.geant.net/uri/dataprotection-code-of-conduct/v1'
+ESI = 'https://myacademicid.org/entity-categories/esi'
 
 # presently these don't by themself
 EU = 'http://www.swamid.se/category/eu-adequate-protection'  # Deprecated from 2021-03-31
@@ -77,6 +80,8 @@ RELEASE = {
     (RESEARCH_AND_EDUCATION, HEI): NAME + STATIC_ORG_INFO + OTHER,
     RESEARCH_AND_SCHOLARSHIP: R_AND_S,
     COCO: GEANT_COCO,
+    ESI: MYACADEMICID_ESI,
+    (ESI, COCO): MYACADEMICID_ESI + GEANT_COCO,
 }
 
 ONLY_REQUIRED = {COCO: True}

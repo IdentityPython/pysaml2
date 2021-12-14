@@ -30,7 +30,6 @@ from saml2.saml import NameID
 from saml2.saml import EncryptedAssertion
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
-from saml2.response import AuthnResponse
 from saml2.response import LogoutResponse
 from saml2.response import UnsolicitedResponse
 from saml2.time_util import instant
@@ -65,6 +64,7 @@ from saml2.sigver import security_context
 from saml2.sigver import SigverError
 from saml2.sigver import SignatureError
 from saml2.sigver import make_temp
+from saml2.sigver import get_pem_wrapped_unwrapped
 from saml2.sigver import pre_encryption_part
 from saml2.sigver import pre_signature_part
 from saml2.sigver import pre_encrypt_assertion
@@ -202,6 +202,39 @@ class Entity(HTTPBase):
 
         self.msg_cb = msg_cb
 
+    def reload_metadata(self, metadata_conf):
+        """
+        Reload metadata configuration.
+
+        Load a new metadata configuration as defined by metadata_conf (by
+        passing this to Config.load_metadata) and make this entity (as well as
+        subordinate objects with own metadata reference) use the new metadata.
+
+        The structure of metadata_conf is the same as the 'metadata' entry in
+        the configuration passed to saml2.Config.
+
+        param metadata_conf: Metadata configuration as passed to Config.load_metadata
+        return: True if successfully reloaded
+        """
+        logger.debug("Loading new metadata")
+        try:
+            new_metadata = self.config.load_metadata(metadata_conf)
+        except Exception as ex:
+            logger.error("Loading metadata failed", exc_info=ex)
+            return False
+
+        logger.debug("Applying new metadata to main config")
+        ( self.metadata, self.sec.metadata, self.config.metadata ) = [new_metadata]*3
+        policy = getattr(self.config, "_%s_policy" % self.entity_type, None)
+        if policy and policy.metadata_store:
+            logger.debug("Applying new metadata to %s policy", self.entity_type)
+            policy.metadata_store = self.metadata
+
+        logger.debug("Applying new metadata source_id")
+        self.sourceid = self.metadata.construct_source_id()
+
+        return True
+
     def _issuer(self, entityid=None):
         """ Return an Issuer instance """
         if entityid:
@@ -241,7 +274,11 @@ class Entity(HTTPBase):
         :return: A dictionary
         """
 
-        # XXX sig-allowed should be configurable
+        # XXX SIG_ALLOWED_ALG should be configurable
+        # XXX should_sign stems from authn_requests_signed and sign_response
+        # XXX based on the type of the entity
+        # XXX but should also take into account the type of message (Authn/Logout/etc)
+        # XXX should_sign should be split and the exact config options should be checked
         sign = sign if sign is not None else self.should_sign
         sign_alg = sigalg or self.signing_algorithm
         if sign_alg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
@@ -300,7 +337,7 @@ class Entity(HTTPBase):
 
         sfunc = getattr(self.metadata, service)
 
-        if bindings is None:
+        if not bindings:
             if request and request.protocol_binding:
                 bindings = [request.protocol_binding]
             else:
@@ -645,24 +682,26 @@ class Entity(HTTPBase):
         _certs = []
 
         if encrypt_cert:
-            _certs.append(encrypt_cert)
+            _certs.append((None, encrypt_cert))
         elif sp_entity_id is not None:
             _certs = self.metadata.certs(sp_entity_id, "any", "encryption")
         exception = None
-        for _cert in _certs:
+        for _cert_name, _cert in _certs:
+            wrapped_cert, unwrapped_cert = get_pem_wrapped_unwrapped(_cert)
             try:
-                begin_cert = "-----BEGIN CERTIFICATE-----\n"
-                end_cert = "\n-----END CERTIFICATE-----\n"
-                if begin_cert not in _cert:
-                    _cert = "%s%s" % (begin_cert, _cert)
-                if end_cert not in _cert:
-                    _cert = "%s%s" % (_cert, end_cert)
-                tmp = make_temp(_cert.encode('ascii'),
-                                decode=False,
-                                delete_tmpfiles=self.config.delete_tmpfiles)
-                response = self.sec.encrypt_assertion(response, tmp.name,
-                                                      pre_encryption_part(),
-                                                      node_xpath=node_xpath)
+                tmp = make_temp(
+                    wrapped_cert.encode('ascii'),
+                    decode=False,
+                    delete_tmpfiles=self.config.delete_tmpfiles,
+                )
+                response = self.sec.encrypt_assertion(
+                    response,
+                    tmp.name,
+                    pre_encryption_part(
+                        key_name=_cert_name, encrypt_cert=unwrapped_cert
+                    ),
+                    node_xpath=node_xpath,
+                )
                 return response
             except Exception as ex:
                 exception = ex
@@ -985,7 +1024,16 @@ class Entity(HTTPBase):
                 else:
                     return typ
 
-    def _parse_request(self, enc_request, request_cls, service, binding):
+    def _parse_request(
+        self,
+        enc_request,
+        request_cls,
+        service,
+        binding,
+        relay_state=None,
+        sigalg=None,
+        signature=None,
+    ):
         """Parse a Request
 
         :param enc_request: The request in its transport format
@@ -1000,8 +1048,7 @@ class Entity(HTTPBase):
         _log_debug = logger.debug
 
         # The addresses I should receive messages like this on
-        receiver_addresses = self.config.endpoint(service, binding,
-                                                  self.entity_type)
+        receiver_addresses = self.config.endpoint(service, binding, self.entity_type)
         if not receiver_addresses and self.entity_type == "idp":
             for typ in ["aa", "aq", "pdp"]:
                 receiver_addresses = self.config.endpoint(service, binding, typ)
@@ -1031,7 +1078,9 @@ class Entity(HTTPBase):
         if only_valid_cert:
             must = True
         _request = _request.loads(xmlstr, binding, origdoc=enc_request,
-                                  must=must, only_valid_cert=only_valid_cert)
+                                  must=must, only_valid_cert=only_valid_cert,
+                                  relay_state=relay_state, sigalg=sigalg,
+                                  signature=signature)
 
         _log_debug("Loaded request")
 
@@ -1535,7 +1584,14 @@ class Entity(HTTPBase):
 
     # ------------------------------------------------------------------------
 
-    def parse_logout_request(self, xmlstr, binding=BINDING_SOAP):
+    def parse_logout_request(
+        self,
+        xmlstr,
+        binding=BINDING_SOAP,
+        relay_state=None,
+        sigalg=None,
+        signature=None,
+    ):
         """ Deal with a LogoutRequest
 
         :param xmlstr: The response as a xml string
@@ -1545,8 +1601,15 @@ class Entity(HTTPBase):
             was not.
         """
 
-        return self._parse_request(xmlstr, saml_request.LogoutRequest,
-                                   "single_logout_service", binding)
+        return self._parse_request(
+            enc_request=xmlstr,
+            request_cls=saml_request.LogoutRequest,
+            service="single_logout_service",
+            binding=binding,
+            relay_state=relay_state,
+            sigalg=sigalg,
+            signature=signature,
+        )
 
     def use_artifact(self, message, endpoint_index=0):
         """

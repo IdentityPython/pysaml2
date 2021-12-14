@@ -7,7 +7,7 @@ by openssl, edit your openssl.cnf, such as /etc/ssl/openssl.cnf
 
 EOF
 
-openssl genrsa -out server.key 2048
+openssl genrsa -out server.key 4096
 chmod 600 server.key
 openssl req -new -key server.key -out server.csr
 openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt

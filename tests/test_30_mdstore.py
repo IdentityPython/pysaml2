@@ -3,6 +3,7 @@
 import datetime
 import os
 import re
+from re import compile as regex_compile
 from collections import OrderedDict
 from unittest.mock import Mock
 from unittest.mock import patch
@@ -98,7 +99,6 @@ TEST_METADATA_STRING = """
 </EntitiesDescriptor>
 """.format(cert_data=TEST_CERT)
 
-
 ATTRCONV = ac_factory(full_path("attributemaps"))
 
 METADATACONF = {
@@ -162,6 +162,10 @@ METADATACONF = {
     "14": [{
         "class": "saml2.mdstore.MetaDataFile",
         "metadata": [(full_path("invalid_metadata_file.xml"),)],
+    }],
+    "15": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("idp_uiinfo.xml"),)],
     }],
 }
 
@@ -517,10 +521,45 @@ def test_load_string():
 def test_get_certs_from_metadata():
     mds = MetadataStore(ATTRCONV, None)
     mds.imp(METADATACONF["11"])
-    certs1 = mds.certs("http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "any")
-    certs2 = mds.certs("http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "idpsso")
 
-    assert certs1[0] == certs2[0] == TEST_CERT
+    cert_any_name, cert_any = mds.certs(
+        "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "any"
+    )[0]
+    cert_idpsso_name, cert_idpsso = mds.certs(
+        "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "idpsso"
+    )[0]
+
+    assert cert_any_name is None
+    assert cert_idpsso_name is None
+
+
+def test_get_unnamed_certs_from_metadata():
+    mds = MetadataStore(ATTRCONV, None)
+    mds.imp(METADATACONF["11"])
+
+    cert_any_name, cert_any = mds.certs(
+        "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "any"
+    )[0]
+    cert_idpsso_name, cert_idpsso = mds.certs(
+        "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "idpsso"
+    )[0]
+
+    assert cert_any_name is None
+    assert cert_idpsso_name is None
+
+
+def test_get_named_certs_from_metadata():
+    mds = MetadataStore(ATTRCONV, None)
+    mds.imp(METADATACONF["3"])
+
+    cert_sign_name, cert_sign = mds.certs(
+        "https://coip-test.sunet.se/shibboleth", "spsso", "signing"
+    )[0]
+    cert_enc_name, cert_enc = mds.certs(
+        "https://coip-test.sunet.se/shibboleth", "spsso", "encryption"
+    )[0]
+
+    assert cert_sign_name == cert_enc_name == "coip-test.sunet.se"
 
 
 def test_get_certs_from_metadata_without_keydescriptor():
@@ -606,6 +645,51 @@ def test_extension():
     metadata["2"] = {"entity2": {"idpsso_descriptor": [{"extensions": {"extension_elements": [{"__class__": "test"}]}}]}}
     mds.metadata = metadata
     assert mds.extension("entity2", "idpsso_descriptor", "test")
+
+
+def test_shibmd_scope_no_regex_no_descriptor_type():
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    mds.imp(METADATACONF["15"])
+
+    scopes = mds.sbibmd_scopes(entity_id='http://example.com/saml2/idp.xml')
+    all_scopes = list(scopes)
+
+    expected = [
+        {
+            "regexp": False,
+            "text": "descriptor-example.org",
+        },
+        {
+            "regexp": True,
+            "text": regex_compile("descriptor-example[^0-9]*\.org"),
+        },
+    ]
+    assert len(all_scopes) == 2
+    assert all_scopes == expected
+
+
+def test_shibmd_scope_no_regex_all_descriptors():
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    mds.imp(METADATACONF["15"])
+
+    scopes = mds.sbibmd_scopes(entity_id='http://example.com/saml2/idp.xml', typ="idpsso_descriptor")
+    all_scopes = list(scopes)
+    expected = [
+        {
+            "regexp": False,
+            "text": "descriptor-example.org",
+        },
+        {
+            "regexp": True,
+            "text": regex_compile("descriptor-example[^0-9]*\.org"),
+        },
+        {
+            "regexp": False,
+            "text": "idpssodescriptor-example.org",
+        },
+    ]
+    assert len(all_scopes) == 3
+    assert all_scopes == expected
 
 
 if __name__ == "__main__":

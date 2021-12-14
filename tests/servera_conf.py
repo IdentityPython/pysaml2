@@ -4,6 +4,8 @@ from saml2 import BINDING_PAOS
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_ARTIFACT
+from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT as AUTHN_PASSWORD_PROTECTED
+from saml2.authn_context import TIMESYNCTOKEN as AUTHN_TIME_SYNC_TOKEN
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 
@@ -42,8 +44,17 @@ CONFIG = {
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title", "eduPersonAffiliation"],
             "idp": ["urn:mace:example.com:saml:roland:idp"],
-            "name_id_format": [NAMEID_FORMAT_TRANSIENT,
-                               NAMEID_FORMAT_PERSISTENT]
+            "name_id_format": [
+                NAMEID_FORMAT_TRANSIENT,
+                NAMEID_FORMAT_PERSISTENT,
+            ],
+            "requested_authn_context": {
+                "authn_context_class_ref": [
+                    AUTHN_PASSWORD_PROTECTED,
+                    AUTHN_TIME_SYNC_TOKEN,
+                ],
+                "comparison": "exact",
+            },
         }
     },
     "debug": 1,

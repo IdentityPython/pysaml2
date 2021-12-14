@@ -12,6 +12,7 @@ from saml2.cert import OpenSSLWrapper
 from saml2.sigver import make_temp, DecryptError, EncryptError, CertificateError
 from saml2.assertion import Policy
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2.response import IncorrectlySigned
 from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import response_from_string
 
@@ -32,6 +33,7 @@ from saml2.s_utils import sid
 from saml2.soap import make_soap_enveloped_saml_thingy
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
 from saml2.time_util import instant
 
 from pytest import raises
@@ -2246,8 +2248,63 @@ class TestServer1NonAsciiAva():
 
         with closing(Server("idp_soap_conf")) as idp:
             request = idp.parse_logout_request(saml_soap)
+            assert request
+
+            idp.config.setattr("idp", "want_authn_requests_signed", True)
+            assert idp.config.getattr("want_authn_requests_signed", "idp")
+
+            with raises(IncorrectlySigned):
+                # check unsigned requests over SOAP to fail
+                request = idp.parse_logout_request(saml_soap)
+                assert not request
+
+            idp.ident.close()
+
+    def test_slo_soap_signed(self):
+        soon = time_util.in_a_while(days=1)
+        sinfo = {
+            "name_id": nid,
+            "issuer": "urn:mace:example.com:saml:roland:idp",
+            "not_on_or_after": soon,
+            "user": {
+                "givenName": "Leo",
+                "sn": "Laport",
+            }
+        }
+
+        sp = client.Saml2Client(config_file="server_conf")
+        sp.users.add_information_about_person(sinfo)
+
+        req_id, logout_request = sp.create_logout_request(
+            name_id=nid, destination="http://localhost:8088/slo",
+            issuer_entity_id="urn:mace:example.com:saml:roland:idp",
+            reason="I'm tired of this", sign=True, sign_alg=ds.SIG_RSA_SHA512,
+            digest_alg=ds.DIGEST_SHA512,
+        )
+
+        saml_soap = sp.apply_binding(BINDING_SOAP, logout_request, sign=False)
+        saml_soap = saml_soap["data"]
+        self.server.ident.close()
+
+        with closing(Server("idp_soap_conf")) as idp:
+            idp.config.setattr("idp", "want_authn_requests_signed", True)
+            assert idp.config.getattr("want_authn_requests_signed", "idp")
+
+            with raises(IncorrectlySigned):
+                # idp_soap_conf has invalid certificate for sp
+                request = idp.parse_logout_request(saml_soap)
+                assert not request
+
+            idp.ident.close()
+
+        with closing(Server("idp_conf_verify_cert")) as idp:
+            idp.config.setattr("idp", "want_authn_requests_signed", True)
+            assert idp.config.getattr("want_authn_requests_signed", "idp")
+
+            request = idp.parse_logout_request(saml_soap)
             idp.ident.close()
             assert request
+
 
 # ------------------------------------------------------------------------
 

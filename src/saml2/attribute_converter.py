@@ -136,12 +136,13 @@ def list_to_local(acs, attrlist, allow_unknown_attributes=False):
         try:
             _func = acsd[attr.name_format].ava_from
         except KeyError:
-            if attr.name_format == NAME_FORMAT_UNSPECIFIED or \
-                    allow_unknown_attributes:
+            if (
+                attr.name_format == NAME_FORMAT_UNSPECIFIED
+                or allow_unknown_attributes
+            ):
                 _func = acs[0].lcd_ava_from
             else:
-                logger.info("Unsupported attribute name format: %s",
-                    attr.name_format)
+                logger.info("Unsupported attribute name format: %s", attr.name_format)
                 continue
 
         try:
@@ -415,7 +416,7 @@ class AttributeConverter(object):
         except KeyError:
             try:
                 _attr = self._to[attr.lower()]
-            except:
+            except KeyError:
                 _attr = ''
 
         if _attr:
@@ -507,6 +508,9 @@ class AttributeConverter(object):
 
         Returns a list of AttributeValue instances of NameID elements.
         """
+
+        if type(values) is not list:
+            values = [values]
 
         def _create_nameid_ext_el(value):
             text = value["text"] if isinstance(value, dict) else value

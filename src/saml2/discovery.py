@@ -64,7 +64,7 @@ class DiscoveryServer(Entity):
         else:
             dsr["isPassive"] = False
 
-        if not "returnIDParam" in dsr:
+        if "returnIDParam" not in dsr:
             dsr["returnIDParam"] = "entityID"
 
         return dsr

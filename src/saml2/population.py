@@ -35,8 +35,9 @@ class Population(object):
         :param sources: Sources for information about the subject
         :return:
         """
-        if not sources:  # assume that all the members has be asked
-                         # once before, hence they are represented in the cache
+        if not sources:
+            # assume that all the members has be asked
+            # once before, hence they are represented in the cache
             sources = self.cache.entities(name_id)
         sources = [m for m in sources if not self.cache.active(name_id, m)]
         return sources

@@ -60,12 +60,20 @@ DECISION_TYPE_DENY = "Deny"
 DECISION_TYPE_INDETERMINATE = "Indeterminate"
 
 VERSION = "2.0"
-
+# http://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf
+# The specification was later updated with errata, and the new version is here:
+# http://www.oasis-open.org/committees/download.php/56779/sstc-saml-bindings-errata-2.0-wd-06.pdf
+# parse a SOAP header, make a SOAP request, and receive a SOAP response
 BINDING_SOAP = 'urn:oasis:names:tc:SAML:2.0:bindings:SOAP'
+# parse a PAOS header, make a PAOS request, and receive a PAOS response
 BINDING_PAOS = 'urn:oasis:names:tc:SAML:2.0:bindings:PAOS'
+# URI encoded messages
 BINDING_HTTP_REDIRECT = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+# HTML encoded messages
 BINDING_HTTP_POST = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
+# sensitive messages are transported over a backchannel
 BINDING_HTTP_ARTIFACT = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact'
+# as uri response encoded message
 BINDING_URI = 'urn:oasis:names:tc:SAML:2.0:bindings:URI'
 
 
@@ -973,7 +981,7 @@ def extension_element_to_element(extension_element, translation_functions,
     return None
 
 
-def extension_elements_to_elements(extension_elements, schemas):
+def extension_elements_to_elements(extension_elements, schemas, keep_unmatched=False):
     """ Create a list of elements each one matching one of the
     given extension elements. This is of course dependent on the access
     to schemas that describe the extension elements.
@@ -981,6 +989,8 @@ def extension_elements_to_elements(extension_elements, schemas):
     :param extension_elements: The list of extension elements
     :param schemas: Imported Python modules that represent the different
         known schemas used for the extension elements
+    :param keep_unmatched: Whether to keep extension elements that did not match any
+        schemas
     :return: A list of elements, representing the set of extension elements
         that was possible to match against a Class in the given schemas.
         The elements returned are the native representation of the elements
@@ -996,13 +1006,19 @@ def extension_elements_to_elements(extension_elements, schemas):
         return res
 
     for extension_element in extension_elements:
-        for schema in schemas:
-            inst = extension_element_to_element(extension_element,
-                                                schema.ELEMENT_FROM_STRING,
-                                                schema.NAMESPACE)
-            if inst:
-                res.append(inst)
-                break
+        convert_results = (
+            inst
+            for schema in schemas
+            for inst in [
+                extension_element_to_element(
+                    extension_element, schema.ELEMENT_FROM_STRING, schema.NAMESPACE
+                )
+            ]
+            if inst
+        )
+        result = next(convert_results, extension_element if keep_unmatched else None)
+        if result:
+            res.append(result)
 
     return res
 

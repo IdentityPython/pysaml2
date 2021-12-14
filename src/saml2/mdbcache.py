@@ -4,7 +4,6 @@ from pymongo.mongo_client import MongoClient
 
 __author__ = 'rolandh'
 
-#import cjson
 import time
 from datetime import datetime
 

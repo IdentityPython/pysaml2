@@ -53,14 +53,21 @@ SIG_AVAIL_ALG = SIG_ALLOWED_ALG + (('SIG_RSA_MD5', SIG_RSA_MD5),)
 
 MAC_SHA1 = 'http://www.w3.org/2000/09/xmldsig#hmac-sha1'
 
-C14N = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315'
-C14N_WITH_C = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments'
-ALG_EXC_C14N = 'http://www.w3.org/2001/10/xml-exc-c14n#'
-
 TRANSFORM_XSLT = 'http://www.w3.org/TR/1999/REC-xslt-19991116'
 TRANSFORM_XPATH = 'http://www.w3.org/TR/1999/REC-xpath-19991116'
 TRANSFORM_ENVELOPED = 'http://www.w3.org/2000/09/xmldsig#enveloped-signature'
+TRANSFORM_C14N = 'http://www.w3.org/2001/10/xml-exc-c14n#'
+TRANSFORM_C14N_WITH_COMMENTS = 'http://www.w3.org/2001/10/xml-exc-c14n#WithComments'
 
+ALLOWED_CANONICALIZATIONS = {
+    TRANSFORM_C14N,
+    TRANSFORM_C14N_WITH_COMMENTS,
+}
+ALLOWED_TRANSFORMS = {
+    TRANSFORM_ENVELOPED,
+    TRANSFORM_C14N,
+    TRANSFORM_C14N_WITH_COMMENTS,
+}
 
 class DefaultSignature(object):
     class _DefaultSignature(object):

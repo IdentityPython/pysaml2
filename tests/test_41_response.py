@@ -48,28 +48,38 @@ class TestResponse:
 
             self._resp_ = server.create_authn_response(
                 IDENTITY,
-                "id12",  # in_response_to
-                "http://lingon.catalogix.se:8087/",
-                # consumer_url
-                "urn:mace:example.com:saml:roland:sp",
-                # sp_entity_id
-                name_id=name_id)
+                in_response_to="id12",
+                destination="http://lingon.catalogix.se:8087/",
+                sp_entity_id="urn:mace:example.com:saml:roland:sp",
+                name_id=name_id,
+            )
 
             self._sign_resp_ = server.create_authn_response(
                 IDENTITY,
-                "id12",  # in_response_to
-                "http://lingon.catalogix.se:8087/",  # consumer_url
-                "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+                in_response_to="id12",
+                destination="http://lingon.catalogix.se:8087/",
+                sp_entity_id="urn:mace:example.com:saml:roland:sp",
                 name_id=name_id,
-                sign_assertion=True)
+                sign_assertion=True,
+            )
 
             self._resp_authn = server.create_authn_response(
                 IDENTITY,
-                "id12",  # in_response_to
-                "http://lingon.catalogix.se:8087/",  # consumer_url
-                "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+                in_response_to="id12",
+                destination="http://lingon.catalogix.se:8087/",
+                sp_entity_id="urn:mace:example.com:saml:roland:sp",
                 name_id=name_id,
-                authn=AUTHN)
+                authn=AUTHN,
+            )
+
+            self._resp_issuer_none = server.create_authn_response(
+                IDENTITY,
+                in_response_to="id12",
+                destination="http://lingon.catalogix.se:8087/",
+                sp_entity_id="urn:mace:example.com:saml:roland:sp",
+                name_id=name_id,
+            )
+            self._resp_issuer_none.issuer = None
 
             conf = config.SPConfig()
             conf.load_file("server_conf")
@@ -77,27 +87,45 @@ class TestResponse:
 
     def test_1(self):
         xml_response = ("%s" % (self._resp_,))
-        resp = response_factory(xml_response, self.conf,
-                                return_addrs=[
-                                    "http://lingon.catalogix.se:8087/"],
-                                outstanding_queries={
-                                    "id12": "http://localhost:8088/sso"},
-                                timeslack=TIMESLACK, decode=False)
+        resp = response_factory(
+            xml_response, self.conf,
+            return_addrs=["http://lingon.catalogix.se:8087/"],
+            outstanding_queries={"id12": "http://localhost:8088/sso"},
+            timeslack=TIMESLACK,
+            decode=False,
+        )
 
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
 
     def test_2(self):
         xml_response = self._sign_resp_
-        resp = response_factory(xml_response, self.conf,
-                                return_addrs=[
-                                    "http://lingon.catalogix.se:8087/"],
-                                outstanding_queries={
-                                    "id12": "http://localhost:8088/sso"},
-                                timeslack=TIMESLACK, decode=False)
+        resp = response_factory(
+            xml_response,
+            self.conf,
+            return_addrs=["http://lingon.catalogix.se:8087/"],
+            outstanding_queries={"id12": "http://localhost:8088/sso"},
+            timeslack=TIMESLACK,
+            decode=False,
+        )
 
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
+
+    def test_issuer_none(self):
+        xml_response = ("%s" % (self._resp_issuer_none,))
+        resp = response_factory(
+            xml_response,
+            self.conf,
+            return_addrs=["http://lingon.catalogix.se:8087/"],
+            outstanding_queries={"id12": "http://localhost:8088/sso"},
+            timeslack=TIMESLACK,
+            decode=False,
+        )
+
+        assert isinstance(resp, StatusResponse)
+        assert isinstance(resp, AuthnResponse)
+        assert resp.issuer() == ""
 
     @mock.patch('saml2.time_util.datetime')
     def test_false_sign(self, mock_datetime):

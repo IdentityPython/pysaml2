@@ -49,7 +49,7 @@ DIGEST_ALG = None
 CONFIG = {
     "entityid": "%s/idp.xml" % BASE,
     "description": "My IDP",
-    "valid_for": 168,
+    #"valid_for": 168,
     "service": {
         "aa": {
             "endpoints": {
