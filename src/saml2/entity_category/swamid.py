@@ -84,4 +84,7 @@ RELEASE = {
     (ESI, COCO): MYACADEMICID_ESI + GEANT_COCO,
 }
 
-ONLY_REQUIRED = {COCO: True}
+ONLY_REQUIRED = {
+    COCO: True,
+    (ESI, COCO): True,
+}

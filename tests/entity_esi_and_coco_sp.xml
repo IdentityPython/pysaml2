@@ -69,6 +69,7 @@ wHyaxzYldWmVC5omkgZeAdCGpJ316GQF8Zwg/yDOUzm4cvGeIESf1Q6ZxBwI6zGE
     <ns0:AttributeConsumingService index="0">
         <ns0:ServiceName xml:lang="en">esi-coco-SP</ns0:ServiceName>
         <ns0:ServiceDescription xml:lang="en">ESI and COCO SP</ns0:ServiceDescription>
+        <ns0:RequestedAttribute FriendlyName="schacHomeOrganization" Name="urn:oid:1.3.6.1.4.1.25178.1.2.9" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="true" />
         <ns0:RequestedAttribute FriendlyName="eduPersonScopedAffiliation" Name="urn:oid:1.3.6.1.4.1.5923.1.1.1.9" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="true" />
     </ns0:AttributeConsumingService>
   </ns0:SPSSODescriptor>
