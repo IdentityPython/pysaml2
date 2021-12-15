@@ -298,6 +298,7 @@ def test_filter_ava_esi_coco():
             "entity_categories": ["swamid"]
         }
     }
+
     policy = Policy(policy_conf, mds)
 
     ava = {
@@ -312,17 +313,29 @@ def test_filter_ava_esi_coco():
         ]
     }
 
-    ava = policy.filter(ava, entity_id)
+    requested_attributes = [
+        {
+            'friendly_name': 'eduPersonScopedAffiliation',
+            'name': '1.3.6.1.4.1.5923.1.1.1.9',
+            'name_format': NAME_FORMAT_URI,
+            'is_required': 'true'
+        },
+        {
+            'friendly_name': 'schacHomeOrganization',
+            'name': '1.3.6.1.4.1.25178.1.2.9',
+            'name_format': NAME_FORMAT_URI,
+            'is_required': 'true'
+        }
+    ]
+
+    ava = policy.filter(ava, entity_id, required=requested_attributes)
 
     assert _eq(list(ava.keys()), [
-        'mail',
-        'givenName',
-        'sn',
-        'c',
-        'schacHomeOrganization',
         'eduPersonScopedAffiliation',
+        'schacHomeOrganization',
         'schacPersonalUniqueCode'
     ])
-    assert _eq(ava["mail"], ["test@example.com"])
+    assert _eq(ava["eduPersonScopedAffiliation"], ["student@example.com"])
+    assert _eq(ava["schacHomeOrganization"], ["example.com"])
     assert _eq(ava["schacPersonalUniqueCode"],
                ["urn:schac:personalUniqueCode:int:esi:ladok.se:externtstudentuid-00000000-1111-2222-3333-444444444444"])
