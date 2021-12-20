@@ -30,6 +30,7 @@ from saml2.extension.idpdisc import BINDING_DISCO
 from saml2.extension.idpdisc import DiscoveryResponse
 from saml2.md import NAMESPACE as NS_MD
 from saml2.md import EntitiesDescriptor
+from saml2.md import EntityDescriptor
 from saml2.md import ArtifactResolutionService
 from saml2.md import NameIDMappingService
 from saml2.md import SingleSignOnService
@@ -44,6 +45,7 @@ from saml2.time_util import add_duration
 from saml2.time_util import before
 from saml2.time_util import str_to_time
 from saml2.validate import NotValid
+from saml2.sigver import SignatureError
 from saml2.sigver import security_context
 from saml2.extension.mdattr import NAMESPACE as NS_MDATTR
 from saml2.extension.mdattr import EntityAttributes
@@ -742,14 +744,50 @@ class InMemoryMetaData(MetaData):
         if not self.signed():
             return True
 
-        fallback_name = "{ns}:{tag}".format(
-            ns=md.EntitiesDescriptor.c_namespace, tag=md.EntitiesDescriptor.c_tag
-        )
-        node_name = self.node_name or fallback_name
+        if self.node_name is not None:
+            try:
+                self.security.verify_signature(
+                    txt, node_name=self.node_name, cert_file=self.cert
+                )
+            except SignatureError as e:
+                error_context = {
+                    "message": "Failed to verify signature",
+                    "node_name": self.node_name,
+                }
+                raise SignatureError(error_context) from e
+            else:
+                return True
 
-        return self.security.verify_signature(
-            txt, node_name=node_name, cert_file=self.cert
+        def try_verify_signature(node_name):
+            try:
+                self.security.verify_signature(
+                    txt, node_name=node_name, cert_file=self.cert
+                )
+            except SignatureError as e:
+                return False
+            else:
+                return True
+
+        descriptor_names = [
+            f"{ns}:{tag}"
+            for ns, tag in [
+                (EntitiesDescriptor.c_namespace, EntitiesDescriptor.c_tag),
+                (EntityDescriptor.c_namespace, EntityDescriptor.c_tag),
+            ]
+        ]
+
+        verified_w_descriptor_name = any(
+            try_verify_signature(node_name)
+            for node_name in descriptor_names
         )
+        if not verified_w_descriptor_name:
+            error_context = {
+                "message": "Failed to verify signature",
+                "descriptor_names": descriptor_names,
+            }
+            raise SignatureError(error_context)
+
+        return verified_w_descriptor_name
 
 
 class MetaDataFile(InMemoryMetaData):
@@ -926,7 +964,7 @@ class MetaDataMDX(InMemoryMetaData):
         # that use case since it is unlikely to be leveraged for most
         # flows.
         self.node_name = "{ns}:{tag}".format(
-            ns=md.EntityDescriptor.c_namespace, tag=md.EntityDescriptor.c_tag
+            ns=EntityDescriptor.c_namespace, tag=EntityDescriptor.c_tag
         )
 
     def load(self, *args, **kwargs):
