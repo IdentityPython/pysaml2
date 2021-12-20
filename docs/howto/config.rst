@@ -398,6 +398,12 @@ will be accepted as valid.
 When the paramenter *disable_ssl_certificate_validation* is set to True the
 validity of ssl certificate will be skipped.
 
+When using a remote metadata source, the `node_name` option can be set to
+define the name of the root node of the XML document, if needed. Usually,
+the node name will be `urn:oasis:names:tc:SAML:2.0:metadata:EntityDescriptor`
+or `urn:oasis:names:tc:SAML:2.0:metadata:EntityDescriptor` (node namespace
+and node tag name).
+
 When using MDQ, the `freshness_period` option can be set to define a period for
 which the metadata fetched from the the MDQ server are considered fresh. After
 that period has passed the metadata are not valid anymore and must be fetched
