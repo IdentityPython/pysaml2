@@ -424,7 +424,7 @@ class SSO(Service):
                 issuer = _req.issuer.text
                 _certs = IDP.metadata.certs(issuer, "any", "signing")
                 verified_ok = False
-                for cert in _certs:
+                for cert_name, cert in _certs:
                     if verify_redirect_signature(saml_msg, IDP.sec.sec_backend, cert):
                         verified_ok = True
                         break
