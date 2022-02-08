@@ -1,0 +1,65 @@
+name: Publish to PyPI and TestPyPI
+
+on:
+  release:
+    types:
+    - published
+
+jobs:
+  check_secrets:
+    name: Check secrets
+    runs-on: ubuntu-latest
+    outputs:
+      ALL: ${{ steps.pypi_api_token.outputs.is_set && steps.test_pypi_api_token.outputs.is_set }}
+      PYPI_API_TOKEN: ${{ steps.pypi_api_token.outputs.is_set }}
+      TEST_PYPI_API_TOKEN: ${{ steps.test_pypi_api_token.outputs.is_set }}
+    steps:
+    -
+      name: Check PYPI_API_TOKEN
+      id: pypi_api_token
+      run: |
+        echo "is_set: ${{ secrets.PYPI_API_TOKEN != '' }}"
+        echo "::set-output name=is_set::${{ secrets.PYPI_API_TOKEN != '' }}"
+    -
+      name: Check TEST_PYPI_API_TOKEN
+      id: test_pypi_api_token
+      run: |
+        echo "is_set: ${{ secrets.TEST_PYPI_API_TOKEN != '' }}"
+        echo "::set-output name=is_set::${{ secrets.TEST_PYPI_API_TOKEN != '' }}"
+  build_and_publish:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    needs:
+    - check_secrets
+    steps:
+    -
+      name: Checkout
+      uses: actions/checkout@v2
+    -
+      name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+        architecture: x64
+    -
+      name: Build binary wheel and source tarball
+      run: |
+        python -m pip install wheel packaging
+        python setup.py sdist bdist_wheel
+    -
+      if: ${{ needs.check_secrets.outputs.TEST_PYPI_API_TOKEN == 'true' && github.event.release.prerelease }}
+      name: Publish to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages_dir: ./dist/
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+        verbose: true
+    -
+      if: ${{ needs.check_secrets.outputs.PYPI_API_TOKEN == 'true' && !github.event.release.prerelease }}
+      name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages_dir: ./dist/
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        verbose: true
