@@ -1,6 +1,22 @@
 # Changelog
 
 
+## 7.1.1 (2022-02-22)
+
+- Process and verify the metadata signature for EntitiesDescriptor and EntityDescriptor
+- Fix client to be able to retry creating an AuthnRequest with a different binding
+- Allow requested_authn_context to be an object
+- AttributeValues are optional; allow Attributes to not have values
+- Update SWAMID entity category to support https://myacademicid.org/entity-categories/esi
+- Fix signing for requests with the SOAP binding
+- tests: new test case for signed SOAP LogoutRequests
+- docs: document the metadata node_name option for the remote source
+- examples: align with latest updates
+- deps: declare setuptools as a requirement for processing the package version
+- build: add python 3.9 and 3.10 to classifiers
+- misc: linter fixes
+
+
 ## 7.1.0 (2021-11-16)
 
 - Fix signature verification for the redirect binding for AuthnRequest and
