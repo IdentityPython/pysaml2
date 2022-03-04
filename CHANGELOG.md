@@ -1,6 +1,14 @@
 # Changelog
 
 
+## 7.1.2 (2022-03-04)
+
+- fix assertion policy filter to try to resolve the local_name using the friendly name if it failed with the name_format
+- reload metadata in-place to avoid memory leak
+- tests: Restrict pymongo to v3
+- docs: highlight installation command
+
+
 ## 7.1.1 (2022-02-22)
 
 - Process and verify the metadata signature for EntitiesDescriptor and EntityDescriptor
