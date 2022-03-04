@@ -86,25 +86,17 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
     """
 
     def _match_attr_name(attr, ava):
-        local_name = None
+        name_format = attr.get('name_format')
+        name = attr.get('name')
+        friendly_name = attr.get('friendly_name')
+        local_name = get_local_name(acs, name, name_format) or friendly_name
 
-        for a in ['name_format', 'friendly_name']:
-            _val = attr.get(a)
-            if _val:
-                if a == 'name_format':
-                    local_name = get_local_name(acs, attr['name'], _val)
-                else:
-                    local_name = _val
-                break
-
-        if local_name:
-            _fn = _match(local_name, ava)
-        else:
-            _fn = None
-
-        if not _fn:  # In the unlikely case that someone has provided us with
-            #  URIs as attribute names
-            _fn = _match(attr["name"], ava)
+        _fn = (
+            _match(local_name, ava)
+            if local_name
+            # In the unlikely case that someone has provided us with URIs as attribute names
+            else _match(name, ava)
+        )
 
         return _fn
 
