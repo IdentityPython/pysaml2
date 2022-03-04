@@ -23,7 +23,7 @@ other frameworks.
 
 Install
 =======
-You can install with `pip install pysaml2`
+You can install with :code:`pip install pysaml2`
 
 Testing
 =======
