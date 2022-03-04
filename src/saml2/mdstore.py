@@ -1111,11 +1111,14 @@ class MetadataStore(MetaData):
         self.metadata[key] = _md
 
     def reload(self, spec):
+        # Save the old set of metadata
         old_metadata = self.metadata
         self.metadata = {}
         try:
+            # Reload the metadata based on the spec
             self.imp(spec)
         except Exception as e:
+            # Something went wrong, restore the previous metadata
             self.metadata = old_metadata
             raise e
 
