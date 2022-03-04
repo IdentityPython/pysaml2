@@ -1,7 +1,7 @@
 coverage
 mock
 pyasn1
-pymongo
+pymongo >=3,<4
 pytest
 pytest-cov
 responses
