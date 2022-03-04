@@ -1110,6 +1110,15 @@ class MetadataStore(MetaData):
         _md.load()
         self.metadata[key] = _md
 
+    def reload(self, spec):
+        old_metadata = self.metadata
+        self.metadata = {}
+        try:
+            self.imp(spec)
+        except Exception as e:
+            self.metadata = old_metadata
+            raise e
+
     def imp(self, spec):
         # This serves as a backwards compatibility
         if type(spec) is dict:
