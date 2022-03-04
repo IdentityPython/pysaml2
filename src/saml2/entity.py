@@ -218,19 +218,11 @@ class Entity(HTTPBase):
         """
         logger.debug("Loading new metadata")
         try:
-            new_metadata = self.config.load_metadata(metadata_conf)
+            self.metadata.reload(metadata_conf)
         except Exception as ex:
             logger.error("Loading metadata failed", exc_info=ex)
             return False
 
-        logger.debug("Applying new metadata to main config")
-        ( self.metadata, self.sec.metadata, self.config.metadata ) = [new_metadata]*3
-        policy = getattr(self.config, "_%s_policy" % self.entity_type, None)
-        if policy and policy.metadata_store:
-            logger.debug("Applying new metadata to %s policy", self.entity_type)
-            policy.metadata_store = self.metadata
-
-        logger.debug("Applying new metadata source_id")
         self.sourceid = self.metadata.construct_source_id()
 
         return True
