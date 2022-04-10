@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-import mock
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from contextlib import closing
 
@@ -127,9 +128,9 @@ class TestResponse:
         assert isinstance(resp, AuthnResponse)
         assert resp.issuer() == ""
 
-    @mock.patch('saml2.time_util.datetime')
+    @patch('saml2.time_util.datetime')
     def test_false_sign(self, mock_datetime):
-        mock_datetime.utcnow = mock.Mock(
+        mock_datetime.utcnow = Mock(
             return_value=datetime.datetime(2016, 9, 4, 9, 59, 39)
         )
         with open(FALSE_ASSERT_SIGNED) as fp:

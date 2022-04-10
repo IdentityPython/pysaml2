@@ -1,5 +1,4 @@
 coverage
-mock
 pyasn1
 pymongo >=3,<4
 pytest

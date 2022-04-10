@@ -8,7 +8,6 @@ from saml2.samlp import response_from_string
 from saml2.server import Server
 from saml2 import client
 from saml2 import config
-from mock.mock import Mock, MagicMock
 import saml2.xmldsig as ds
 
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
