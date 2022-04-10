@@ -68,15 +68,55 @@ mail = to_dict(md.RequestedAttribute(name="urn:oid:0.9.2342.19200300.100.1.3",
 
 
 def test_filter_on_attributes_0():
-    a = to_dict(Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                          friendly_name="serialNumber"), ONTS)
+    a = to_dict(
+        Attribute(
+            name="urn:oid:2.5.4.5",
+            name_format=NAME_FORMAT_URI,
+            friendly_name="serialNumber",
+        ),
+        ONTS,
+    )
 
-    required = [a]
-    ava = {"serialNumber": ["12345"]}
+    b = to_dict(
+        Attribute(
+            name="urn:oasis:names:tc:SAML:attribute:subject-id",
+            name_format=NAME_FORMAT_URI,
+            friendly_name="subject-id",
+        ),
+        ONTS,
+    )
+
+    c = to_dict(
+        Attribute(
+            name="unmapped_attr_name",
+            name_format=NAME_FORMAT_URI,
+            friendly_name="unmapped attr name",
+        ),
+        ONTS,
+    )
+
+    d = to_dict(
+        Attribute(
+            name="urn:oid:2.5.4.6",
+            friendly_name="c",
+        ),
+        ONTS,
+    )
+
+    required = [a, b, c, d]
+    ava = {
+        "serialNumber": ["12345"],
+        "subject-id": ["id_12345"],
+        "unmapped_attr_name": ["abcd"],
+        "c": ["some-country"],
+    }
 
     ava = filter_on_attributes(ava, required, acs=ac_factory())
-    assert list(ava.keys()) == ["serialNumber"]
+    assert set(ava.keys()) == {"serialNumber", "subject-id", "unmapped_attr_name", "c"}
     assert ava["serialNumber"] == ["12345"]
+    assert ava["subject-id"] == ["id_12345"]
+    assert ava["unmapped_attr_name"] == ["abcd"]
+    assert ava["c"] == ["some-country"]
 
 
 def test_filter_on_attributes_1():
