@@ -5,7 +5,7 @@ import cryptography.hazmat.primitives.hashes as _hashes
 import cryptography.hazmat.primitives.serialization as _serialization
 
 
-def load_pem_private_key(data, password):
+def load_pem_private_key(data, password=None):
     """Load RSA PEM certificate."""
     key = _serialization.load_pem_private_key(data, password)
     return key

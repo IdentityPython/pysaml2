@@ -2,13 +2,15 @@ import copy
 from saml2.config import SPConfig
 from saml2.metadata import create_metadata_string
 from saml2.metadata import entity_descriptor
-from saml2.metadata import read_cert
+from saml2.cert import read_cert_from_file as read_cert
+from saml2.cert import CertificateError
 from saml2.saml import NAME_FORMAT_URI, NAME_FORMAT_BASIC
 from saml2 import sigver
 
 from pathutils import full_path
 
-__author__ = 'roland'
+from pytest import raises
+
 
 sp_conf = {
     "entityid": "urn:mace:umu.se:saml:roland:sp",
@@ -70,7 +72,7 @@ def test_cert_trailing_newlines_ignored():
 
 
 def test_invalid_cert_raises_error():
-    with pytest.raises(ValueError):
+    with raises(CertificateError):
         read_cert(full_path("malformed.crt"))
 
 

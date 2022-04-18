@@ -9,10 +9,11 @@ from saml2 import class_name
 from saml2 import time_util
 from saml2 import saml, samlp
 from saml2 import config
-from saml2.sigver import pre_encryption_part, read_cert_from_file
+from saml2.cert import read_cert_from_file
+from saml2.cert import CertificateError
+from saml2.sigver import pre_encryption_part
 from saml2.sigver import make_temp
 from saml2.sigver import XmlsecError
-from saml2.sigver import CertificateError
 from saml2.mdstore import MetadataStore
 from saml2.saml import assertion_from_string
 from saml2.saml import EncryptedAssertion
@@ -97,8 +98,7 @@ def test_cert_from_instance_1():
     assert certs[0] == CERT1
 
 
-@pytest.mark.skipif(not decoder,
-                    reason="pyasn1 is not installed")
+@pytest.mark.skipif(not decoder, reason="pyasn1 is not installed")
 def test_cert_from_instance_ssp():
     with open(SIMPLE_SAML_PHP_RESPONSE) as fp:
         xml_response = fp.read()
@@ -1120,7 +1120,7 @@ def test_cert_trailing_newlines_ignored():
 
 
 def test_invalid_cert_raises_error():
-    with pytest.raises(CertificateError):
+    with raises(CertificateError):
         read_cert_from_file(full_path("malformed.crt"))
 
 

@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-from cryptography import x509
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.serialization import Encoding
 from saml2.algsupport import algorithm_support_in_metadata
 from saml2.md import AttributeProfile
-from saml2.sigver import security_context, read_cert_from_file
+from saml2.sigver import security_context
+from saml2.cert import read_cert_from_file
 from saml2.config import Config
 from saml2.validate import valid_instance
 from saml2.time_util import in_a_while
