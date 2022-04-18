@@ -10,7 +10,6 @@ import logging
 from warnings import warn as _warn
 
 import cryptography.fernet as _fernet
-import cryptography.hazmat.backends as _backends
 import cryptography.hazmat.primitives.ciphers as _ciphers
 
 from .errors import SymmetricCryptographyError
@@ -158,10 +157,7 @@ class AESCipher(object):
         except KeyError:
             raise Exception('Unsupported chaining mode: {}'.format(cmode))
 
-        cipher = _ciphers.Cipher(
-                _ciphers.algorithms.AES(self.key),
-                mode(iv),
-                backend=_backends.default_backend())
+        cipher = _ciphers.Cipher(_ciphers.algorithms.AES(self.key), mode(iv))
 
         return cipher, iv
 

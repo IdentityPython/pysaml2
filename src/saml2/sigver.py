@@ -13,6 +13,7 @@ import re
 import six
 import sys
 from uuid import uuid4 as gen_random_key
+
 from time import mktime
 from tempfile import NamedTemporaryFile
 from subprocess import Popen
@@ -43,6 +44,8 @@ from saml2 import class_name
 from saml2 import saml
 from saml2 import ExtensionElement
 from saml2.cert import OpenSSLWrapper
+from saml2.cert import read_cert_from_file
+from saml2.cert import CertificateError
 from saml2.extension import pefim
 from saml2.extension.pefim import SPCertEnc
 from saml2.saml import EncryptedAssertion
@@ -108,21 +111,12 @@ class BadSignature(SigverError):
     pass
 
 
-class CertificateError(SigverError):
-    pass
-
-
 def get_pem_wrapped_unwrapped(cert):
     begin_cert = "-----BEGIN CERTIFICATE-----\n"
     end_cert = "\n-----END CERTIFICATE-----\n"
     unwrapped_cert = re.sub(f'{begin_cert}|{end_cert}', '', cert)
     wrapped_cert = f'{begin_cert}{unwrapped_cert}{end_cert}'
     return wrapped_cert, unwrapped_cert
-
-
-def read_file(*args, **kwargs):
-    with open(*args, **kwargs) as handler:
-        return handler.read()
 
 
 def rm_xmltag(statement):
@@ -489,8 +483,9 @@ def pem_format(key):
 
 
 def import_rsa_key_from_file(filename):
-    data = read_file(filename, 'rb')
-    key = saml2.cryptography.asymmetric.load_pem_private_key(data, None)
+    with open(filename, "rb") as fd:
+        data = fd.read()
+    key = saml2.cryptography.asymmetric.load_pem_private_key(data)
     return key
 
 
@@ -623,55 +618,6 @@ def verify_redirect_signature(saml_msg, crypto, cert=None, sigkey=None):
             _sign = base64.b64decode(saml_msg['Signature'])
 
             return bool(signer.verify(string, _sign, _key))
-
-
-def make_str(txt):
-    if isinstance(txt, six.string_types):
-        return txt
-    else:
-        return txt.decode()
-
-
-def read_cert_from_file(cert_file, cert_type):
-    """ Reads a certificate from a file. The assumption is that there is
-    only one certificate in the file
-
-    :param cert_file: The name of the file
-    :param cert_type: The certificate type
-    :return: A base64 encoded certificate as a string or the empty string
-    """
-
-    if not cert_file:
-        return ''
-
-    if cert_type == 'pem':
-        _a = read_file(cert_file, 'rb').decode()
-        _b = _a.replace('\r\n', '\n')
-        lines = _b.split('\n')
-
-        for pattern in (
-                '-----BEGIN CERTIFICATE-----',
-                '-----BEGIN PUBLIC KEY-----'):
-            if pattern in lines:
-                lines = lines[lines.index(pattern) + 1:]
-                break
-        else:
-            raise CertificateError('Strange beginning of PEM file')
-
-        for pattern in (
-                '-----END CERTIFICATE-----',
-                '-----END PUBLIC KEY-----'):
-            if pattern in lines:
-                lines = lines[:lines.index(pattern)]
-                break
-        else:
-            raise CertificateError('Strange end of PEM file')
-        return make_str(''.join(lines).encode())
-
-    if cert_type in ['der', 'cer', 'crt']:
-        data = read_file(cert_file, 'rb')
-        _cert = base64.b64encode(data)
-        return make_str(_cert)
 
 
 class CryptoBackend(object):

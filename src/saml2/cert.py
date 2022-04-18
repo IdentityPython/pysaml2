@@ -5,9 +5,10 @@ import datetime
 import dateutil.parser
 import pytz
 import six
-from OpenSSL import crypto
-from os.path import join
 from os import remove
+from os.path import join
+
+from OpenSSL import crypto
 
 import saml2.cryptography.pki
 
@@ -323,8 +324,7 @@ class OpenSSLWrapper(object):
                 cert_algorithm = cert_algorithm.decode('ascii')
                 cert_str = cert_str.encode('ascii')
 
-            cert_crypto = saml2.cryptography.pki.load_pem_x509_certificate(
-                    cert_str)
+            cert_crypto = saml2.cryptography.pki.load_pem_x509_certificate(cert_str)
 
             try:
                 crypto.verify(ca_cert, cert_crypto.signature,
@@ -335,3 +335,28 @@ class OpenSSLWrapper(object):
                 return False, "Certificate is incorrectly signed."
         except Exception as e:
             return False, "Certificate is not valid for an unknown reason. %s" % str(e)
+
+
+def read_cert_from_file(cert_file, cert_type="pem"):
+    """Read a certificate from a file.
+
+    If there are multiple certificates in the file, the first is returned.
+
+    :param cert_file: The name of the file
+    :param cert_type: The certificate type
+    :return: A base64 encoded certificate as a string or the empty string
+    """
+    if not cert_file:
+        return ""
+
+    with open(cert_file, "rb") as fp:
+        data = fp.read()
+
+    try:
+        cert = saml2.cryptography.pki.load_x509_certificate(data, cert_type)
+        pem_data = saml2.cryptography.pki.get_public_bytes_from_cert(cert)
+    except Exception as e:
+        raise CertificateError(e)
+
+    pem_data_no_headers = "".join(pem_data.splitlines()[1:-1])
+    return pem_data_no_headers

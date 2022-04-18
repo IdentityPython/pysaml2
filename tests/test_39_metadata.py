@@ -1,12 +1,16 @@
 import copy
 from saml2.config import SPConfig
-from saml2.metadata import create_metadata_string, entity_descriptor
+from saml2.metadata import create_metadata_string
+from saml2.metadata import entity_descriptor
+from saml2.cert import read_cert_from_file as read_cert
+from saml2.cert import CertificateError
 from saml2.saml import NAME_FORMAT_URI, NAME_FORMAT_BASIC
 from saml2 import sigver
 
 from pathutils import full_path
 
-__author__ = 'roland'
+from pytest import raises
+
 
 sp_conf = {
     "entityid": "urn:mace:umu.se:saml:roland:sp",
@@ -62,5 +66,18 @@ def test_signed_metadata_proper_str_bytes_handling():
     sp_metadata = create_metadata_string('', config=cnf, sign=True)
 
 
+def test_cert_trailing_newlines_ignored():
+    assert "".join(read_cert(full_path("extra_lines.crt"))) \
+           == "".join(read_cert(full_path("test_2.crt")))
+
+
+def test_invalid_cert_raises_error():
+    with raises(CertificateError):
+        read_cert(full_path("malformed.crt"))
+
+
 if __name__ == '__main__':
     test_requested_attribute_name_format()
+    test_cert_trailing_newlines_ignored()
+    test_invalid_cert_raises_error()
+    test_signed_metadata_proper_str_bytes_handling()

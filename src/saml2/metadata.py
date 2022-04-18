@@ -2,6 +2,7 @@
 from saml2.algsupport import algorithm_support_in_metadata
 from saml2.md import AttributeProfile
 from saml2.sigver import security_context
+from saml2.cert import read_cert_from_file
 from saml2.config import Config
 from saml2.validate import valid_instance
 from saml2.time_util import in_a_while
@@ -688,14 +689,14 @@ def entity_descriptor(confd):
     enc_cert = None
     if confd.cert_file is not None:
         mycert = []
-        mycert.append("".join(read_cert(confd.cert_file)))
+        mycert.append(read_cert_from_file(confd.cert_file))
         if confd.additional_cert_files is not None:
             for _cert_file in confd.additional_cert_files:
-                mycert.append("".join(read_cert(_cert_file)))
+                mycert.append(read_cert_from_file(_cert_file))
     if confd.encryption_keypairs is not None:
         enc_cert = []
         for _encryption in confd.encryption_keypairs:
-            enc_cert.append("".join(read_cert(_encryption["cert_file"])))
+            enc_cert.append(read_cert_from_file(_encryption["cert_file"]))
 
     entd = md.EntityDescriptor()
     entd.entity_id = confd.entityid
@@ -844,9 +845,3 @@ def sign_entity_descriptor(edesc, ident, secc, sign_alg=None, digest_alg=None):
     xmldoc = secc.sign_statement("%s" % edesc, class_name(edesc))
     edesc = md.entity_descriptor_from_string(xmldoc)
     return edesc, xmldoc
-
-
-def read_cert(path):
-    with open(path) as fp:
-        lines = fp.readlines()
-    return lines[1:-1]
