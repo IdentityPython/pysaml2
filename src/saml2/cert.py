@@ -340,7 +340,7 @@ class OpenSSLWrapper(object):
 def read_cert_from_file(cert_file, cert_type="pem"):
     """Read a certificate from a file.
 
-    The assumption is that there is only one certificate in the file.
+    If there are multiple certificates in the file, the first is returned.
 
     :param cert_file: The name of the file
     :param cert_type: The certificate type
