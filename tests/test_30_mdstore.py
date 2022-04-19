@@ -345,6 +345,16 @@ def test_mdx_service():
     assert len(certs) == 1
 
 
+@patch('saml2.httpbase.requests.get')
+def test_mdx_service_request_timeout(mock_request):
+    entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+    url = "http://mdx.example.com/entities/{}".format(MetaDataMDX.sha1_entity_transform(entity_id))
+
+    mdx = MetaDataMDX("http://mdx.example.com", http_client_timeout=10)
+    mdx.service(entity_id, "idpsso_descriptor", "single_sign_on_service")
+    mock_request.assert_called_with(url, headers={'Accept': 'application/samlmetadata+xml'}, timeout=10)
+
+
 @responses.activate
 def test_mdx_single_sign_on_service():
     entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
@@ -462,12 +472,14 @@ def test_load_extern_incommon(mock_request):
 
     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
     mds = MetadataStore(ATTRCONV, sec_config,
-                        disable_ssl_certificate_validation=True)
+                        disable_ssl_certificate_validation=True,
+                        http_client_timeout=10)
 
     mds.imp(METADATACONF["10"])
     print(mds)
     assert mds
     assert len(mds.keys())
+    mock_request.assert_called_with('GET', 'http://md.incommon.org/InCommon/InCommon-metadata-export.xml', allow_redirects=False, verify=False, timeout=10)
 
 
 def test_load_local():
@@ -495,9 +507,12 @@ def test_load_remote_encoding(mock_request):
 
     crypto = sigver._get_xmlsec_cryptobackend()
     sc = sigver.SecurityContext(crypto, key_type="", cert_type="")
-    httpc = HTTPBase()
-    mds = MetaDataExtern(ATTRCONV, 'http://metadata.aai.switch.ch/metadata.aaitest.xml', sc, full_path('SWITCHaaiRootCA.crt.pem'), httpc)
+    url = 'http://metadata.aai.switch.ch/metadata.aaitest.xml'
+    httpc = HTTPBase(http_client_timeout=10)
+    mds = MetaDataExtern(ATTRCONV, url, sc, full_path('SWITCHaaiRootCA.crt.pem'), httpc)
     mds.load()
+
+    mock_request.assert_called_with('GET', url, allow_redirects=False, verify=True, timeout=10)
 
 
 def test_load_string():

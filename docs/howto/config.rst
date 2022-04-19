@@ -113,6 +113,15 @@ Example::
 
 Whether debug information should be sent to the log file.
 
+http_client_timeout
+^^^^^^^^^^^^^^^^^^^
+
+Example::
+
+    http_client_timeout: 10
+
+The timeout of HTTP requests, in seconds. Defaults to None.
+
 additional_cert_files
 ^^^^^^^^^^^^^^^^^^^^^
 

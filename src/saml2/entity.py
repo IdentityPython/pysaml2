@@ -165,7 +165,7 @@ class Entity(HTTPBase):
                 continue
 
             if _val.startswith("http"):
-                r = requests.request("GET", _val)
+                r = requests.request("GET", _val, timeout=self.config.http_client_timeout)
                 if r.status_code == 200:
                     tmp = make_temp(r.text, ".pem", False, self.config.delete_tmpfiles)
                     setattr(self.config, item, tmp.name)
@@ -175,7 +175,7 @@ class Entity(HTTPBase):
 
         HTTPBase.__init__(self, self.config.verify_ssl_cert,
                           self.config.ca_certs, self.config.key_file,
-                          self.config.cert_file)
+                          self.config.cert_file, self.config.http_client_timeout)
 
         if self.config.vorg:
             for vo in self.config.vorg.values():

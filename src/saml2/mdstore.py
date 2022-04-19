@@ -928,7 +928,8 @@ class MetaDataMDX(InMemoryMetaData):
         return transform
 
     def __init__(self, url=None, security=None, cert=None,
-                 entity_transform=None, freshness_period=None, **kwargs):
+                 entity_transform=None, freshness_period=None,
+                 http_client_timeout=None, **kwargs):
         """
         :params url: mdx service url
         :params security: SecurityContext()
@@ -940,6 +941,7 @@ class MetaDataMDX(InMemoryMetaData):
         sha1 transformation.
         :params freshness_period: a duration in the format described at
         https://www.w3.org/TR/xmlschema-2/#duration
+        :params http_client_timeout: timeout of http requests
         """
         super(MetaDataMDX, self).__init__(None, **kwargs)
         if not url:
@@ -956,6 +958,7 @@ class MetaDataMDX(InMemoryMetaData):
         self.security = security
         self.freshness_period = freshness_period or DEFAULT_FRESHNESS_PERIOD
         self.expiration_date = {}
+        self.http_client_timeout = http_client_timeout
 
         # We assume that the MDQ server will return a single entity
         # described by a single <EntityDescriptor> element. The protocol
@@ -976,7 +979,8 @@ class MetaDataMDX(InMemoryMetaData):
             url=self.url, id=self.entity_transform(item)
         )
 
-        response = requests.get(mdx_url, headers={"Accept": SAML_METADATA_CONTENT_TYPE})
+        response = requests.get(mdx_url, headers={"Accept": SAML_METADATA_CONTENT_TYPE},
+                                timeout=self.http_client_timeout)
         if response.status_code != 200:
             error_msg = "Fething {item}: Got response status {status}".format(
                 item=item, status=response.status_code
@@ -1022,7 +1026,7 @@ class MetadataStore(MetaData):
     def __init__(self, attrc, config, ca_certs=None,
                  check_validity=True,
                  disable_ssl_certificate_validation=False,
-                 filter=None):
+                 filter=None, http_client_timeout=None):
         """
         :params attrc:
         :params config: Config()
@@ -1032,9 +1036,9 @@ class MetadataStore(MetaData):
         MetaData.__init__(self, attrc, check_validity=check_validity)
 
         if disable_ssl_certificate_validation:
-            self.http = HTTPBase(verify=False, ca_bundle=ca_certs)
+            self.http = HTTPBase(verify=False, ca_bundle=ca_certs, http_client_timeout=http_client_timeout)
         else:
-            self.http = HTTPBase(verify=True, ca_bundle=ca_certs)
+            self.http = HTTPBase(verify=True, ca_bundle=ca_certs, http_client_timeout=http_client_timeout)
 
         self.security = security_context(config)
         self.ii = 0
@@ -1042,6 +1046,7 @@ class MetadataStore(MetaData):
         self.check_validity = check_validity
         self.filter = filter
         self.to_old = {}
+        self.http_client_timeout = http_client_timeout
 
     def load(self, *args, **kwargs):
         if self.filter:
@@ -1100,11 +1105,12 @@ class MetadataStore(MetaData):
                 security = self.security
                 entity_transform = kwargs.get('entity_transform', None)
                 _md = MetaDataMDX(url, security, cert, entity_transform,
-                                  freshness_period=freshness_period)
+                                  freshness_period=freshness_period,
+                                  http_client_timeout=self.http_client_timeout)
             else:
                 key = args[1]
                 url = args[1]
-                _md = MetaDataMDX(url)
+                _md = MetaDataMDX(url, http_client_timeout=self.http_client_timeout)
         else:
             raise SAMLError("Unknown metadata type '%s'" % typ)
         _md.load()

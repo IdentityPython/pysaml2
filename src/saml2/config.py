@@ -76,6 +76,7 @@ COMMON_ARGS = [
     "name_id_format",
     "signing_algorithm",
     "digest_algorithm",
+    "http_client_timeout",
 ]
 
 SP_ARGS = [
@@ -228,6 +229,7 @@ class Config(object):
         self.delete_tmpfiles = True
         self.signing_algorithm = None
         self.digest_algorithm = None
+        self.http_client_timeout = None
 
     def setattr(self, context, attr, val):
         if context == "":
@@ -381,11 +383,13 @@ class Config(object):
             disable_validation = False
 
         mds = MetadataStore(
-            acs, self, ca_certs, disable_ssl_certificate_validation=disable_validation
+            acs,
+            self,
+            ca_certs,
+            disable_ssl_certificate_validation=disable_validation,
+            http_client_timeout=self.http_client_timeout,
         )
-
         mds.imp(metadata_conf)
-
         return mds
 
     def endpoint(self, service, binding=None, context=None):
