@@ -108,7 +108,7 @@ class Request(object):
         return self
 
     def _do_redirect_sig_check(self, _saml_msg):
-        issuer = self.message.issuer.text.strip()
+        issuer = self.sender()
         certs = self.sec.metadata.certs(issuer, "any", "signing")
         logger.debug("Certs to verify request sig: %s, _saml_msg: %s", certs, _saml_msg)
         verified = any(
@@ -180,7 +180,7 @@ class Request(object):
                 pass
 
     def sender(self):
-        return self.message.issuer.text
+        return self.message.issuer.text.strip()
 
 
 class LogoutRequest(Request):
