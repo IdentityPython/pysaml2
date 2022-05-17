@@ -45,6 +45,14 @@ So you will find descriptions of both cases here.
 The configuration is the same disregarding whether you are using PySAML2 in a
 WSGI or non-WSGI environment.
 
+
+Python compatibility
+^^^^^^^^^^^^^^^^^^^^
+
+PySAML2 has transitioned to Python3. Master Apps is maintaining a fork with Python2
+compatibility on [GitHub](https://github.com/masterapps-au/pysaml2).
+
+
 Table of contents
 ==================
 
