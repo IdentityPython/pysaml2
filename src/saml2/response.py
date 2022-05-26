@@ -1083,13 +1083,11 @@ class AuthnResponse(StatusResponse):
             if not context:
                 continue
 
-            try:
-                authn_class = (
-                    context.authn_context_class_ref.text
-                    or context.authn_context_decl_ref.text
-                )
-            except AttributeError:
-                authn_class = ""
+            authn_class = (
+                getattr(context.authn_context_class_ref, "text", None)
+                or getattr(context.authn_context_decl_ref, "text", None)
+                or ""
+            )
 
             authenticating_authorities = getattr(
                 context, "authenticating_authority", []
