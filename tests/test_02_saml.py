@@ -276,11 +276,15 @@ class TestSAMLBase:
             # the value is unchanged
             assert av.text == value
 
-    def test_set_invalid_type_before_text(self):
+    def test_treat_invalid_types_as_string(self):
+        _type_name = 'invalid-type'
+        _value = 'foobar'
         av = AttributeValue()
-        av.set_type('invalid-type')
-        with raises(ValueError):
-            av.set_text('foobar')
+        av.set_type(_type_name)
+        av.set_text(_value)
+        assert av.get_type() == _type_name
+        assert av.text == _value
+        assert type(av.text) is str
 
     def test_make_vals_div(self):
         foo = saml2.make_vals(666, AttributeValue, part=True)
