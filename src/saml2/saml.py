@@ -15,6 +15,8 @@
 
 
 import base64
+from datetime import date
+from datetime import datetime
 
 from saml2.validate import valid_ipv4, MustValueError
 from saml2.validate import valid_ipv6
@@ -306,6 +308,11 @@ class AttributeValueBase(SamlBase):
                     'false': False,
                 }[str(x).lower()],
                 'to_text': lambda x: str(x).lower(),
+            },
+            'date': {
+                'type': date,
+                'to_type': lambda x: datetime.strptime(x, '%Y-%m-%d').date(),
+                'to_text': str,
             },
             'base64Binary': {
                 'type': str,

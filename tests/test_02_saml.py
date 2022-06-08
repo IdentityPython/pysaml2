@@ -276,6 +276,16 @@ class TestSAMLBase:
             # the value is unchanged
             assert av.text == value
 
+    def test_set_xs_type_date(self):
+        _type_name = 'xs:date'
+        _value = '2022-06-07'
+        av = AttributeValue()
+        av.set_type(_type_name)
+        av.set_text(_value)
+        assert av.get_type() == _type_name
+        assert av.text == _value
+        assert type(av.text) is str
+
     def test_treat_invalid_types_as_string(self):
         _type_name = 'invalid-type'
         _value = 'foobar'
