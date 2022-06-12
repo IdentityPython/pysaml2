@@ -11,6 +11,12 @@ PySAML2 - SAML2 in Python
 .. image:: https://img.shields.io/pypi/pyversions/pysaml2.svg
     :target: https://pypi.org/project/pysaml2/
 
+.. image:: https://pepy.tech/badge/pysaml2
+    :target: https://pepy.tech/project/pysaml2
+
+.. image:: https://pepy.tech/badge/pysaml2/week
+    :target: https://pepy.tech/project/pysaml2
+
 .. image:: https://img.shields.io/pypi/v/pysaml2.svg
     :target: https://pypi.org/project/pysaml2/
 
