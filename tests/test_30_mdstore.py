@@ -666,7 +666,7 @@ def test_shibmd_scope_no_regex_no_descriptor_type():
     mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
     mds.imp(METADATACONF["15"])
 
-    scopes = mds.sbibmd_scopes(entity_id='http://example.com/saml2/idp.xml')
+    scopes = mds.shibmd_scopes(entity_id='http://example.com/saml2/idp.xml')
     all_scopes = list(scopes)
 
     expected = [
@@ -676,7 +676,7 @@ def test_shibmd_scope_no_regex_no_descriptor_type():
         },
         {
             "regexp": True,
-            "text": regex_compile("descriptor-example[^0-9]*\.org"),
+            "text": regex_compile(r"descriptor-example[^0-9]*\.org"),
         },
     ]
     assert len(all_scopes) == 2
@@ -687,7 +687,7 @@ def test_shibmd_scope_no_regex_all_descriptors():
     mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
     mds.imp(METADATACONF["15"])
 
-    scopes = mds.sbibmd_scopes(entity_id='http://example.com/saml2/idp.xml', typ="idpsso_descriptor")
+    scopes = mds.shibmd_scopes(entity_id='http://example.com/saml2/idp.xml', typ="idpsso_descriptor")
     all_scopes = list(scopes)
     expected = [
         {
@@ -696,7 +696,7 @@ def test_shibmd_scope_no_regex_all_descriptors():
         },
         {
             "regexp": True,
-            "text": regex_compile("descriptor-example[^0-9]*\.org"),
+            "text": regex_compile(r"descriptor-example[^0-9]*\.org"),
         },
         {
             "regexp": False,

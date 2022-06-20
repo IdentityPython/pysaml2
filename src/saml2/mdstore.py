@@ -1543,6 +1543,15 @@ class MetadataStore(MetaData):
         return elements
 
     def sbibmd_scopes(self, entity_id, typ=None):
+        warn_msg = (
+            "`saml2.mdstore.MetadataStore::sbibmd_scopes` method is deprecated; "
+            "instead, use `saml2.mdstore.MetadataStore::shibmd_scopes`."
+        )
+        logger.warning(warn_msg)
+        _warn(warn_msg, DeprecationWarning)
+        return self.shibmd_scopes(entity_id, typ=typ)
+
+    def shibmd_scopes(self, entity_id, typ=None):
         try:
             md = self[entity_id]
         except KeyError:
