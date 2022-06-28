@@ -1190,8 +1190,7 @@ class MetadataStore(MetaData):
 
     def service(self, entity_id, typ, service, binding=None):
         known_entity = False
-        logger.debug("service(%s, %s, %s, %s)", entity_id, typ, service,
-                     binding)
+        logger.debug("service(%s, %s, %s, %s)", entity_id, typ, service, binding)
         for key, _md in self.metadata.items():
             srvs = _md.service(entity_id, typ, service, binding)
             if srvs:
@@ -1521,6 +1520,29 @@ class MetadataStore(MetaData):
             },
         }
         return res
+
+    def registration_info_typ(self, entity_id, typ):
+        try:
+            md = self.__getitem__(entity_id)
+        except KeyError:
+            md = {}
+
+        services_of_type = md.get(typ) or []
+        typ_reg_info = (
+            {
+                "registration_authority": elem.get("registration_authority"),
+                "registration_instant": elem.get("registration_instant"),
+                "registration_policy": {
+                    policy["lang"]: policy["text"]
+                    for policy in elem.get("registration_policy", [])
+                    if policy.get("__class__") == classnames["mdrpi_registration_policy"]
+                },
+            }
+            for srv in services_of_type
+            for elem in srv.get("extensions", {}).get("extension_elements", [])
+            if elem.get("__class__") == classnames["mdrpi_registration_info"]
+        )
+        return typ_reg_info
 
     def _lookup_elements_by_cls(self, root, cls):
         elements = (
