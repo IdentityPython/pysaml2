@@ -12,7 +12,7 @@ from pathutils import full_path
 
 __author__ = 'roland'
 
-TMPL_NO_HEADER = """<ns0:EncryptedData xmlns:ns0="http://www.w3.org/2001/04/xmlenc#" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" Id="{ed_id}" Type="http://www.w3.org/2001/04/xmlenc#Element"><ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc" /><ns1:KeyInfo><ns0:EncryptedKey Id="{ek_id}"><ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p" />{key_info}<ns0:CipherData><ns0:CipherValue /></ns0:CipherData></ns0:EncryptedKey></ns1:KeyInfo><ns0:CipherData><ns0:CipherValue /></ns0:CipherData></ns0:EncryptedData>"""
+TMPL_NO_HEADER = """<md:EncryptedData xmlns:md="http://www.w3.org/2001/04/xmlenc#" xmlns:saml="http://www.w3.org/2000/09/xmldsig#" Id="{ed_id}" Type="http://www.w3.org/2001/04/xmlenc#Element"><md:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc" /><saml:KeyInfo><md:EncryptedKey Id="{ek_id}"><md:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p" />{key_info}<md:CipherData><md:CipherValue /></md:CipherData></md:EncryptedKey></saml:KeyInfo><md:CipherData><md:CipherValue /></md:CipherData></md:EncryptedData>"""
 TMPL = f"<?xml version='1.0' encoding='UTF-8'?>\n{TMPL_NO_HEADER}"
 
 IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
@@ -66,7 +66,7 @@ def test_pre_enc_with_named_key():
     expected = TMPL_NO_HEADER.format(
         ed_id=tmpl.id,
         ek_id=tmpl.key_info.encrypted_key.id,
-        key_info='<ns1:KeyInfo><ns1:KeyName>my-rsa-key</ns1:KeyName></ns1:KeyInfo>'
+        key_info='<saml:KeyInfo><saml:KeyName>my-rsa-key</saml:KeyName></saml:KeyInfo>'
     )
     assert str(tmpl) == expected
 
@@ -133,6 +133,7 @@ def test_enc2():
                                         pre_encryption_part())
 
     assert enc_resp
+
 
 if __name__ == "__main__":
     test_enc1()

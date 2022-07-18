@@ -20,25 +20,25 @@ from pathutils import full_path
 XML_HEADER = '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n'
 
 SUCCESS_STATUS_NO_HEADER = (
-    '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0'
+    '<samlp:Status xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"><samlp'
     ':StatusCode '
-    'Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></ns0:Status>')
+    'Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></samlp:Status>')
 SUCCESS_STATUS = '%s%s' % (XML_HEADER, SUCCESS_STATUS_NO_HEADER)
 
 ERROR_STATUS_NO_HEADER = (
-    '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0'
+    '<samlp:Status xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"><samlp'
     ':StatusCode '
-    'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode '
+    'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><samlp:StatusCode '
     'Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" '
-    '/></ns0:StatusCode><ns0:StatusMessage>Error resolving '
-    'principal</ns0:StatusMessage></ns0:Status>')
+    '/></samlp:StatusCode><samlp:StatusMessage>Error resolving '
+    'principal</samlp:StatusMessage></samlp:Status>')
 
 ERROR_STATUS_NO_HEADER_EMPTY = (
-    '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0'
+    '<samlp:Status xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"><samlp'
     ':StatusCode '
-    'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode '
+    'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><samlp:StatusCode '
     'Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" '
-    '/></ns0:StatusCode></ns0:Status>')
+    '/></samlp:StatusCode></samlp:Status>')
 
 ERROR_STATUS = '%s%s' % (XML_HEADER, ERROR_STATUS_NO_HEADER)
 ERROR_STATUS_EMPTY = '%s%s' % (XML_HEADER, ERROR_STATUS_NO_HEADER_EMPTY)

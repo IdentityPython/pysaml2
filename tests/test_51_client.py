@@ -139,24 +139,24 @@ def _leq(l1, l2):
 
 
 REQ1 = {"1.2.14": """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:AttributeQuery Destination="https://idp.example.com/idp/" ID="id1"
-IssueInstant="%s" Version="2.0" xmlns:ns0="urn:oasis:names:tc:SAML:2
-.0:protocol"><ns1:Issuer Format="urn:oasis:names:tc:SAML:2
-.0:nameid-format:entity" xmlns:ns1="urn:oasis:names:tc:SAML:2
-.0:assertion">urn:mace:example.com:saml:roland:sp</ns1:Issuer><ns1:Subject
-xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"><ns1:NameID
+<samlp:AttributeQuery Destination="https://idp.example.com/idp/" ID="id1"
+IssueInstant="%s" Version="2.0" xmlns:samlp="urn:oasis:names:tc:SAML:2
+.0:protocol"><saml:Issuer Format="urn:oasis:names:tc:SAML:2
+.0:nameid-format:entity" xmlns:saml="urn:oasis:names:tc:SAML:2
+.0:assertion">urn:mace:example.com:saml:roland:sp</saml:Issuer><saml:Subject
+xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"><saml:NameID
 Format="urn:oasis:names:tc:SAML:2
-.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID
-></ns1:Subject></ns0:AttributeQuery>""",
+.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</saml:NameID
+></saml:Subject></samlp:AttributeQuery>""",
         "1.2.16": """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:AttributeQuery xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"
-xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion" Destination="https://idp
-.example.com/idp/" ID="id1" IssueInstant="%s" Version="2.0"><ns1:Issuer
+<samlp:AttributeQuery xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Destination="https://idp
+.example.com/idp/" ID="id1" IssueInstant="%s" Version="2.0"><saml:Issuer
 Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">urn:mace:example
-.com:saml:roland:sp</ns1:Issuer><ns1:Subject><ns1:NameID
+.com:saml:roland:sp</saml:Issuer><saml:Subject><saml:NameID
 Format="urn:oasis:names:tc:SAML:2
-.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID
-></ns1:Subject></ns0:AttributeQuery>"""}
+.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</saml:NameID
+></saml:Subject></samlp:AttributeQuery>"""}
 
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
              text="123456")
@@ -1735,7 +1735,7 @@ class TestClient:
         _dic = unpack_form(info["data"])
         res = self.server.parse_logout_request(_dic["SAMLRequest"],
                                                BINDING_HTTP_POST)
-        assert b'<ns0:SessionIndex>_foo</ns0:SessionIndex>' in res.xmlstr
+        assert b'<samlp:SessionIndex>_foo</samlp:SessionIndex>' in res.xmlstr
 
     def test_do_logout_redirect_no_cache(self):
         conf = config.SPConfig()
@@ -1789,7 +1789,7 @@ class TestClient:
         _dic = unpack_form(info["data"])
         res = self.server.parse_logout_request(_dic["SAMLRequest"],
                                                BINDING_HTTP_POST)
-        assert b'<ns0:SessionIndex>_foo</ns0:SessionIndex>' in res.xmlstr
+        assert b'<samlp:SessionIndex>_foo</samlp:SessionIndex>' in res.xmlstr
 
     def test_signature_wants(self):
 
@@ -3340,7 +3340,7 @@ class TestClientNonAsciiAva:
         _dic = unpack_form(info["data"])
         res = self.server.parse_logout_request(_dic["SAMLRequest"],
                                                BINDING_HTTP_POST)
-        assert b'<ns0:SessionIndex>_foo</ns0:SessionIndex>' in res.xmlstr
+        assert b'<samlp:SessionIndex>_foo</samlp:SessionIndex>' in res.xmlstr
 
     def test_do_logout_session_expired(self):
         # information about the user from an IdP
@@ -3370,7 +3370,7 @@ class TestClientNonAsciiAva:
         _dic = unpack_form(info["data"])
         res = self.server.parse_logout_request(_dic["SAMLRequest"],
                                                BINDING_HTTP_POST)
-        assert b'<ns0:SessionIndex>_foo</ns0:SessionIndex>' in res.xmlstr
+        assert b'<samlp:SessionIndex>_foo</samlp:SessionIndex>' in res.xmlstr
 
 # Below can only be done with dummy Server
 IDP = "urn:mace:example.com:saml:roland:idp"

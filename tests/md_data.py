@@ -108,9 +108,9 @@ TEST_ORGANIZATION_NAME = """<?xml version="1.0" encoding="utf-8"?>
 """
 
 TEST_ORGANIZATION_DISPLAY_NAME = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:OrganizationDisplayName xml:lang="se" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata">
+<md:OrganizationDisplayName xml:lang="se" xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata">
 Catalogix
-</ns0:OrganizationDisplayName>
+</md:OrganizationDisplayName>
 """
 
 TEST_ORGANIZATION_URL = """<?xml version="1.0" encoding="utf-8"?>

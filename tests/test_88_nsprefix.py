@@ -13,7 +13,7 @@ def test_nsprefix():
 
     txt = "%s" % status_message
 
-    assert "ns0:StatusMessage" in txt
+    assert "samlp:StatusMessage" in txt
 
     status_message.register_prefix({"saml2": saml.NAMESPACE,
                                     "saml2p": samlp.NAMESPACE})
@@ -40,6 +40,7 @@ def test_nsprefix2():
 
     assert "saml2p:AuthnRequest" in txt
     assert "saml2:Issuer" in txt
+
 
 if __name__ == "__main__":
     test_nsprefix2()

@@ -1,13 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<ns0:EntitiesDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata"
-                        xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">
-    <ns0:EntityDescriptor entityID="http://www.example.org/pysaml2/">
-        <ns0:PDPDescriptor
+<md:EntitiesDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
+                        xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+    <md:EntityDescriptor entityID="http://www.example.org/pysaml2/">
+        <md:PDPDescriptor
                 protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-            <ns0:KeyDescriptor>
-                <ns1:KeyInfo>
-                    <ns1:X509Data>
-                        <ns1:X509Certificate>
+            <md:KeyDescriptor>
+                <ds:KeyInfo>
+                    <ds:X509Data>
+                        <ds:X509Certificate>
                             MIICsDCCAhmgAwIBAgIJAJrzqSSwmDY9MA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV
                             BAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBX
                             aWRnaXRzIFB0eSBMdGQwHhcNMDkxMDA2MTk0OTQxWhcNMDkxMTA1MTk0OTQxWjBF
@@ -23,30 +23,30 @@
                             h3qh+3+JAk8HbGBW+cbX6KBCAw/mzU8flK25vnWwXS3dv2FF3Aod0/S7AWNfKib5
                             U/SA9nJaz/mWeF9S0farz9AQFc8/NSzAzaVq7YbM4F6f6N2FRl7GikdXRCed45j6
                             mrPzGzk3ECbupFnqyREH3+ZPSdk=
-                        </ns1:X509Certificate>
-                    </ns1:X509Data>
-                </ns1:KeyInfo>
-            </ns0:KeyDescriptor>
-            <ns0:AuthzService
+                        </ds:X509Certificate>
+                    </ds:X509Data>
+                </ds:KeyInfo>
+            </md:KeyDescriptor>
+            <md:AuthzService
                     Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP"
                     Location="http://www.example.org/pysaml2/authz"/>
-            <ns0:NameIDFormat>urn:oasis:names:tc:SAML:2.0:attrname-format:uri
-            </ns0:NameIDFormat>
-        </ns0:PDPDescriptor>
-        <ns0:Organization>
-            <ns0:OrganizationName xml:lang="en">Exempel AB
-            </ns0:OrganizationName>
-            <ns0:OrganizationDisplayName xml:lang="se">Exempel AB
-            </ns0:OrganizationDisplayName>
-            <ns0:OrganizationDisplayName xml:lang="en">Example Co.
-            </ns0:OrganizationDisplayName>
-            <ns0:OrganizationURL xml:lang="en">http://www.example.com/
-            </ns0:OrganizationURL>
-        </ns0:Organization>
-        <ns0:ContactPerson contactType="technical">
-            <ns0:GivenName>John</ns0:GivenName>
-            <ns0:SurName>Smith</ns0:SurName>
-            <ns0:EmailAddress>john.smith@example.com</ns0:EmailAddress>
-        </ns0:ContactPerson>
-    </ns0:EntityDescriptor>
-</ns0:EntitiesDescriptor>
+            <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:attrname-format:uri
+            </md:NameIDFormat>
+        </md:PDPDescriptor>
+        <md:Organization>
+            <md:OrganizationName xml:lang="en">Exempel AB
+            </md:OrganizationName>
+            <md:OrganizationDisplayName xml:lang="se">Exempel AB
+            </md:OrganizationDisplayName>
+            <md:OrganizationDisplayName xml:lang="en">Example Co.
+            </md:OrganizationDisplayName>
+            <md:OrganizationURL xml:lang="en">http://www.example.com/
+            </md:OrganizationURL>
+        </md:Organization>
+        <md:ContactPerson contactType="technical">
+            <md:GivenName>John</md:GivenName>
+            <md:SurName>Smith</md:SurName>
+            <md:EmailAddress>john.smith@example.com</md:EmailAddress>
+        </md:ContactPerson>
+    </md:EntityDescriptor>
+</md:EntitiesDescriptor>
