@@ -1174,7 +1174,7 @@ want_assertions_or_response_signed
 Indicates that *either* the Authentication Response *or* the assertions
 contained within the response to this SP must be signed.
 
-Valid values are True or False. Default value is False.
+Valid values are True or False. Default value is True.
 
 This configuration directive **does not** override ``want_response_signed``
 or ``want_assertions_signed``. For example, if ``want_response_signed`` is True

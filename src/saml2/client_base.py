@@ -173,7 +173,7 @@ class Base(Entity):
             "authn_requests_signed": False,
             "want_assertions_signed": False,
             "want_response_signed": True,
-            "want_assertions_or_response_signed": False,
+            "want_assertions_or_response_signed": True,
         }
         for attr, val_default in attribute_defaults.items():
             val_config = self.config.getattr(attr, "sp")
