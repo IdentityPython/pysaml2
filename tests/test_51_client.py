@@ -1860,7 +1860,8 @@ class TestClient:
         parse_authn_response(response)
 
         set_client_want(False, False, False)
-        parse_authn_response(response)
+        with raises(SAMLError):
+            parse_authn_response(response)
 
         # Response is not signed but assertion is signed.
         kwargs["sign_response"] = False
@@ -1893,7 +1894,8 @@ class TestClient:
         parse_authn_response(response)
 
         set_client_want(False, False, False)
-        parse_authn_response(response)
+        with raises(SAMLError):
+            parse_authn_response(response)
 
         # Both response and assertion are signed.
         kwargs["sign_response"] = True
@@ -1922,7 +1924,8 @@ class TestClient:
         parse_authn_response(response)
 
         set_client_want(False, False, False)
-        parse_authn_response(response)
+        with raises(SAMLError):
+            parse_authn_response(response)
 
         # Neither response nor assertion is signed.
         kwargs["sign_response"] = False
@@ -1958,7 +1961,8 @@ class TestClient:
             parse_authn_response(response)
 
         set_client_want(False, False, False)
-        parse_authn_response(response)
+        with raises(SAMLError):
+            parse_authn_response(response)
 
 
 class TestClientNonAsciiAva:
