@@ -65,7 +65,7 @@ from saml2.xmlenc import EncryptedKey
 from saml2.xmlenc import CipherData
 from saml2.xmlenc import CipherValue
 from saml2.xmlenc import EncryptedData
-from saml2.xml.schema import node_to_schema
+from saml2.xml.schema import validate as validate_doc_with_schema
 from saml2.xml.schema import XMLSchemaError
 
 
@@ -1427,20 +1427,8 @@ class SecurityContext(object):
         if not certs:
             raise MissingKey(_issuer)
 
-        # validate XML with the appropriate schema
         try:
-            _schema = node_to_schema[node_name]
-        except KeyError as e:
-            error_context = {
-                "message": "Signature verification failed. Unknown node type.",
-                "issuer": _issuer,
-                "type": node_name,
-                "document": decoded_xml,
-            }
-            raise SignatureError(error_context) from e
-
-        try:
-            _schema.validate(str(item))
+            validate_doc_with_schema(str(item))
         except XMLSchemaError as e:
             error_context = {
                 "message": "Signature verification failed. Invalid document format.",
