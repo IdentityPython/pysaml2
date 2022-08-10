@@ -3,7 +3,7 @@
                         xmlns:ns1="http://www.w3.org/2001/04/xmlenc#"
                         xmlns:ns2="http://www.w3.org/2000/09/xmldsig#">
     <ns0:EncryptedAttribute >
-        <ns1:EncryptedData ID="_dcf9eb6ed26d9332d940130e0cae1ba1"
+        <ns1:EncryptedData Id="_dcf9eb6ed26d9332d940130e0cae1ba1"
                            Type="http://www.w3.org/2001/04/xmlenc#Element">
             <ns1:EncryptionMethod
                     Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc"/>
@@ -24,7 +24,7 @@
                 </ns1:CipherValue>
             </ns1:CipherData>
         </ns1:EncryptedData>
-        <ns1:EncryptedKey ID="_1234">
+        <ns1:EncryptedKey Id="_1234">
             <ns1:EncryptionMethod
                     Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5"/>
             <ns2:KeyInfo>

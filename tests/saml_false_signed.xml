@@ -64,15 +64,15 @@ OmuMZY0K6ERY4fNVnGEAoUZeieehC6/ljmfk14xCAlE=</ns2:SignatureValue>
     </ns1:AuthnStatement>
     <ns1:AttributeStatement>
       <ns1:Attribute Name="uid" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
-        <ns1:AttributeValue xmlns:ns2="http://www.w3.org/2001/XMLSchema-instance" ns2:type="xs:string">
+        <ns1:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ns2="http://www.w3.org/2001/XMLSchema-instance" ns2:type="xs:string">
           student
         </ns1:AttributeValue>
       </ns1:Attribute>
       <ns1:Attribute Name="eduPersonAffiliation" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
-        <ns1:AttributeValue xmlns:ns2="http://www.w3.org/2001/XMLSchema-instance" ns2:type="xs:string">
+        <ns1:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ns2="http://www.w3.org/2001/XMLSchema-instance" ns2:type="xs:string">
           member
         </ns1:AttributeValue>
-        <ns1:AttributeValue xmlns:ns2="http://www.w3.org/2001/XMLSchema-instance" ns2:type="xs:string">
+        <ns1:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ns2="http://www.w3.org/2001/XMLSchema-instance" ns2:type="xs:string">
           student
         </ns1:AttributeValue>
       </ns1:Attribute>

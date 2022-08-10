@@ -167,6 +167,10 @@ METADATACONF = {
         "class": "saml2.mdstore.MetaDataFile",
         "metadata": [(full_path("idp_uiinfo.xml"),)],
     }],
+    "16": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("empty_metadata_file.xml"),)],
+    }],
 }
 
 
@@ -183,8 +187,14 @@ def _fix_valid_until(xmlstring):
 
 def test_invalid_metadata():
     mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    mds.imp(METADATACONF["14"])
+    assert mds.entities() == 0
+
+
+def test_empty_metadata():
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
     with raises(SAMLError):
-        mds.imp(METADATACONF["14"])
+        mds.imp(METADATACONF["16"])
 
 
 def test_swami_1():
