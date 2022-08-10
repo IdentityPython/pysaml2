@@ -1,6 +1,26 @@
 # Changelog
 
 
+## 7.2.0 (2022-08-10)
+
+- Add schemas for eIDAS extensions, elements and attributes
+- Add the voPerson v2 attributes mappings; see [reference](https://github.com/voperson/voperson/tree/2.0.0)
+- Add the `registration_info_typ` method on `saml2.mdstore.MetadataStore` to get the registration information from an `EntityDescriptor` services
+- Allow exceptions to convey the SAML `StatusCode` in an error response
+- Fix typo on method name under `saml2.mdstore.MetadataStore`; from `sbibmd_scopes` to `shibmd_scopes`
+- Add partial support for `xs:date` `AttributeValue` type
+- Fallback to `xs:string` as the type of the `AttributeValue` text node
+- Fallback to the authn context class declaration to set the authn context class reference
+- Αdd configuration option `http_client_timeout` to set a timeout on the HTTP calls by the httpbase module
+- Load certificates using cryptography and support certificate chains
+- Remove deprecated cryptography backend param
+- Fix assertion policy filter: Fallback to match a known attribute or return its name
+- examples: Allow multiple attributes to be returned by the idp
+- tests: Minor cleanups
+- docs: Reference python2 compatible fork
+- misc: add pepy badges on the README file
+
+
 ## 7.1.2 (2022-03-04)
 
 - fix assertion policy filter to try to resolve the local_name using the friendly name if it failed with the name_format
