@@ -77,8 +77,18 @@ def metadata_tostring_fix(desc, nspair, xmlstring=""):
     return xmlstring
 
 
-def create_metadata_string(configfile, config=None, valid=None, cert=None,
-                           keyfile=None, mid=None, name=None, sign=None):
+def create_metadata_string(
+    configfile,
+    config=None,
+    valid=None,
+    cert=None,
+    keyfile=None,
+    mid=None,
+    name=None,
+    sign=None,
+    sign_alg=None,
+    digest_alg=None,
+):
     valid_for = 0
     nspair = {"xs": "http://www.w3.org/2001/XMLSchema"}
     # paths = [".", "/opt/local/bin"]
@@ -96,17 +106,19 @@ def create_metadata_string(configfile, config=None, valid=None, cert=None,
     conf = Config()
     conf.key_file = config.key_file or keyfile
     conf.cert_file = config.cert_file or cert
-    conf.debug = 1
     conf.xmlsec_binary = config.xmlsec_binary
     secc = security_context(conf)
 
+    sign_alg = sign_alg or config.signing_algorithm
+    digest_alg = digest_alg or config.digest_algorithm
     if mid:
-        eid, xmldoc = entities_descriptor(eds, valid_for, name, mid,
-                                          sign, secc)
+        eid, xmldoc = entities_descriptor(
+            eds, valid_for, name, mid, sign, secc, sign_alg, digest_alg
+        )
     else:
         eid = eds[0]
         if sign:
-            eid, xmldoc = sign_entity_descriptor(eid, mid, secc)
+            eid, xmldoc = sign_entity_descriptor(eid, mid, secc, sign_alg, digest_alg)
         else:
             xmldoc = None
 
@@ -794,8 +806,9 @@ def entity_descriptor(confd):
     return entd
 
 
-def entities_descriptor(eds, valid_for, name, ident, sign, secc, sign_alg=None,
-                        digest_alg=None):
+def entities_descriptor(
+    eds, valid_for, name, ident, sign, secc, sign_alg=None, digest_alg=None
+):
     entities = md.EntitiesDescriptor(entity_descriptor=eds)
     if valid_for:
         entities.valid_until = in_a_while(hours=valid_for)
