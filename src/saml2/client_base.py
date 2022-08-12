@@ -194,9 +194,9 @@ class Base(Entity):
             ]
         ):
             error_msg = (
+                "This configuration is insecure. "
                 "The SAML service provider accepts "
                 "unsigned SAML Responses and Assertions. "
-                "This configuration is insecure. "
                 "Set at least one of want_assertions_signed, want_response_signed "
                 "or want_assertions_or_response_signed configuration options."
             )
