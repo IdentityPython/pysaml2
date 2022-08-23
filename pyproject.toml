@@ -1,2 +1,68 @@
+[tool.poetry]
+name = "pysaml2"
+version = "7.3.0-alpha"
+description = "Python implementation of SAML Version 2 Standard"
+license = "Apache-2.0"
+authors = ["IdentityPython <discuss@idpy.org>"]
+maintainers = ["IdentityPython <discuss@idpy.org>"]
+readme = "README.rst"
+homepage = "https://idpy.org"
+repository = "https://github.com/IdentityPython/pysaml2"
+documentation = "https://pysaml2.readthedocs.io"
+keywords = [
+    "saml",
+    "saml2",
+    "standard",
+    "federation",
+    "identity",
+    "idpy",
+    "IdentityPython",
+]
+classifiers = [
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+packages = [
+    { include = "saml2", from = "src" },
+    { include = "saml2test", from = "src" },
+    { include = "utility", from = "src" },
+]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/IdentityPython/pysaml2/issues"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+cryptography = ">=3.1"
+defusedxml = "*"
+importlib-resources = {python = "<3.9", version = "*"}
+paste = {optional = true, version = "*"}
+pyopenssl = "*"
+python-dateutil = "*"
+pytz = "*"
+"repoze.who" = {optional = true, version = "*"}
+requests = "^2"
+setuptools = "*"
+six = "*"
+xmlschema = ">=1.2.1"
+"zope.interface" = {optional = true, version = "*"}
+
+[tool.poetry.dev-dependencies]
+coverage = "*"
+pyasn1 = "*"
+pymongo = "^3"
+pytest = "*"
+pytest-cov = "*"
+responses = "*"
+
+[tool.poetry.scripts]
+make_metadata = "saml2.tools.make_metadata:main"
+mdexport = "saml2.tools.mdexport:main"
+merge_metadata = "saml2.tools.merge_metadata:main"
+parse_xsd2 = "saml2.tools.parse_xsd2:main"
+
+[tool.poetry.extras]
+s2repoze = ["paste", "repoze-who", "zope-interface"]
+
 [build-system]
-requires = ["setuptools>=40.0.0", "wheel"]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
