@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 7.2.1 (2022-08-23)
+
+- Accept and forward sign and digest alg information when creating a metadata string
+- Fix tests to comply with latest xmlschema
+
+
 ## 7.2.0 (2022-08-10)
 
 - Add schemas for eIDAS extensions, elements and attributes
