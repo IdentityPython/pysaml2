@@ -10,8 +10,8 @@
   <ns0:Extensions>
     <ns1:EntityAttributes>
       <ns2:Attribute Name="http://macedir.org/entity-category">
-        <ns2:AttributeValue xsi:type="xs:string">http://www.swamid.se/category/sfs-1993-1153</ns2:AttributeValue>
-        <ns2:AttributeValue xsi:type="xs:string">http://www.swamid.se/category/hei-service</ns2:AttributeValue>
+        <ns2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">http://www.swamid.se/category/sfs-1993-1153</ns2:AttributeValue>
+        <ns2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">http://www.swamid.se/category/hei-service</ns2:AttributeValue>
       </ns2:Attribute>
     </ns1:EntityAttributes>
   </ns0:Extensions>
