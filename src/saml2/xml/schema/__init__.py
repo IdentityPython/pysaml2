@@ -67,8 +67,47 @@ def _create_xml_schema_validator(source=None, **kwargs):
         "base_url": source,
         "allow": "sandbox",
         "use_fallback": False,
+        "build": False,
     }
-    return _XMLSchema(source, **kwargs)
+
+    schema_validator = _XMLSchema(source, **kwargs)
+
+    schema_extensions = []
+    if "schema_extensions" in kwargs:
+        schema_extensions = kwargs["schema_extensions"]
+        del(kwargs["schema_extensions"])
+
+    for extension in schema_extensions:
+        schema_validator.import_schema(extension["namespace"], extension["location"])
+        schema_validator.maps.register(schema_validator.imports[extension["namespace"]])
+
+    schema_validator.build()
+
+    return schema_validator
+
+def add_schema_extensions(schema_extensions):
+    """
+    Adds additional xsd files to the default validator.
+
+    Supply this function with a list in the following style:
+
+    ```
+    extension_schemas = [
+        {
+            "location" : "file:///path/to/schema1.xsd",
+            "namespace" : "urn:foo:bar:schemas:identity"
+        },
+        {
+            "location" : "file:///path/to/schema2.xsd",
+            "namespace" : "urn:foo:bar:schemas:identity"
+        },
+    ]
+    ```
+    """
+    global _schema_validator_default
+    _schema_validator_default = _create_xml_schema_validator(
+        schema_extensions=schema_extensions
+    )
 
 
 _schema_validator_default = _create_xml_schema_validator()
