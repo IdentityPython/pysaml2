@@ -37,7 +37,7 @@ merge_metadata = "saml2.tools.merge_metadata:main"
 parse_xsd2 = "saml2.tools.parse_xsd2:main"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.6.2"
 cryptography = ">=3.1"
 defusedxml = "*"
 importlib-metadata = {version = ">=1.7.0", python = "<3.8"}
@@ -63,6 +63,8 @@ black = "*"
 pylint = "*"
 flake8 = "*"
 mypy = "*"
+isort = {version = "^5.10.1", extras = ["pyproject"]}
+tox = "^3.25.1"
 
 [tool.poetry.group.test]
 optional = true
@@ -70,7 +72,7 @@ optional = true
 [tool.poetry.group.test.dependencies]
 pyasn1 = "*"
 pymongo = "^3"
-pytest = "*"
+pytest = ">=6.0"
 responses = "*"
 
 [tool.poetry.group.coverage]
@@ -89,3 +91,32 @@ sphinx = "*"
 [build-system]
 requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -vvv"
+testpaths = [
+    "tests",
+]
+pythonpath = [
+    "tests",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["saml2"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "def __str__",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+  "if typing.TYPE_CHECKING:",
+]
+
+[tool.coverage.html]
+directory = "cov_html"
