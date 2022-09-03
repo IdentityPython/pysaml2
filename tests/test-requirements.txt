@@ -1,6 +1,0 @@
-coverage
-pyasn1
-pymongo >=3,<4
-pytest
-pytest-cov
-responses

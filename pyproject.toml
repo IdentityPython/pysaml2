@@ -30,6 +30,12 @@ packages = [
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/IdentityPython/pysaml2/issues"
 
+[tool.poetry.scripts]
+make_metadata = "saml2.tools.make_metadata:main"
+mdexport = "saml2.tools.mdexport:main"
+merge_metadata = "saml2.tools.merge_metadata:main"
+parse_xsd2 = "saml2.tools.parse_xsd2:main"
+
 [tool.poetry.dependencies]
 python = "^3.6"
 cryptography = ">=3.1"
@@ -46,22 +52,39 @@ six = "*"
 xmlschema = ">=1.2.1"
 "zope.interface" = {optional = true, version = "*"}
 
-[tool.poetry.dev-dependencies]
-coverage = "*"
+[tool.poetry.extras]
+s2repoze = ["paste", "repoze-who", "zope-interface"]
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+pylint = "*"
+flake8 = "*"
+mypy = "*"
+
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
 pyasn1 = "*"
 pymongo = "^3"
 pytest = "*"
-pytest-cov = "*"
 responses = "*"
 
-[tool.poetry.scripts]
-make_metadata = "saml2.tools.make_metadata:main"
-mdexport = "saml2.tools.mdexport:main"
-merge_metadata = "saml2.tools.merge_metadata:main"
-parse_xsd2 = "saml2.tools.parse_xsd2:main"
+[tool.poetry.group.coverage]
+optional = true
 
-[tool.poetry.extras]
-s2repoze = ["paste", "repoze-who", "zope-interface"]
+[tool.poetry.group.coverage.dependencies]
+coverage = "*"
+pytest-cov = "*"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+sphinx = "*"
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]
