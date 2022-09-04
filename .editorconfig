@@ -10,15 +10,6 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 max_line_length = 88
 
-[*.y{a,}ml]
+[{*.y{a,}ml,*.html,*.xhtml,*.xml,*.xsd}]
 indent_size = 2
 tab_width = 2
-
-[*.html]
-indent_style = tab
-
-[*.js]
-indent_style = tab
-
-[*.css]
-indent_style = tab

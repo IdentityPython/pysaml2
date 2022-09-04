@@ -60,11 +60,12 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
-pylint = "*"
-flake8 = "*"
-mypy = "*"
 isort = {version = "^5.10.1", extras = ["pyproject"]}
 tox = "^3.25.1"
+flake8 = ">=4"
+Flake8-pyproject = "^1.1.0.post0"
+flake8-bugbear = "^22.8.23"
+flake8-logging-format = "^0.7.5"
 
 [tool.poetry.group.test]
 optional = true
@@ -120,3 +121,68 @@ exclude_lines = [
 
 [tool.coverage.html]
 directory = "cov_html"
+
+[tool.flake8]
+max-line-length = 88
+max-complexity = 18
+count = true
+show-source = true
+statistics = true
+disable-noqa = false
+enable-extensions = [
+    'G', # flake8-logging-format
+]
+# 'ignore' defaults to: E121,E123,E126,E226,E24,E704,W503,W504
+extend-ignore = [
+    'E501', # line too long; instead, use B950
+    'W503', # line break before binary operator
+]
+per-file-ignores = [
+    '__init__.py:F401',
+]
+# 'select' defaults to: E,F,W,C90
+extend-select = [
+    # * Default warnings reported by flake8-bugbear (B) -
+    #   https://github.com/PyCQA/flake8-bugbear#list-of-warnings
+    'B',
+    # * The B950 flake8-bugbear opinionated warnings -
+    #   https://github.com/PyCQA/flake8-bugbear#opinionated-warnings
+    'B9',
+    #
+    # * Complexity violations reported by mccabe (C) -
+    #   http://flake8.pycqa.org/en/latest/user/error-codes.html#error-violation-codes
+    #   mccabe only ever reports one violation - C901 based on the complexity value
+    #   provided by the user.
+    #   This is selected by default.
+    #'C90',
+    #
+    # * Documentation conventions compliance reported by pydocstyle (D) -
+    #   http://www.pydocstyle.org/en/stable/error_codes.html
+    #'D', # FIXME TODO
+    #
+    # * Default errors reported by pycodestyle (E) -
+    #   https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes
+    #   This is selected by default.
+    #'E',
+    #
+    # * Default errors reported by pyflakes (F) -
+    #   http://flake8.pycqa.org/en/latest/user/error-codes.html
+    #   This is selected by default.
+    #'F',
+    #
+    # * flake8-mypy - enable limited type checking as a linter
+    #   http://flake8.pycqa.org/en/latest/user/error-codes.html
+    #'T4', # FIXME TODO
+    #
+    # * Default warnings reported by pycodestyle (W) -
+    #   https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes
+    #   This is selected by default.
+    #'W',
+]
+extend-exclude = [
+    '.github', '.gitlab',
+    '.Python', '.*.pyc', '.*.pyo', '.*.pyd', '.*.py.class', '*.egg-info',
+    'venv*', '.venv*', '.*_cache',
+    'lib', 'lib64', '.*.so',
+    'build', 'dist', 'sdist', 'wheels',
+]
