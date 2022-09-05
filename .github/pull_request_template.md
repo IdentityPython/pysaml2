@@ -1,11 +1,20 @@
-### All Submissions:
+### Description
 
-* [ ] Have you checked to ensure there aren't other open [Pull Requests](../../pulls) for the same update/change?
-* [ ] Have you added an explanation of what problem you are trying to solve with this PR?
-* [ ] Have you added information on what your changes do and why you chose this as your solution?
-* [ ] Have you written new tests for your changes?
-* [ ] Does your submission pass tests?
-* [ ] This project follows PEP8 style guide. Have you run your code against the 'flake8' linter?
+##### The feature or problem addressed by this PR
 
+<!-- an explaination of the issue that is being resolved with this PR -->
+<!-- or, an explaination of the feature that is being added with this PR -->
+<!-- or, link to an issue describing the problem -->
 
 
+##### What your changes do and why you chose this solution
+
+<!-- description of the technical changes that help resolve the issue -->
+
+
+### Checklist
+
+* [ ] Checked that no other issues or pull requests exist for the same issue/change
+* [ ] Added tests covering the new functionality
+* [ ] Updated documentation OR the change is too minor to be documented
+* [ ] Updated CHANGELOG.md OR changes are insignificant
