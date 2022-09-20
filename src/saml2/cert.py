@@ -122,11 +122,11 @@ class OpenSSLWrapper(object):
             key_file = "%s.key" % cn
             try:
                 remove(cert_file)
-            except:
+            except Exception:
                 pass
             try:
                 remove(key_file)
-            except:
+            except Exception:
                 pass
             c_f = join(cert_dir, cert_file)
             k_f = join(cert_dir, key_file)
@@ -146,7 +146,7 @@ class OpenSSLWrapper(object):
         cert.get_subject().C = cert_info["country_code"]
         cert.get_subject().ST = cert_info["state"]
         cert.get_subject().L = cert_info["city"]
-        cert.get_subject().O = cert_info["organization"]
+        cert.get_subject().O = cert_info["organization"]  # noqa: E741
         cert.get_subject().OU = cert_info["organization_unit"]
         cert.get_subject().CN = cn
         if not request:
@@ -333,7 +333,7 @@ class OpenSSLWrapper(object):
                 crypto.verify(ca_cert, cert_crypto.signature, cert_crypto.tbs_certificate_bytes, cert_algorithm)
                 return True, "Signed certificate is valid and correctly signed by CA certificate."
             except crypto.Error as e:
-                return False, "Certificate is incorrectly signed."
+                return False, "Certificate is incorrectly signed: %s" % str(e)
         except Exception as e:
             return False, "Certificate is not valid for an unknown reason. %s" % str(e)
 

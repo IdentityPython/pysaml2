@@ -312,11 +312,11 @@ class Conversation(object):
                     }
                 )
                 break
-            except (FatalError, OperationError):
-                raise
-            except Exception as err:
-                # self.err_check("exception", err)
-                raise
+            # except (FatalError, OperationError):
+            #     raise
+            # except Exception as err:
+            #     self.err_check("exception", err)
+            #     raise
 
         try:
             self.test_sequence(oper["tests"]["post"])

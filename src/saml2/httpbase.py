@@ -5,7 +5,6 @@ import re
 import time
 
 import requests
-import six
 from six.moves import http_cookiejar
 from six.moves.http_cookies import SimpleCookie
 from six.moves.urllib.parse import urlencode
@@ -13,7 +12,6 @@ from six.moves.urllib.parse import urlparse
 
 from saml2 import SAMLError
 from saml2 import class_name
-from saml2.pack import http_post_message
 from saml2.pack import make_soap_enveloped_saml_thingy
 from saml2.time_util import utc_now
 
@@ -321,7 +319,7 @@ class HTTPBase(object):
             args["headers"] = dict(args["headers"])
             response = self.send(**args)
         except Exception as exc:
-            logger.info("HTTPClient exception: %s", exc)
+            logger.info("HTTPClient exception: %s", str(exc))
             raise
 
         if response.status_code == 200:

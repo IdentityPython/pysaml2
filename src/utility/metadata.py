@@ -1,6 +1,5 @@
 import logging
 import os.path
-import sys
 import time
 from time import strftime
 import urllib
@@ -37,5 +36,5 @@ def fetch_metadata(url, path, maxage=600):
         try:
             f.retrieve(url, path)
             logger.debug("downloaded metadata from %s into %s", url, path)
-        except:
-            logger.debug("downloaded metadata from %s failed: %s", url, sys.exc_info()[0])
+        except Exception as e:
+            logger.debug("downloaded metadata from %s failed: %s", url, str(e))

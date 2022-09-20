@@ -267,7 +267,7 @@ def _mdb_get_database(uri, **kwargs):
     :params database: name as string or (uri, name)
     :returns: pymongo database object
     """
-    if not "tz_aware" in kwargs:
+    if "tz_aware" not in kwargs:
         # default, but not forced
         kwargs["tz_aware"] = True
 

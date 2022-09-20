@@ -54,8 +54,6 @@ from saml2.samlp import Extensions
 from saml2.samlp import NameIDMappingRequest
 from saml2.samlp import RequestedAuthnContext
 from saml2.soap import make_soap_enveloped_saml_thingy
-from saml2.xmldsig import DIGEST_ALLOWED_ALG
-from saml2.xmldsig import SIG_ALLOWED_ALG
 
 
 logger = logging.getLogger(__name__)
@@ -445,7 +443,7 @@ class Base(Entity):
             args.update(_args)
         args.pop("id", None)
 
-        client_crt = kwargs.get("client_crt")
+        # client_crt = kwargs.get("client_crt")
         nsprefix = kwargs.get("nsprefix")
 
         msg = self._message(
@@ -797,12 +795,12 @@ class Base(Entity):
         try:
             resp = self._parse_response(xmlstr, AuthnResponse, "assertion_consumer_service", binding, **kwargs)
         except StatusError as err:
-            logger.error("SAML status error: %s", err)
+            logger.error("SAML status error: %s", str(err))
             raise
         except UnravelError:
             return None
         except Exception as err:
-            logger.error("XML parse error: %s", err)
+            logger.error("XML parse error: %s", str(err))
             raise
 
         if not isinstance(resp, AuthnResponse):

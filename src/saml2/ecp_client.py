@@ -298,7 +298,7 @@ class Client(Entity):
 
         opargs["headers"] = self.add_paos_headers(opargs["headers"])
         response = self.send(sp_url, op, **opargs)
-        logger.debug("[Op] SP response: %s" % response)
+        logger.debug("[Op] SP response", extra={"response": response})
         print(response.text)
 
         if response.status_code != 200:

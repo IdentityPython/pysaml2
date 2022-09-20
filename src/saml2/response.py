@@ -220,9 +220,7 @@ def for_me(conditions, myself):
             if audience.text and audience.text.strip() == myself:
                 return True
             else:
-                logger.debug(
-                    "AudienceRestriction - One condition not satisfied: {} != {}".format(audience.text, myself)
-                )
+                logger.debug("AudienceRestriction - One condition not satisfied: %s != %s" % (audience.text, myself))
     logger.debug("AudienceRestrictions not satisfied!")
     return False
 
@@ -375,10 +373,8 @@ class StatusResponse(object):
         except SignatureError:
             raise
         except Exception as excp:
-            logger.exception("EXCEPTION: %s", excp)
+            logger.exception("EXCEPTION: %s", str(excp))
             raise
-
-        # print("<", self.response)
 
         return self._postamble()
 
@@ -608,7 +604,7 @@ class AuthnResponse(StatusResponse):
             if conditions.not_before:
                 validate_before(conditions.not_before, self.timeslack)
         except Exception as excp:
-            logger.error("Exception on conditions: %s", excp)
+            logger.error("Exception on conditions: %s", str(excp))
             if not lax:
                 raise
             else:
@@ -939,7 +935,7 @@ class AuthnResponse(StatusResponse):
                 decr_text_old = decr_text
                 try:
                     decr_text = self.sec.decrypt_keys(decr_text, keys=keys)
-                except DecryptError as e:
+                except DecryptError:
                     continue
                 else:
                     resp = samlp.response_from_string(decr_text)
@@ -959,7 +955,7 @@ class AuthnResponse(StatusResponse):
                 decr_text_old = decr_text
                 try:
                     decr_text = self.sec.decrypt_keys(decr_text, keys=keys)
-                except DecryptError as e:
+                except DecryptError:
                     continue
                 else:
                     resp = samlp.response_from_string(decr_text)
@@ -1009,7 +1005,7 @@ class AuthnResponse(StatusResponse):
 
         if self.context == "AuthnReq" or self.context == "AttrQuery":
             self.ava = self.get_identity()
-            logger.debug("--- AVA: {0}".format(self.ava))
+            logger.debug("--- AVA: %s" % self.ava)
 
         return True
 
@@ -1024,7 +1020,7 @@ class AuthnResponse(StatusResponse):
         try:
             res = self._verify()
         except AssertionError as err:
-            logger.error("Verification error on the response: %s", err)
+            logger.error("Verification error on the response: %s", str(err))
             raise
         else:
             if not res:
@@ -1393,7 +1389,7 @@ class AssertionIDResponse(object):
         except SignatureError:
             raise
         except Exception as excp:
-            logger.exception("EXCEPTION: %s", excp)
+            logger.exception("EXCEPTION: %s", str(excp))
             raise
 
         # print("<", self.response)

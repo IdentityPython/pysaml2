@@ -636,8 +636,8 @@ class SamlBase(ExtensionContainer):
 
         # fixup all elements in the tree
         memo = {}
-        for elem in elem.iter():
-            self.fixup_element_prefixes(elem, uri_map, memo)
+        for element in elem.iter():
+            self.fixup_element_prefixes(element, uri_map, memo)
 
     def fixup_element_prefixes(self, elem, uri_map, memo):
         def fixup(name):
@@ -739,18 +739,15 @@ class SamlBase(ExtensionContainer):
 
         # print("set_text: %s" % (val,))
         if isinstance(val, bool):
-            if val:
-                setattr(self, "text", "true")
-            else:
-                setattr(self, "text", "false")
+            self.text = "true" if val else "false"
         elif isinstance(val, int):
-            setattr(self, "text", "%d" % val)
+            self.text = str(val)
         elif isinstance(val, six.string_types):
-            setattr(self, "text", val)
+            self.text = val
         elif val is None:
             pass
         else:
-            raise ValueError("Type shouldn't be '%s'" % (val,))
+            raise ValueError("Type shouldn't be '%s'" % val)
 
         return self
 

@@ -68,7 +68,7 @@ def decode(txt):
             i, val = part.split("=")
             try:
                 setattr(_nid, ATTR[int(i)], unquote(val))
-            except:
+            except Exception:
                 pass
     return _nid
 
@@ -160,7 +160,7 @@ class IdentDB(object):
         if nformat == NAMEID_FORMAT_PERSISTENT:
             nameid = self.match_local_id(userid, sp_name_qualifier, name_qualifier)
             if nameid:
-                logger.debug("Found existing persistent NameId {nid} for user {uid}".format(nid=nameid, uid=userid))
+                logger.debug("Found existing persistent NameId %s for user %s" % (nameid, userid))
                 return nameid
 
         _id = self.create_id(nformat, name_qualifier, sp_name_qualifier)

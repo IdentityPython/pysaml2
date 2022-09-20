@@ -65,7 +65,7 @@ class MyChallengeDecider:
         if status.startswith("401 "):
             return True
         else:
-            if environ.has_key("samlsp.pending"):
+            if "samlsp.pending" in environ:
                 return True
 
             uri = environ.get("REQUEST_URI", None)
@@ -80,7 +80,7 @@ class MyChallengeDecider:
 
             # If the user is already authent, whatever happens(except logout),
             #   don't make a challenge
-            if environ.has_key("repoze.who.identity"):
+            if "repoze.who.identity" in environ:
                 return False
 
             # require a challenge for login

@@ -215,7 +215,7 @@ class Entity(HTTPBase):
         try:
             self.metadata.reload(metadata_conf)
         except Exception as ex:
-            logger.error("Loading metadata failed", exc_info=ex)
+            logger.error("Loading metadata failed; reason: %s" % str(ex))
             return False
 
         self.sourceid = self.metadata.construct_source_id()
@@ -884,7 +884,7 @@ class Entity(HTTPBase):
                 if encrypt_assertion_self_contained:
                     try:
                         assertion_tag = response.assertion._to_element_tree().tag
-                    except:
+                    except Exception:
                         assertion_tag = response.assertion[0]._to_element_tree().tag
                     response = pre_encrypt_assertion(response)
                     response = response.get_xml_string_with_self_contained_assertion_within_encrypted_assertion(
@@ -995,7 +995,7 @@ class Entity(HTTPBase):
         :return: A request instance
         """
 
-        _log_info = logger.info
+        # _log_info = logger.info
         _log_debug = logger.debug
 
         # The addresses I should receive messages like this on
@@ -1430,7 +1430,7 @@ class Entity(HTTPBase):
         try:
             response = response_cls(self.sec, **kwargs)
         except Exception as exc:
-            logger.info("%s", exc)
+            logger.info(str(exc))
             raise
 
         xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
@@ -1449,7 +1449,7 @@ class Entity(HTTPBase):
             response = response.loads(xmlstr, False, origxml=xmlstr)
         except SigverError as err:
             if require_response_signature:
-                logger.error("Signature Error: %s", err)
+                logger.error("Signature Error: %s", str(err))
                 raise
             else:
                 # The response is not signed but a signature is not required
@@ -1501,7 +1501,7 @@ class Entity(HTTPBase):
             response.verify(keys)
         except SignatureError as err:
             if require_signature:
-                logger.error("Signature Error: %s", err)
+                logger.error("Signature Error: %s", str(err))
                 raise
             else:
                 response.require_signature = require_signature

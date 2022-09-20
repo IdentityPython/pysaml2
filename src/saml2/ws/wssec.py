@@ -6,9 +6,6 @@
 
 import saml2
 from saml2 import SamlBase
-from saml2 import xmldsig as ds
-from saml2.schema import soapenv
-from saml2.ws import wsutil as wsu
 
 
 NAMESPACE = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"

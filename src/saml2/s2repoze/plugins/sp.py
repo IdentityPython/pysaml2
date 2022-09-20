@@ -26,7 +26,6 @@ from six import StringIO
 from six.moves.urllib import parse
 from zope.interface import implementer
 
-import saml2
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import ecp
@@ -125,12 +124,12 @@ class SAML2Plugin(object):
         rememberer = environ["repoze.who.plugins"][self.rememberer_name]
         return rememberer
 
-    #### IIdentifier ####
+    # #### IIdentifier ####
     def remember(self, environ, identity):
         rememberer = self._get_rememberer(environ)
         return rememberer.remember(environ, identity)
 
-    #### IIdentifier ####
+    # #### IIdentifier ####
     def forget(self, environ, identity):
         rememberer = self._get_rememberer(environ)
         return rememberer.forget(environ, identity)
@@ -260,7 +259,7 @@ class SAML2Plugin(object):
         logger.info("Chosen IdP: '%s'", idp_entity_id)
         return 0, idp_entity_id
 
-    #### IChallenger ####
+    # #### IChallenger ####
     # noinspection PyUnusedLocal
     def challenge(self, environ, _status, _app_headers, _forget_headers):
         _cli = self.saml_client
@@ -269,7 +268,6 @@ class SAML2Plugin(object):
             name_id = decode(environ["REMOTE_USER"])
 
             _cli = self.saml_client
-            path_info = environ["PATH_INFO"]
 
             if "samlsp.logout" in environ:
                 responses = _cli.global_logout(name_id)
@@ -363,16 +361,17 @@ class SAML2Plugin(object):
 
                 logger.debug("ht_args: %s", ht_args)
             except Exception as exc:
-                logger.exception(exc)
+                logger.exception("Failed to construct the AuthnRequest: %s" % str(exc))
                 raise Exception("Failed to construct the AuthnRequest: %s" % exc)
 
             try:
+                path_info = environ.get("PATH_INFO")
                 ret = _cli.config.getattr("endpoints", "sp")["discovery_response"][0][0]
-                if (environ["PATH_INFO"]) in ret and ret.split(environ["PATH_INFO"])[1] == "":
+                if path_info in ret and ret.split(path_info)[1] == "":
                     query = parse.parse_qs(environ["QUERY_STRING"])
                     result_sid = query["sid"][0]
                     came_from = self.outstanding_queries[result_sid]
-            except:
+            except Exception:
                 pass
             # remember the request
             self.outstanding_queries[_sid] = came_from
@@ -439,7 +438,7 @@ class SAML2Plugin(object):
 
         return session_info
 
-    #### IIdentifier ####
+    # #### IIdentifier ####
     def identify(self, environ):
         """
         Tries to do the identification
@@ -492,7 +491,7 @@ class SAML2Plugin(object):
                     )
                     environ["samlsp.pending"] = self._handle_logout(response)
                     return {}
-                except:
+                except Exception:
                     import traceback
 
                     traceback.print_exc()
@@ -559,7 +558,7 @@ class SAML2Plugin(object):
                 # Make sure that userids authenticated by another plugin
                 # don't cause problems here.
                 name_id = decode(name_id)
-            except:
+            except Exception:
                 pass
 
         _cli = self.saml_client
@@ -606,7 +605,7 @@ class SAML2Plugin(object):
             url = construct_url(environ)
         return url
 
-    #### IAuthenticatorPlugin ####
+    # #### IAuthenticatorPlugin ####
     # noinspection PyUnusedLocal
     def authenticate(self, environ, identity=None):
         if identity:

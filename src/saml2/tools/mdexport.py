@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 import argparse
 
-from saml2 import md
-from saml2 import saml
-from saml2 import xmldsig
-from saml2 import xmlenc
 from saml2.attribute_converter import ac_factory
 from saml2.httpbase import HTTPBase
 from saml2.mdstore import MetaDataExtern
 from saml2.mdstore import MetaDataFile
-from saml2.mdstore import load_extensions
 from saml2.sigver import SecurityContext
 from saml2.sigver import _get_xmlsec_cryptobackend
 

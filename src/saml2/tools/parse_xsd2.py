@@ -2177,7 +2177,7 @@ def main():
         elif opt in ("-I", "--ignore"):
             ignore.append(arg)
         else:
-            assert False, "unhandled option"
+            raise Exception("unhandled option %s" % opt)
 
     if not args:
         print("No XSD-file specified")

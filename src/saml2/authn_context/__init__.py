@@ -1,11 +1,12 @@
+from saml2 import extension_elements_to_elements
+from saml2.authn_context import ippword
+from saml2.authn_context import mobiletwofactor
+from saml2.authn_context import ppt
+from saml2.authn_context import pword
+from saml2.authn_context import sslcert
 from saml2.saml import AuthnContext
 from saml2.saml import AuthnContextClassRef
 from saml2.samlp import RequestedAuthnContext
-
-
-__author__ = "rolandh"
-
-from saml2 import extension_elements_to_elements
 
 
 UNSPECIFIED = "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified"
@@ -21,13 +22,6 @@ AL1 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel1"
 AL2 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel2"
 AL3 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel3"
 AL4 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel4"
-
-from saml2.authn_context import ippword
-from saml2.authn_context import mobiletwofactor
-from saml2.authn_context import ppt
-from saml2.authn_context import pword
-from saml2.authn_context import sslcert
-
 
 CMP_TYPE = ["exact", "minimum", "maximum", "better"]
 

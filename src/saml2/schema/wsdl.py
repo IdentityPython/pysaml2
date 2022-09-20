@@ -1,5 +1,3 @@
-#!!!! 'NoneType' object has no attribute 'py_class'
-#!!!! 'NoneType' object has no attribute 'py_class'
 #!/usr/bin/env python
 
 #

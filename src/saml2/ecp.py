@@ -200,4 +200,4 @@ class ECPServer(Server):
 
         soap_envelope = soapenv.Envelope(header=header, body=body)
 
-        return "%s" % soap_envelope
+        return str(soap_envelope)

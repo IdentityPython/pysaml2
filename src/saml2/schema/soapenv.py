@@ -292,14 +292,14 @@ ELEMENT_FROM_STRING = {
 }
 
 ELEMENT_BY_TAG = {
-    "Envelope": Envelope,
+    # "Envelope": Envelope,
     "Envelope": Envelope_,
-    "Header": Header,
+    # "Header": Header,
     "Header": Header_,
-    "Body": Body,
+    # "Body": Body,
     "Body": Body_,
     "encodingStyle": EncodingStyle_,
-    "Fault": Fault,
+    # "Fault": Fault,
     "Fault": Fault_,
     "detail": Detail_,
     "faultcode": Fault_faultcode,

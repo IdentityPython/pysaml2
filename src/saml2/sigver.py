@@ -782,7 +782,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         try:
             (stdout, stderr, output) = self._run_xmlsec(com_list, [tmp.name])
         except XmlsecError as e:
-            raise SignatureError(com_list)
+            raise SignatureError(com_list) from e
 
         # this does not work if --store-signatures is used
         if output:
@@ -1011,7 +1011,7 @@ def encrypt_cert_from_item(item):
     try:
         try:
             _elem = extension_elements_to_elements(item.extensions.extension_elements, [pefim, ds])
-        except:
+        except Exception:
             _elem = extension_elements_to_elements(item.extension_elements[0].children, [pefim, ds])
 
         for _tmp_elem in _elem:
@@ -1020,7 +1020,7 @@ def encrypt_cert_from_item(item):
                     if _tmp_key_info.x509_data is not None and len(_tmp_key_info.x509_data) > 0:
                         _encrypt_cert = _tmp_key_info.x509_data[0].x509_certificate.text
                         break
-    except Exception as _exception:
+    except Exception:
         pass
 
     if _encrypt_cert is not None:
@@ -1296,12 +1296,8 @@ class SecurityContext(object):
         key_files = list(make_temp(key, decode=False, delete_tmpfiles=self.delete_tmpfiles) for key in keys_encoded)
         key_file_names = list(tmp.name for tmp in key_files)
 
-        try:
-            dectext = self.decrypt(enctext, key_file=key_file_names)
-        except DecryptError as e:
-            raise
-        else:
-            return dectext
+        dectext = self.decrypt(enctext, key_file=key_file_names)
+        return dectext
 
     def decrypt(self, enctext, key_file=None):
         """Decrypting an encrypted text by the use of a private key.
@@ -1316,7 +1312,7 @@ class SecurityContext(object):
         for key_file in key_files:
             try:
                 dectext = self.crypto.decrypt(enctext, key_file)
-            except XmlsecError as e:
+            except XmlsecError:
                 continue
             else:
                 if dectext:
@@ -1501,10 +1497,10 @@ class SecurityContext(object):
                     verified = True
                     break
             except XmlsecError as exc:
-                logger.error("check_sig: %s", exc)
+                logger.error("check_sig: %s", str(exc))
                 pass
             except Exception as exc:
-                logger.error("check_sig: %s", exc)
+                logger.error("check_sig: %s", str(exc))
                 raise
 
         if verified or only_valid_cert:

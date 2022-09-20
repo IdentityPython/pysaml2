@@ -373,7 +373,7 @@ def _do_nameid_format(cls, conf, typ):
         name_id_format = [name_id_format]
 
     formats = [md.NameIDFormat(text=format) for format in name_id_format]
-    setattr(cls, "name_id_format", formats)
+    cls.name_id_format = formats
 
 
 def do_endpoints(conf, endpoints):

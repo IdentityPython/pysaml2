@@ -67,10 +67,7 @@ def main():
             metad = MetaDataExtern(ATTRCONV, spec[1], sc, cert=spec[2], http=httpc, **kwargs)
 
         if metad is not None:
-            try:
-                metad.load()
-            except:
-                raise
+            metad.load()
 
         mds.metadata[spec[1]] = metad
 

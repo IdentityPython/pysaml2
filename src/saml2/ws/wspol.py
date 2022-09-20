@@ -6,8 +6,6 @@
 
 import saml2
 from saml2 import SamlBase
-from saml2.ws import wssec as wsse
-from saml2.ws import wsutil as wsu
 
 
 NAMESPACE = "http://schemas.xmlsoap.org/ws/2004/09/policy"

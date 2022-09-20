@@ -131,7 +131,7 @@ class VerifyBadRequestResponse(ExpectedError):
 
     def _func(self, conv):
         _response = conv.last_response
-        _content = conv.last_content
+        # _content = conv.last_content
         res = {}
         if _response.status_code == 400:
             pass
@@ -202,7 +202,7 @@ class CheckSpHttpResponseOK(Error):
 
     def _func(self, conv):
         _response = conv.last_response
-        _content = conv.last_response.content
+        # _content = conv.last_response.content
 
         res = {}
         if _response.status_code >= 400:
@@ -225,7 +225,7 @@ class CheckSpHttpResponse500(Error):
 
     def _func(self, conv):
         _response = conv.last_response
-        _content = conv.last_response.content
+        # _content = conv.last_response.content
 
         res = {}
         if _response.status_code < 500:

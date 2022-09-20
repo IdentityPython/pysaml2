@@ -738,7 +738,7 @@ class InMemoryMetaData(MetaData):
         def try_verify_signature(node_name):
             try:
                 self.security.verify_signature(txt, node_name=node_name, cert_file=self.cert)
-            except SignatureError as e:
+            except SignatureError:
                 return False
             else:
                 return True
@@ -798,7 +798,7 @@ class MetaDataLoader(MetaDataFile):
 
     @staticmethod
     def get_metadata_loader(func):
-        if hasattr(func, "__call__"):
+        if callable(func):
             return func
 
         i = func.rfind(".")
@@ -813,7 +813,7 @@ class MetaDataLoader(MetaDataFile):
         except AttributeError:
             raise RuntimeError('Module "%s" does not define a "%s" metadata loader' % (module, attr))
 
-        if not hasattr(metadata_loader, "__call__"):
+        if not callable(metadata_loader):
             raise RuntimeError("Metadata loader %s.%s must be callable" % (module, attr))
 
         return metadata_loader
@@ -957,7 +957,7 @@ class MetaDataMDX(InMemoryMetaData):
 
         _txt = response.content
         if not self.parse_and_check_signature(_txt):
-            error_msg = "Fething {item}: invalid signature".format(item=item, status=response.status_code)
+            error_msg = "Fething {item}: invalid signature".format(item=item)
             logger.info(error_msg)
             raise KeyError(error_msg)
 
@@ -974,7 +974,7 @@ class MetaDataMDX(InMemoryMetaData):
         elif not self._is_metadata_fresh(item):
             msg = "Metadata for {} have expired; refreshing metadata".format(item)
             logger.info(msg)
-            old_entity = self.entity.pop(item)
+            _ = self.entity.pop(item)
             entity = self._fetch_metadata(item)
         else:
             entity = self.entity[item]

@@ -51,12 +51,8 @@ def main():
         metad = MetaDataExtern(ATTRCONV, args.url, sc, cert=args.cert, http=httpc, **kwargs)
 
     if metad:
-        try:
-            metad.load()
-        except:
-            raise
-        else:
-            print("OK")
+        metad.load()
+        print("OK")
 
 
 if __name__ == "__main__":

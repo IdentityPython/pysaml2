@@ -35,7 +35,7 @@ def main():
 
     valid_for = 0
     nspair = {"xs": "http://www.w3.org/2001/XMLSchema"}
-    paths = [".", "/opt/local/bin"]
+    # paths = [".", "/opt/local/bin"]
 
     if args.valid:
         # translate into hours

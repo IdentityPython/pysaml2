@@ -167,6 +167,7 @@ class HttpParameters(object):
     signature = None
     sigalg = None
     # Relaystate and SAML message are stored elsewhere
+
     def __init__(self, dict):
         try:
             self.signature = dict["Signature"][0]

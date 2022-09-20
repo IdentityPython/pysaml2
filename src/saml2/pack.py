@@ -12,7 +12,7 @@ import base64
 
 try:
     import html
-except:
+except Exception:
     import cgi as html
 
 import logging
