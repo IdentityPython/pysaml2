@@ -66,6 +66,7 @@ flake8 = ">=4"
 Flake8-pyproject = "^1.1.0.post0"
 flake8-bugbear = "^22.8.23"
 flake8-logging-format = "^0.7.5"
+ipdb = "^0.13.9"
 
 [tool.poetry.group.test]
 optional = true
