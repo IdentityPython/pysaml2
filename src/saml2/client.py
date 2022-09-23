@@ -698,27 +698,38 @@ class Saml2Client(Base):
             BINDING_SOAP: [BINDING_SOAP],
             BINDING_HTTP_POST: [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT],
             BINDING_HTTP_REDIRECT: [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST],
-        }.get(binding)
+        }.get(binding, [])
 
         if sign is None:
             sign = self.logout_responses_signed
 
-        response = self.create_logout_response(
-            _req.message,
-            bindings=response_bindings,
-            status=status,
-            sign=sign,
-            sign_alg=sign_alg,
-            digest_alg=digest_alg,
-        )
-        rinfo = self.response_args(_req.message, response_bindings)
+        for response_binding in response_bindings:
+            try:
+                response = self.create_logout_response(
+                    _req.message,
+                    bindings=[response_binding],
+                    status=status,
+                    sign=sign,
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg,
+                )
+                rinfo = self.response_args(_req.message, [response_binding])
 
-        return self.apply_binding(
-            rinfo["binding"],
-            response,
-            rinfo["destination"],
-            relay_state,
-            response=True,
-            sign=sign,
-            sigalg=sign_alg,
-        )
+                return self.apply_binding(
+                    rinfo["binding"],
+                    response,
+                    rinfo["destination"],
+                    relay_state,
+                    response=True,
+                    sign=sign,
+                    sigalg=sign_alg,
+                )
+            except Exception:
+                continue
+
+        log_ctx = {
+            "message": "No supported bindings found to create LogoutResponse",
+            "issuer": _req.issuer.text,
+            "response_bindings": response_bindings,
+        }
+        raise SAMLError(log_ctx)
