@@ -437,14 +437,11 @@ class TestClient:
             name_id=nid, reason="Tired", expire=in_a_while(minutes=15),
             session_indexes=["_foo"])
 
-        info = self.client.apply_binding(
-            BINDING_HTTP_REDIRECT, req, destination="",
-            relay_state="relay2")
-        loc = info["headers"][0][1]
-        qs = parse.parse_qs(loc[1:])
-        samlreq = qs['SAMLRequest'][0]
-        resphttp = self.client.handle_logout_request(samlreq, nid,
-                BINDING_HTTP_REDIRECT)
+        info = self.client.apply_binding(BINDING_HTTP_POST, req, destination="", relay_state="relay2")
+        _dic_info = unpack_form(info["data"], "SAMLRequest")
+        samlreq = _dic_info["SAMLRequest"]
+
+        resphttp = self.client.handle_logout_request(samlreq, nid, BINDING_HTTP_POST)
         _dic = unpack_form(resphttp['data'], "SAMLResponse")
         xml = b64decode(_dic['SAMLResponse'].encode('UTF-8'))
 
@@ -453,8 +450,7 @@ class TestClient:
 
         # Try again with logout_responses_signed=False
         self.client.logout_responses_signed = False
-        resphttp = self.client.handle_logout_request(samlreq, nid,
-                BINDING_HTTP_REDIRECT)
+        resphttp = self.client.handle_logout_request(samlreq, nid, BINDING_HTTP_POST)
         _dic = unpack_form(resphttp['data'], "SAMLResponse")
         xml = b64decode(_dic['SAMLResponse'].encode('UTF-8'))
 
