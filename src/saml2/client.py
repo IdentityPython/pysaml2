@@ -700,16 +700,17 @@ class Saml2Client(Base):
             BINDING_HTTP_REDIRECT: [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST],
         }.get(binding, [])
 
-        if sign is None:
-            sign = self.logout_responses_signed
-
         for response_binding in response_bindings:
+            sign = sign if sign is not None else self.logout_responses_signed
+            sign_redirect = sign and response_binding == BINDING_HTTP_REDIRECT
+            sign_post = sign and not sign_redirect
+
             try:
                 response = self.create_logout_response(
                     _req.message,
                     bindings=[response_binding],
                     status=status,
-                    sign=sign,
+                    sign=sign_post,
                     sign_alg=sign_alg,
                     digest_alg=digest_alg,
                 )
@@ -721,7 +722,7 @@ class Saml2Client(Base):
                     rinfo["destination"],
                     relay_state,
                     response=True,
-                    sign=sign,
+                    sign=sign_redirect,
                     sigalg=sign_alg,
                 )
             except Exception:
