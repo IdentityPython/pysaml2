@@ -13,7 +13,7 @@
       <xsd:pattern value="[A-Z][A-Z]"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:element name=" RequestedAttributes" type="eidas:RequestedAttributesType"/>
+  <xsd:element name="RequestedAttributes" type="eidas:RequestedAttributesType"/>
   <xsd:complexType name="RequestedAttributesType">
     <xsd:sequence>
       <xsd:element minOccurs="0" maxOccurs="unbounded" ref="eidas:RequestedAttribute"/>
@@ -22,11 +22,11 @@
   <xsd:element name="RequestedAttribute" type="eidas:RequestedAttributeType"/>
   <xsd:complexType name="RequestedAttributeType">
     <xsd:sequence>
-      <xsd:element name=" AttributeValue" type="xsd:anyType" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="AttributeValue" type="xsd:anyType" minOccurs="0" maxOccurs="unbounded"/>
     </xsd:sequence>
     <xsd:attribute name="Name" type="xsd:string" use="required"/>
     <xsd:attribute name="NameFormat" type="xsd:anyURI" use="required"/>
-    <xsd:attribute name="isRequired" type=" xsd:boolean" use="required"/>
+    <xsd:attribute name="isRequired" type="xsd:boolean" use="required"/>
     <xsd:attribute name="FriendlyName" type="xsd:string" use="optional"/>
     <xsd:anyAttribute namespace="##other" processContents="lax"/>
   </xsd:complexType>
