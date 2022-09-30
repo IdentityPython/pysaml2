@@ -3,7 +3,7 @@
 
 """Test data for saml2"""
 
-__author__ = 'tmatsuo@example.com (Takashi MATSUO)'
+__author__ = "tmatsuo@example.com (Takashi MATSUO)"
 
 TEST_NAME_ID = """<?xml version="1.0" encoding="utf-8"?>
 <NameID xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
@@ -241,4 +241,3 @@ TEST_ACTION = """<?xml version="1.0" encoding="utf-8"?>
 <Action xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
   Namespace="http://www.example.com/Namespace"/>
 """
-

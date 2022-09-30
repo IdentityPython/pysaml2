@@ -1,33 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import datetime
-import re
 import os
+import re
 from unittest.mock import patch
 
-from saml2.mdstore import MetadataStore, MetaDataMDX
-from saml2.mdstore import locations
-from saml2.mdstore import name
+from pathutils import full_path
 
-from saml2 import md
-from saml2 import sigver
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_ARTIFACT
-from saml2 import saml
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
 from saml2 import config
+from saml2 import md
+from saml2 import saml
+from saml2 import sigver
 from saml2.attribute_converter import ac_factory
 from saml2.attribute_converter import d_to_local_name
+from saml2.mdstore import MetaDataMDX
+from saml2.mdstore import MetadataStore
+from saml2.mdstore import locations
+from saml2.mdstore import name
 from saml2.s_utils import UnknownPrincipal
-
-from pathutils import full_path
 
 
 TESTS_DIR = os.path.dirname(__file__)
 
 sec_config = config.Config()
-#sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
+# sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
 
 TEST_METADATA_STRING = """
 <EntitiesDescriptor
@@ -84,15 +84,9 @@ TEST_METADATA_STRING = """
 ATTRCONV = ac_factory(full_path("attributemaps"))
 
 METADATACONF = {
-    "1": {
-        "local": [full_path("swamid-1.0.xml")]
-    },
-    "2": {
-        "local": [full_path("InCommon-metadata.xml")]
-    },
-    "3": {
-        "local": [full_path("extended.xml")]
-    },
+    "1": {"local": [full_path("swamid-1.0.xml")]},
+    "2": {"local": [full_path("InCommon-metadata.xml")]},
+    "3": {"local": [full_path("extended.xml")]},
     # "7": {
     #     "local": [full_path("metadata_sp_1.xml"),
     #               full_path("InCommon-metadata.xml")],
@@ -100,26 +94,19 @@ METADATACONF = {
     #         {"url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
     #          "cert": full_path("kalmar2.pem")}]
     # },
-    "4": {
-        "local": [full_path("metadata_example.xml")]
-    },
-    "5": {
-        "local": [full_path("metadata.aaitest.xml")]
-    },
-    "8": {
-        "mdfile": [full_path("swamid.md")]
-    },
-    "9": {
-        "local": [full_path("metadata")]
-    },
+    "4": {"local": [full_path("metadata_example.xml")]},
+    "5": {"local": [full_path("metadata.aaitest.xml")]},
+    "8": {"mdfile": [full_path("swamid.md")]},
+    "9": {"local": [full_path("metadata")]},
     "10": {
         "remote": [
-            {"url": "http://md.incommon.org/InCommon/InCommon-metadata-export.xml",
-             "cert": full_path("inc-md-cert.pem")}]
+            {
+                "url": "http://md.incommon.org/InCommon/InCommon-metadata-export.xml",
+                "cert": full_path("inc-md-cert.pem"),
+            }
+        ]
     },
-    "11": {
-        "inline": [TEST_METADATA_STRING]
-    }
+    "11": {"inline": [TEST_METADATA_STRING]},
 }
 
 
@@ -130,14 +117,12 @@ def _eq(l1, l2):
 def _fix_valid_until(xmlstring):
     new_date = datetime.datetime.now() + datetime.timedelta(days=1)
     new_date = new_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-    return re.sub(r' validUntil=".*?"', ' validUntil="%s"' % new_date,
-                  xmlstring)
+    return re.sub(r' validUntil=".*?"', ' validUntil="%s"' % new_date, xmlstring)
 
 
 def test_swami_1():
-    UMU_IDP = 'https://idp.umu.se/saml2/idp/metadata.php'
-    mds = MetadataStore(ATTRCONV, sec_config,
-                        disable_ssl_certificate_validation=True)
+    UMU_IDP = "https://idp.umu.se/saml2/idp/metadata.php"
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["1"])
     assert len(mds) == 1  # One source
@@ -145,33 +130,31 @@ def test_swami_1():
     assert idps.keys()
     idpsso = mds.single_sign_on_service(UMU_IDP)
     assert len(idpsso) == 1
-    assert list(locations(idpsso)) == [
-        'https://idp.umu.se/saml2/idp/SSOService.php'
-    ]
+    assert list(locations(idpsso)) == ["https://idp.umu.se/saml2/idp/SSOService.php"]
 
     _name = name(mds[UMU_IDP])
-    assert _name == u'Umeå University (SAML2)'
+    assert _name == "Umeå University (SAML2)"
     certs = mds.certs(UMU_IDP, "idpsso", "signing")
     assert len(certs) == 1
 
     sps = mds.with_descriptor("spsso")
     assert len(sps) == 108
 
-    wants = mds.attribute_requirement('https://connect8.sunet.se/shibboleth')
+    wants = mds.attribute_requirement("https://connect8.sunet.se/shibboleth")
     lnamn = [d_to_local_name(mds.attrc, attr) for attr in wants["optional"]]
-    assert _eq(lnamn, ['eduPersonPrincipalName', 'mail', 'givenName', 'sn',
-                       'eduPersonScopedAffiliation'])
+    assert _eq(lnamn, ["eduPersonPrincipalName", "mail", "givenName", "sn", "eduPersonScopedAffiliation"])
 
-    wants = mds.attribute_requirement('https://beta.lobber.se/shibboleth')
+    wants = mds.attribute_requirement("https://beta.lobber.se/shibboleth")
     assert wants["required"] == []
     lnamn = [d_to_local_name(mds.attrc, attr) for attr in wants["optional"]]
-    assert _eq(lnamn, ['eduPersonPrincipalName', 'mail', 'givenName', 'sn',
-                       'eduPersonScopedAffiliation', 'eduPersonEntitlement'])
+    assert _eq(
+        lnamn,
+        ["eduPersonPrincipalName", "mail", "givenName", "sn", "eduPersonScopedAffiliation", "eduPersonEntitlement"],
+    )
 
 
 def test_incommon_1():
-    mds = MetadataStore(ATTRCONV, sec_config,
-                        disable_ssl_certificate_validation=True)
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["2"])
 
@@ -181,16 +164,14 @@ def test_incommon_1():
     print(idps.keys())
     assert len(idps) > 300  # ~ 18%
     try:
-        _ = mds.single_sign_on_service('urn:mace:incommon:uiuc.edu')
+        _ = mds.single_sign_on_service("urn:mace:incommon:uiuc.edu")
     except UnknownPrincipal:
         pass
 
-    idpsso = mds.single_sign_on_service('urn:mace:incommon:alaska.edu')
+    idpsso = mds.single_sign_on_service("urn:mace:incommon:alaska.edu")
     assert len(idpsso) == 1
     print(idpsso)
-    assert list(locations(idpsso)) == [
-        'https://idp.alaska.edu/idp/profile/SAML2/Redirect/SSO'
-    ]
+    assert list(locations(idpsso)) == ["https://idp.alaska.edu/idp/profile/SAML2/Redirect/SSO"]
 
     sps = mds.with_descriptor("spsso")
 
@@ -209,53 +190,43 @@ def test_incommon_1():
 
 
 def test_ext_2():
-    mds = MetadataStore(ATTRCONV, sec_config,
-                        disable_ssl_certificate_validation=True)
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["3"])
     # No specific binding defined
 
     ents = mds.with_descriptor("spsso")
-    for binding in [BINDING_SOAP, BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT,
-                    BINDING_HTTP_REDIRECT]:
+    for binding in [BINDING_SOAP, BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT, BINDING_HTTP_REDIRECT]:
         assert mds.single_logout_service(list(ents.keys())[0], binding, "spsso")
 
 
 def test_example():
-    mds = MetadataStore(ATTRCONV, sec_config,
-                        disable_ssl_certificate_validation=True)
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["4"])
     assert len(mds.keys()) == 1
     idps = mds.with_descriptor("idpsso")
 
-    assert list(idps.keys()) == [
-        'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php']
-    certs = mds.certs(
-        'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php',
-        "idpsso", "signing")
+    assert list(idps.keys()) == ["http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"]
+    certs = mds.certs("http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "idpsso", "signing")
     assert len(certs) == 1
 
 
 def test_switch_1():
-    mds = MetadataStore(ATTRCONV, sec_config,
-                        disable_ssl_certificate_validation=True)
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["5"])
     assert len(mds.keys()) > 160
     idps = mds.with_descriptor("idpsso")
     print(idps.keys())
-    idpsso = mds.single_sign_on_service(
-        'https://aai-demo-idp.switch.ch/idp/shibboleth')
+    idpsso = mds.single_sign_on_service("https://aai-demo-idp.switch.ch/idp/shibboleth")
     assert len(idpsso) == 1
     print(idpsso)
-    assert list(locations(idpsso)) == [
-        'https://aai-demo-idp.switch.ch/idp/profile/SAML2/Redirect/SSO'
-    ]
+    assert list(locations(idpsso)) == ["https://aai-demo-idp.switch.ch/idp/profile/SAML2/Redirect/SSO"]
     assert len(idps) > 30
     aas = mds.with_descriptor("attribute_authority")
     print(aas.keys())
-    aad = aas['https://aai-demo-idp.switch.ch/idp/shibboleth']
+    aad = aas["https://aai-demo-idp.switch.ch/idp/shibboleth"]
     print(aad.keys())
     assert len(aad["attribute_authority_descriptor"]) == 1
     assert len(aad["idpsso_descriptor"]) == 1
@@ -268,8 +239,7 @@ def test_switch_1():
 
 def test_metadata_file():
     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
-    mds = MetadataStore(ATTRCONV, sec_config,
-                        disable_ssl_certificate_validation=True)
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["8"])
     print(len(mds.keys()))
@@ -304,8 +274,7 @@ def test_metadata_file():
 
 def test_load_local_dir():
     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
-    mds = MetadataStore(ATTRCONV, sec_config,
-                        disable_ssl_certificate_validation=True)
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["9"])
     print(mds)
@@ -313,7 +282,7 @@ def test_load_local_dir():
     assert len(mds.keys()) == 4  # number of idps
 
 
-@patch('saml2.httpbase.requests.request')
+@patch("saml2.httpbase.requests.request")
 def test_load_external(mock_request):
     filepath = os.path.join(TESTS_DIR, "remote_data/InCommon-metadata-export.xml")
     with open(filepath) as fd:
@@ -323,8 +292,7 @@ def test_load_external(mock_request):
     mock_request.return_value.content = data
 
     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
-    mds = MetadataStore(ATTRCONV, sec_config,
-                        disable_ssl_certificate_validation=True)
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["10"])
     print(mds)
@@ -334,20 +302,17 @@ def test_load_external(mock_request):
 
 def test_load_string():
     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
-    mds = MetadataStore(ATTRCONV, sec_config,
-                        disable_ssl_certificate_validation=True)
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["11"])
     print(mds)
     assert len(mds.keys()) == 1
     idps = mds.with_descriptor("idpsso")
 
-    assert list(idps.keys()) == [
-        'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php']
-    certs = mds.certs(
-        'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php',
-        "idpsso", "signing")
+    assert list(idps.keys()) == ["http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"]
+    certs = mds.certs("http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "idpsso", "signing")
     assert len(certs) == 1
+
 
 if __name__ == "__main__":
     test_load_external()

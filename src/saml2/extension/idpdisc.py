@@ -7,15 +7,16 @@
 import saml2
 from saml2 import md
 
-NAMESPACE = 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol'
+
+NAMESPACE = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
 BINDING_DISCO = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
 
 
 class DiscoveryResponse(md.IndexedEndpointType_):
     """The urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:
-    DiscoveryResponse element """
+    DiscoveryResponse element"""
 
-    c_tag = 'DiscoveryResponse'
+    c_tag = "DiscoveryResponse"
     c_namespace = NAMESPACE
     c_children = md.IndexedEndpointType_.c_children.copy()
     c_attributes = md.IndexedEndpointType_.c_attributes.copy()
@@ -32,10 +33,9 @@ ELEMENT_FROM_STRING = {
 }
 
 ELEMENT_BY_TAG = {
-    'DiscoveryResponse': DiscoveryResponse,
+    "DiscoveryResponse": DiscoveryResponse,
 }
 
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

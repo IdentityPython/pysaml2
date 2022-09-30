@@ -2,8 +2,11 @@
 import logging
 
 import memcache
+
 from saml2 import time_util
-from saml2.cache import TooOld, CacheError
+from saml2.cache import CacheError
+from saml2.cache import TooOld
+
 
 # The assumption is that any subject may consist of data
 # gathered from several different sources, all with their own
@@ -11,8 +14,10 @@ from saml2.cache import TooOld, CacheError
 
 logger = logging.getLogger(__name__)
 
+
 def _key(prefix, name):
     return "%s_%s" % (prefix, name)
+
 
 class Cache(object):
     def __init__(self, servers, debug=0):
@@ -35,7 +40,7 @@ class Cache(object):
                 raise CacheError("Set operation failed")
 
     def get_identity(self, subject_id, entities=None):
-        """ Get all the identity information that has been received and
+        """Get all the identity information that has been received and
         are still valid about the subject.
 
         :param subject_id: The identifier of the subject
@@ -52,8 +57,7 @@ class Cache(object):
 
         res = {}
         oldees = []
-        for (entity_id, item) in self._cache.get_multi(entities,
-                                                    subject_id+'_').items():
+        for (entity_id, item) in self._cache.get_multi(entities, subject_id + "_").items():
             try:
                 info = self.get_info(item)
             except TooOld:
@@ -68,7 +72,7 @@ class Cache(object):
         return res, oldees
 
     def get_info(self, item, check_not_on_or_after=True):
-        """ Get session information about a subject gotten from a
+        """Get session information about a subject gotten from a
         specified IdP/AA.
 
         :param item: Information stored
@@ -92,7 +96,7 @@ class Cache(object):
             return self.get_info(res)
 
     def set(self, subject_id, entity_id, info, timestamp=0):
-        """ Stores session information in the cache. Assumes that the subject_id
+        """Stores session information in the cache. Assumes that the subject_id
         is unique within the context of the Service Provider.
 
         :param subject_id: The subject identifier
@@ -122,7 +126,7 @@ class Cache(object):
             raise CacheError("set failed")
 
     def reset(self, subject_id, entity_id):
-        """ Scrap the assertions received from a IdP or an AA about a special
+        """Scrap the assertions received from a IdP or an AA about a special
         subject.
 
         :param subject_id: The subjects identifier
@@ -133,7 +137,7 @@ class Cache(object):
             raise CacheError("reset failed")
 
     def entities(self, subject_id):
-        """ Returns all the entities of assertions for a subject, disregarding
+        """Returns all the entities of assertions for a subject, disregarding
         whether the assertion still is valid or not.
 
         :param subject_id: The identifier of the subject
@@ -146,12 +150,12 @@ class Cache(object):
             return res
 
     def receivers(self, subject_id):
-        """ Another name for entities() just to make it more logic in the IdP
-            scenario """
+        """Another name for entities() just to make it more logic in the IdP
+        scenario"""
         return self.entities(subject_id)
 
     def active(self, subject_id, entity_id):
-        """ Returns the status of assertions from a specific entity_id.
+        """Returns the status of assertions from a specific entity_id.
 
         :param subject_id: The ID of the subject
         :param entity_id: The entity ID of the entity_id of the assertion
@@ -174,7 +178,7 @@ class Cache(object):
             return False
 
     def subjects(self):
-        """ Return identifiers for all the subjects that are in the cache.
+        """Return identifiers for all the subjects that are in the cache.
 
         :return: list of subject identifiers
         """

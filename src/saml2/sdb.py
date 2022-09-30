@@ -1,6 +1,5 @@
-import logging
-
 from hashlib import sha1
+import logging
 
 from saml2.ident import code_binary
 
@@ -12,11 +11,12 @@ def context_match(cfilter, cntx):
     # TODO
     return True
 
+
 # The key to the stored authn statement is placed encrypted in the cookie
 
 
 class SessionStorage(object):
-    """ In memory storage of session information """
+    """In memory storage of session information"""
 
     def __init__(self):
         self.db = {"assertion": {}, "authn": {}}
@@ -34,8 +34,7 @@ class SessionStorage(object):
     def get_assertion(self, cid):
         return self.assertion[cid]
 
-    def get_authn_statements(self, name_id, session_index=None,
-                             requested_context=None):
+    def get_authn_statements(self, name_id, session_index=None, requested_context=None):
         """
 
         :param name_id:
@@ -56,8 +55,7 @@ class SessionStorage(object):
                 if statement.session_index != session_index:
                     continue
             if requested_context:
-                if not context_match(requested_context,
-                                     statement[0].authn_context):
+                if not context_match(requested_context, statement[0].authn_context):
                     continue
             result.append(statement)
 

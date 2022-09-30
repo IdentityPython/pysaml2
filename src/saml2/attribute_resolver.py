@@ -7,7 +7,8 @@ Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to do attribute aggregation.
 """
 import logging
-#from saml2 import client
+
+# from saml2 import client
 from saml2 import BINDING_SOAP
 
 
@@ -36,14 +37,11 @@ class AttributeResolver(object):
         for member in vo_members:
             for ass in self.metadata.attribute_consuming_service(member):
                 for attr_serv in ass.attribute_service:
-                    logger.info(
-                        "Send attribute request to %s", attr_serv.location)
+                    logger.info("Send attribute request to %s", attr_serv.location)
                     if attr_serv.binding != BINDING_SOAP:
                         continue
                     # attribute query assumes SOAP binding
-                    session_info = self.saml2client.attribute_query(
-                        name_id, attr_serv.location, issuer_id=issuer
-                    )
+                    session_info = self.saml2client.attribute_query(name_id, attr_serv.location, issuer_id=issuer)
                     if session_info:
                         result.append(session_info)
         return result

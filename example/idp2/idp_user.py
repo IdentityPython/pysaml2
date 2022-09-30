@@ -56,7 +56,7 @@ USERS = {
         "labeledURL": "http://www.example.com/test My homepage",
         "norEduPersonNIN": "SE199012315555",
         "postaladdress": "postaladdress",
-        "cn": "cn"
+        "cn": "cn",
     },
     "roland": {
         "sn": "Hedberg",
@@ -73,24 +73,16 @@ USERS = {
         "mail": "roland@example.com",
         "displayName": "P. Roland Hedberg",
         "labeledURL": "http://www.example.com/rohe My homepage",
-        "norEduPersonNIN": "SE197001012222"
+        "norEduPersonNIN": "SE197001012222",
     },
-    "babs": {
-        "surname": "Babs",
-        "givenName": "Ozzie",
-        "eduPersonAffiliation": "affiliate"
-    },
-    "upper": {
-        "surname": "Jeter",
-        "givenName": "Derek",
-        "eduPersonAffiliation": "affiliate"
-    },
+    "babs": {"surname": "Babs", "givenName": "Ozzie", "eduPersonAffiliation": "affiliate"},
+    "upper": {"surname": "Jeter", "givenName": "Derek", "eduPersonAffiliation": "affiliate"},
 }
 
 EXTRA = {
     "roland": {
         "eduPersonEntitlement": "urn:mace:swamid.se:foo:bar",
         "schacGender": "male",
-        "schacUserPresenceID": "skype:pepe.perez"
+        "schacUserPresenceID": "skype:pepe.perez",
     }
 }

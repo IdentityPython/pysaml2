@@ -15,16 +15,10 @@ MDIMPORT = {
     "swamid": {
         "url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
         "cert": "kalmar2.pem",
-        "type": "external"
+        "type": "external",
     },
-    "incommon": {
-        "file": "InCommon-metadata.xml",
-        "type": "local"
-    },
-    "test": {
-        "file": "mdtest.xml",
-        "type": "local"
-    }
+    "incommon": {"file": "InCommon-metadata.xml", "type": "local"},
+    "test": {"file": "mdtest.xml", "type": "local"},
 }
 
 
@@ -36,13 +30,12 @@ def main():
     if item["type"] == "local":
         metad = MetaDataFile(sys.argv[1], item["file"])
     elif item["type"] == "external":
-        metad = MetaDataExtern(sys.argv[1], item["url"],
-                               "/opt/local/bin/xmlsec1", item["cert"])
+        metad = MetaDataExtern(sys.argv[1], item["url"], "/opt/local/bin/xmlsec1", item["cert"])
 
     if metad:
         metad.load()
         print(metad.dumps())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

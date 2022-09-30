@@ -1,4 +1,4 @@
-__author__ = 'rolandh'
+__author__ = "rolandh"
 
 ENTITYATTRIBUTES = "urn:oasis:names:tc:SAML:metadata:attribute&EntityAttributes"
 

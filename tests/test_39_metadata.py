@@ -1,15 +1,16 @@
 import copy
+
+from pathutils import full_path
+from pytest import raises
+
+from saml2 import sigver
+from saml2.cert import CertificateError
+from saml2.cert import read_cert_from_file as read_cert
 from saml2.config import SPConfig
 from saml2.metadata import create_metadata_string
 from saml2.metadata import entity_descriptor
-from saml2.cert import read_cert_from_file as read_cert
-from saml2.cert import CertificateError
-from saml2.saml import NAME_FORMAT_URI, NAME_FORMAT_BASIC
-from saml2 import sigver
-
-from pathutils import full_path
-
-from pytest import raises
+from saml2.saml import NAME_FORMAT_BASIC
+from saml2.saml import NAME_FORMAT_URI
 
 
 sp_conf = {
@@ -18,8 +19,7 @@ sp_conf = {
     "service": {
         "sp": {
             "endpoints": {
-                "assertion_consumer_service": [
-                    "http://lingon.catalogix.se:8087/"],
+                "assertion_consumer_service": ["http://lingon.catalogix.se:8087/"],
             },
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],
@@ -56,19 +56,18 @@ def test_requested_attribute_name_format():
 
 def test_signed_metadata_proper_str_bytes_handling():
     sp_conf_2 = sp_conf.copy()
-    sp_conf_2['key_file'] = full_path("test.key")
-    sp_conf_2['cert_file'] = full_path("inc-md-cert.pem")
+    sp_conf_2["key_file"] = full_path("test.key")
+    sp_conf_2["cert_file"] = full_path("inc-md-cert.pem")
     # requires xmlsec binaries per https://pysaml2.readthedocs.io/en/latest/examples/sp.html
-    sp_conf_2['xmlsec_binary'] = sigver.get_xmlsec_binary(["/opt/local/bin"])
+    sp_conf_2["xmlsec_binary"] = sigver.get_xmlsec_binary(["/opt/local/bin"])
     cnf = SPConfig().load(sp_conf_2)
 
     # This will raise TypeError if string/bytes handling is not correct
-    sp_metadata = create_metadata_string('', config=cnf, sign=True)
+    sp_metadata = create_metadata_string("", config=cnf, sign=True)
 
 
 def test_cert_trailing_newlines_ignored():
-    assert "".join(read_cert(full_path("extra_lines.crt"))) \
-           == "".join(read_cert(full_path("test_2.crt")))
+    assert "".join(read_cert(full_path("extra_lines.crt"))) == "".join(read_cert(full_path("test_2.crt")))
 
 
 def test_invalid_cert_raises_error():
@@ -76,7 +75,7 @@ def test_invalid_cert_raises_error():
         read_cert(full_path("malformed.crt"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_requested_attribute_name_format()
     test_cert_trailing_newlines_ignored()
     test_invalid_cert_raises_error()

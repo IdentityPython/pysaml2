@@ -1,6 +1,7 @@
 import saml2
-import saml2.xmlenc as xenc
 from saml2 import xmldsig
+import saml2.xmlenc as xenc
+
 
 data1 = """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:EncryptedData MimeType="text/xml" xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">
@@ -18,7 +19,8 @@ def test_1():
     cd = ed.cipher_data
     assert cd.cipher_value is not None
     assert cd.cipher_value.text == "A23B45C56"
-    
+
+
 data2 = """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:EncryptedData 
     Type="http://www.w3.org/2001/04/xmlenc#Element" 
@@ -42,6 +44,7 @@ data2 = """<?xml version='1.0' encoding='UTF-8'?>
 #     <CipherData><CipherValue>DEADBEEF</CipherValue></CipherData>
 # </EncryptedData>"""
 
+
 def test_2():
     ed = xenc.encrypted_data_from_string(data2)
     assert ed
@@ -49,7 +52,7 @@ def test_2():
     assert ed.type == "http://www.w3.org/2001/04/xmlenc#Element"
     assert ed.encryption_method is not None
     em = ed.encryption_method
-    assert em.algorithm == 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc'
+    assert em.algorithm == "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
     assert ed.key_info is not None
     ki = ed.key_info
     assert ki.key_name[0].text == "John Smith"
@@ -57,6 +60,7 @@ def test_2():
     cd = ed.cipher_data
     assert cd.cipher_value is not None
     assert cd.cipher_value.text == "DEADBEEF"
+
 
 data3 = """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:EncryptedData 
@@ -73,13 +77,14 @@ data3 = """<?xml version='1.0' encoding='UTF-8'?>
     </ns0:CipherData>
 </ns0:EncryptedData>"""
 
+
 def test_3():
     ed = xenc.encrypted_data_from_string(data3)
     assert ed
     print(ed)
     assert ed.encryption_method != None
     em = ed.encryption_method
-    assert em.algorithm == 'http://www.w3.org/2001/04/xmlenc#aes128-cbc'
+    assert em.algorithm == "http://www.w3.org/2001/04/xmlenc#aes128-cbc"
     assert ed.key_info != None
     ki = ed.key_info
     assert ki.key_name[0].text == "Sally Doe"
@@ -91,6 +96,7 @@ def test_3():
     cd = ed.cipher_data
     assert cd.cipher_value != None
     assert cd.cipher_value.text == "DEADBEEF"
+
 
 data4 = """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:EncryptedKey 
@@ -111,7 +117,7 @@ data4 = """<?xml version='1.0' encoding='UTF-8'?>
 
 
 # data4 = """<EncryptedKey Id='EK' xmlns='http://www.w3.org/2001/04/xmlenc#'>
-#     <EncryptionMethod 
+#     <EncryptionMethod
 #            Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5"/>
 #     <ds:KeyInfo xmlns:ds='http://www.w3.org/2000/09/xmldsig#'>
 #         <ds:KeyName>John Smith</ds:KeyName>
@@ -123,13 +129,14 @@ data4 = """<?xml version='1.0' encoding='UTF-8'?>
 #     <CarriedKeyName>Sally Doe</CarriedKeyName>
 # </EncryptedKey>"""
 
+
 def test_4():
     ek = xenc.encrypted_key_from_string(data4)
     assert ek
     print(ek)
     assert ek.encryption_method != None
     em = ek.encryption_method
-    assert em.algorithm == 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
+    assert em.algorithm == "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
     assert ek.key_info != None
     ki = ek.key_info
     assert ki.key_name[0].text == "John Smith"
@@ -142,6 +149,7 @@ def test_4():
     cd = ek.cipher_data
     assert cd.cipher_value != None
     assert cd.cipher_value.text == "xyzabc"
+
 
 data5 = """<CipherReference URI="http://www.example.com/CipherValues.xml"
     xmlns="http://www.w3.org/2001/04/xmlenc#">
@@ -156,6 +164,7 @@ data5 = """<CipherReference URI="http://www.example.com/CipherValues.xml"
     </Transforms>
 </CipherReference>"""
 
+
 def test_5():
     cr = xenc.cipher_reference_from_string(data5)
     assert cr
@@ -164,16 +173,15 @@ def test_5():
     trs = cr.transforms
     assert len(trs.transform) == 2
     tr = trs.transform[0]
-    assert tr.algorithm in ["http://www.w3.org/TR/1999/REC-xpath-19991116",
-            "http://www.w3.org/2000/09/xmldsig#base64"]
+    assert tr.algorithm in ["http://www.w3.org/TR/1999/REC-xpath-19991116", "http://www.w3.org/2000/09/xmldsig#base64"]
     if tr.algorithm == "http://www.w3.org/2000/09/xmldsig#base64":
         pass
     elif tr.algorithm == "http://www.w3.org/TR/1999/REC-xpath-19991116":
         assert len(tr.x_path) == 1
         xp = tr.x_path[0]
         assert xp.text.strip() == """self::text()[parent::rep:CipherValue[@Id="example1"]]"""
-        
-        
+
+
 data6 = """<ReferenceList xmlns="http://www.w3.org/2001/04/xmlenc#">
     <DataReference URI="#invoice34">
       <ds:Transforms xmlns:ds='http://www.w3.org/2000/09/xmldsig#'>
@@ -186,6 +194,7 @@ data6 = """<ReferenceList xmlns="http://www.w3.org/2001/04/xmlenc#">
     </DataReference>
 </ReferenceList>"""
 
+
 def test_6():
     rl = xenc.reference_list_from_string(data6)
     assert rl
@@ -197,13 +206,11 @@ def test_6():
     ee = dr.extension_elements[0]
     assert ee.tag == "Transforms"
     assert ee.namespace == "http://www.w3.org/2000/09/xmldsig#"
-    trs = saml2.extension_element_to_element(ee, xmldsig.ELEMENT_FROM_STRING,
-                                        namespace=xmldsig.NAMESPACE)
-    
+    trs = saml2.extension_element_to_element(ee, xmldsig.ELEMENT_FROM_STRING, namespace=xmldsig.NAMESPACE)
+
     assert trs
     assert len(trs.transform) == 1
     tr = trs.transform[0]
     assert tr.algorithm == "http://www.w3.org/TR/1999/REC-xpath-19991116"
     assert len(tr.x_path) == 1
     assert tr.x_path[0].text.strip() == """self::xenc:EncryptedData[@Id="example1"]"""
-

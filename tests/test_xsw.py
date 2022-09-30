@@ -2,16 +2,14 @@ from datetime import datetime
 from unittest.mock import Mock
 from unittest.mock import patch
 
+from dateutil import parser
+from pathutils import dotname
+from pathutils import full_path
+from pytest import raises
+
 from saml2.config import config_factory
 from saml2.response import authn_response
 from saml2.sigver import SignatureError
-
-from dateutil import parser
-
-from pytest import raises
-
-from pathutils import dotname
-from pathutils import full_path
 
 
 SIGNED_XSW_ASSERTION_WRAPPER = full_path("xsw/signed-xsw-assertion-wrapper.xml")
@@ -27,7 +25,7 @@ class TestXSW:
         self.conf = config_factory("sp", dotname("server_conf"))
         self.ar = authn_response(self.conf, return_addrs="https://example.org/acs/post")
 
-    @patch('saml2.response.validate_on_or_after', return_value=True)
+    @patch("saml2.response.validate_on_or_after", return_value=True)
     def test_signed_xsw_assertion_wrapper_should_fail(self, mock_validate_on_or_after):
         self.ar.issue_instant_ok = Mock(return_value=True)
 
@@ -38,9 +36,9 @@ class TestXSW:
         self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
 
-        assert self.ar.came_from == 'http://localhost:8088/sso'
+        assert self.ar.came_from == "http://localhost:8088/sso"
         assert self.ar.session_id() == "id-abc"
-        assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
+        assert self.ar.issuer() == "urn:mace:example.com:saml:roland:idp"
 
         with raises(SignatureError):
             self.ar.verify()
@@ -48,7 +46,7 @@ class TestXSW:
         assert self.ar.ava is None
         assert self.ar.name_id is None
 
-    @patch('saml2.response.validate_on_or_after', return_value=True)
+    @patch("saml2.response.validate_on_or_after", return_value=True)
     def test_signed_xsw_assertion_extensions_should_fail(self, mock_validate_on_or_after):
         self.ar.issue_instant_ok = Mock(return_value=True)
 
@@ -59,9 +57,9 @@ class TestXSW:
         self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
 
-        assert self.ar.came_from == 'http://localhost:8088/sso'
+        assert self.ar.came_from == "http://localhost:8088/sso"
         assert self.ar.session_id() == "id-abc"
-        assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
+        assert self.ar.issuer() == "urn:mace:example.com:saml:roland:idp"
 
         with raises(SignatureError):
             self.ar.verify()
@@ -69,7 +67,7 @@ class TestXSW:
         assert self.ar.ava is None
         assert self.ar.name_id is None
 
-    @patch('saml2.response.validate_on_or_after', return_value=True)
+    @patch("saml2.response.validate_on_or_after", return_value=True)
     def test_signed_xsw_assertion_assertion_should_fail(self, mock_validate_on_or_after):
         self.ar.issue_instant_ok = Mock(return_value=True)
 
@@ -80,9 +78,9 @@ class TestXSW:
         self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
 
-        assert self.ar.came_from == 'http://localhost:8088/sso'
+        assert self.ar.came_from == "http://localhost:8088/sso"
         assert self.ar.session_id() == "id-abc"
-        assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
+        assert self.ar.issuer() == "urn:mace:example.com:saml:roland:idp"
 
         with raises(SignatureError):
             self.ar.verify()
@@ -96,7 +94,7 @@ class TestInvalidDepthFirstSig:
         self.conf = config_factory("sp", dotname("server_conf"))
         self.ar = authn_response(self.conf, return_addrs="https://example.org/acs/post")
 
-    @patch('saml2.response.validate_on_or_after', return_value=True)
+    @patch("saml2.response.validate_on_or_after", return_value=True)
     def test_signed_assertion_first_sig_should_fail(self, mock_validate_on_or_after):
         self.ar.issue_instant_ok = Mock(return_value=True)
 
@@ -107,9 +105,9 @@ class TestInvalidDepthFirstSig:
         self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
 
-        assert self.ar.came_from == 'http://localhost:8088/sso'
+        assert self.ar.came_from == "http://localhost:8088/sso"
         assert self.ar.session_id() == "id-abc"
-        assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
+        assert self.ar.issuer() == "urn:mace:example.com:saml:roland:idp"
 
         with raises(SignatureError):
             self.ar.verify()
@@ -117,7 +115,7 @@ class TestInvalidDepthFirstSig:
         assert self.ar.ava is None
         assert self.ar.name_id is None
 
-    @patch('saml2.response.validate_on_or_after', return_value=True)
+    @patch("saml2.response.validate_on_or_after", return_value=True)
     def test_signed_response_first_sig_should_fail(self, mock_validate_on_or_after):
         self.ar.issue_instant_ok = Mock(return_value=True)
 

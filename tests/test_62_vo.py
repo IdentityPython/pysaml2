@@ -1,19 +1,19 @@
-from saml2.saml import NameID
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.saml import NameID
 
-__author__ = 'rolandh'
+
+__author__ = "rolandh"
 
 from saml2 import config
 from saml2.client import Saml2Client
-from saml2.time_util import str_to_time, in_a_while
+from saml2.time_util import in_a_while
+from saml2.time_util import str_to_time
 
-SESSION_INFO_PATTERN = {"ava": {}, "came from": "", "not_on_or_after": 0,
-                        "issuer": "", "session_id": -1}
 
-nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
-             text="abcdefgh")
-nid0 = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
-              text="01234567")
+SESSION_INFO_PATTERN = {"ava": {}, "came from": "", "not_on_or_after": 0, "issuer": "", "session_id": -1}
+
+nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT, text="abcdefgh")
+nid0 = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT, text="01234567")
 
 
 def add_derek_info(sp):
@@ -27,7 +27,7 @@ def add_derek_info(sp):
     sp.users.add_information_about_person(session_info)
 
 
-class TestVirtualOrg():
+class TestVirtualOrg:
     def setup_class(self):
         conf = config.SPConfig()
         conf.load_file("server_conf")
@@ -41,7 +41,7 @@ class TestVirtualOrg():
         aas = self.vo.members_to_ask(nid)
         print(aas)
         assert len(aas) == 1
-        assert 'urn:mace:example.com:saml:aa' in aas
+        assert "urn:mace:example.com:saml:aa" in aas
 
     def test_unknown_subject(self):
         aas = self.vo.members_to_ask(nid0)
@@ -58,7 +58,7 @@ class TestVirtualOrg():
         assert cid is None
 
 
-class TestVirtualOrg_2():
+class TestVirtualOrg_2:
     def setup_class(self):
         conf = config.SPConfig()
         conf.load_file("server_conf")
@@ -70,7 +70,7 @@ class TestVirtualOrg_2():
         aas = self.sp.vorg.members_to_ask(nid)
         print(aas)
         assert len(aas) == 1
-        assert 'urn:mace:example.com:saml:aa' in aas
+        assert "urn:mace:example.com:saml:aa" in aas
 
     def test_unknown_subject(self):
         aas = self.sp.vorg.members_to_ask(nid0)

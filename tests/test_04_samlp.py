@@ -4,26 +4,26 @@
 
 """Tests for saml2.samlp"""
 
-__author__ = 'roland.hedberg@adm.umu.se (Roland Hedberg)'
+__author__ = "roland.hedberg@adm.umu.se (Roland Hedberg)"
 
 try:
-  from xml.etree import ElementTree
+    from xml.etree import ElementTree
 except ImportError:
-  from elementtree import ElementTree
-import saml2
+    from elementtree import ElementTree
 
 import samlp_data
 
+import saml2
 from saml2 import saml
 from saml2 import samlp
 from saml2 import xmldsig as ds
 
 
 # class TestRequestAbstractType:
-# 
+#
 #     def setup_class(self):
 #         self.ar = samlp.RequestAbstractType_()
-# 
+#
 #     def testAccessors(self):
 #         """Test for RequestAbstractType accessors"""
 #         self.ar.id = "request id"
@@ -34,7 +34,7 @@ from saml2 import xmldsig as ds
 #         self.ar.issuer = saml.Issuer()
 #         self.ar.signature = ds.Signature()
 #         self.ar.extensions = samlp.Extensions()
-# 
+#
 #         new_ar = samlp.request_abstract_type__from_string(self.ar.to_string())
 #         assert new_ar.id == "request id"
 #         assert new_ar.version == saml2.VERSION
@@ -44,14 +44,14 @@ from saml2 import xmldsig as ds
 #         assert isinstance(new_ar.issuer, saml.Issuer)
 #         assert isinstance(new_ar.signature, ds.Signature)
 #         assert isinstance(new_ar.extensions, samlp.Extensions)
-#         
+#
 #     def testUsingTestData(self):
 #         """Test for request_abstract_type_from_string() using test data"""
 #         # TODO:
 #         pass
 
-class TestStatusDetail:
 
+class TestStatusDetail:
     def setup_class(self):
         self.status_detail = samlp.StatusDetail()
 
@@ -59,10 +59,9 @@ class TestStatusDetail:
         """Test for StatusDetail accessors"""
         # TODO:
         pass
-    
+
 
 class TestStatusMessage:
-
     def setup_class(self):
         self.status_message = samlp.StatusMessage()
 
@@ -70,35 +69,29 @@ class TestStatusMessage:
         """Test for StatusMessage accessors"""
         # TODO:
         pass
-    
+
 
 class TestStatusCode:
-
     def setup_class(self):
         self.status_code = samlp.StatusCode()
 
     def testAccessors(self):
         """Test for StatusCode accessors"""
         self.status_code.value = samlp.STATUS_RESPONDER
-        self.status_code.status_code = samlp.StatusCode(
-            value=samlp.STATUS_REQUEST_DENIED)
+        self.status_code.status_code = samlp.StatusCode(value=samlp.STATUS_REQUEST_DENIED)
         print(self.status_code.__dict__)
         new_status_code = samlp.status_code_from_string(self.status_code.to_string())
         assert new_status_code.value == samlp.STATUS_RESPONDER
-        assert new_status_code.status_code.value == \
-                                 samlp.STATUS_REQUEST_DENIED
+        assert new_status_code.status_code.value == samlp.STATUS_REQUEST_DENIED
 
     def testUsingTestData(self):
         """Test for status_code_from_string() using test data"""
-        new_status_code = samlp.status_code_from_string(
-            samlp_data.TEST_STATUS_CODE)
+        new_status_code = samlp.status_code_from_string(samlp_data.TEST_STATUS_CODE)
         assert new_status_code.value == samlp.STATUS_RESPONDER
-        assert new_status_code.status_code.value == \
-                                 samlp.STATUS_REQUEST_DENIED
+        assert new_status_code.status_code.value == samlp.STATUS_REQUEST_DENIED
 
 
 class TestStatus:
-
     def setup_class(self):
         self.status = samlp.Status()
 
@@ -116,16 +109,16 @@ class TestStatus:
         """Test for status_from_string using test data"""
         new_status = samlp.status_from_string(samlp_data.TEST_STATUS)
         assert isinstance(new_status.status_code, samlp.StatusCode)
-        assert isinstance(new_status.status_code.status_code,
-                                                        samlp.StatusCode)
+        assert isinstance(new_status.status_code.status_code, samlp.StatusCode)
         assert isinstance(new_status.status_message, samlp.StatusMessage)
         assert isinstance(new_status.status_detail, samlp.StatusDetail)
 
+
 # class TestStatusResponseType:
-# 
+#
 #     def setup_class(self):
 #         self.sr = samlp.StatusResponseType()
-# 
+#
 #     def testAccessors(self):
 #         """Test for StatusResponseType accessors"""
 #         self.sr.id = "response id"
@@ -138,7 +131,7 @@ class TestStatus:
 #         self.sr.signature = ds.Signature()
 #         self.sr.extensions = samlp.Extensions()
 #         self.sr.status = samlp.Status()
-# 
+#
 #         new_sr = samlp.status_response_type_from_string(self.sr.to_string())
 #         assert new_sr.id == "response id"
 #         assert new_sr.in_response_to == "request id"
@@ -150,7 +143,7 @@ class TestStatus:
 #         assert isinstance(new_sr.signature, ds.Signature)
 #         assert isinstance(new_sr.extensions, samlp.Extensions)
 #         assert isinstance(new_sr.status, samlp.Status)
-#         
+#
 #     def testUsingTestData(self):
 #         """Test for status_response_from_string() using test data"""
 #         # TODO:
@@ -158,7 +151,6 @@ class TestStatus:
 
 
 class TestResponse:
-
     def setup_class(self):
         self.response = samlp.Response()
 
@@ -190,16 +182,15 @@ class TestResponse:
         assert isinstance(new_response.status, samlp.Status)
 
         assert isinstance(new_response.assertion[0], saml.Assertion)
-        assert isinstance(new_response.encrypted_assertion[0],
-                                                        saml.EncryptedAssertion)
+        assert isinstance(new_response.encrypted_assertion[0], saml.EncryptedAssertion)
 
     def testUsingTestData(self):
         """Test for response_from_string() using test data"""
         # TODO:
         pass
 
-class TestNameIDPolicy:
 
+class TestNameIDPolicy:
     def setup_class(self):
         self.name_id_policy = samlp.NameIDPolicy()
 
@@ -207,29 +198,24 @@ class TestNameIDPolicy:
         """Test for NameIDPolicy accessors"""
         self.name_id_policy.format = saml.NAMEID_FORMAT_EMAILADDRESS
         self.name_id_policy.sp_name_qualifier = saml.NAMEID_FORMAT_PERSISTENT
-        self.name_id_policy.allow_create = 'false'
+        self.name_id_policy.allow_create = "false"
 
-        new_name_id_policy = samlp.name_id_policy_from_string(
-            self.name_id_policy.to_string())
+        new_name_id_policy = samlp.name_id_policy_from_string(self.name_id_policy.to_string())
 
         assert new_name_id_policy.format == saml.NAMEID_FORMAT_EMAILADDRESS
-        assert new_name_id_policy.sp_name_qualifier == \
-                                 saml.NAMEID_FORMAT_PERSISTENT
-        assert new_name_id_policy.allow_create == 'false'
+        assert new_name_id_policy.sp_name_qualifier == saml.NAMEID_FORMAT_PERSISTENT
+        assert new_name_id_policy.allow_create == "false"
 
     def testUsingTestData(self):
         """Test for name_id_policy_from_string() using test data"""
-        new_name_id_policy = samlp.name_id_policy_from_string(
-            samlp_data.TEST_NAME_ID_POLICY)
+        new_name_id_policy = samlp.name_id_policy_from_string(samlp_data.TEST_NAME_ID_POLICY)
 
         assert new_name_id_policy.format == saml.NAMEID_FORMAT_EMAILADDRESS
-        assert new_name_id_policy.sp_name_qualifier == \
-                                 saml.NAMEID_FORMAT_PERSISTENT
-        assert new_name_id_policy.allow_create == 'false'
+        assert new_name_id_policy.sp_name_qualifier == saml.NAMEID_FORMAT_PERSISTENT
+        assert new_name_id_policy.allow_create == "false"
 
 
 class TestIDPEntry:
-
     def setup_class(self):
         self.idp_entry = samlp.IDPEntry()
 
@@ -253,31 +239,25 @@ class TestIDPEntry:
 
 
 class TestIDPList:
-
     def setup_class(self):
         self.idp_list = samlp.IDPList()
 
     def testAccessors(self):
         """Test for IDPList accessors"""
-        self.idp_list.idp_entry.append(samlp.idp_entry_from_string(
-            samlp_data.TEST_IDP_ENTRY))
-        self.idp_list.get_complete = samlp.GetComplete(
-            text="http://www.example.com/GetComplete")
+        self.idp_list.idp_entry.append(samlp.idp_entry_from_string(samlp_data.TEST_IDP_ENTRY))
+        self.idp_list.get_complete = samlp.GetComplete(text="http://www.example.com/GetComplete")
         new_idp_list = samlp.idp_list_from_string(self.idp_list.to_string())
         assert isinstance(new_idp_list.idp_entry[0], samlp.IDPEntry)
-        assert new_idp_list.get_complete.text.strip() == \
-                                 "http://www.example.com/GetComplete"
+        assert new_idp_list.get_complete.text.strip() == "http://www.example.com/GetComplete"
 
     def testUsingTestData(self):
         """Test for idp_list_from_string() using test data"""
         new_idp_list = samlp.idp_list_from_string(samlp_data.TEST_IDP_LIST)
         assert isinstance(new_idp_list.idp_entry[0], samlp.IDPEntry)
-        assert new_idp_list.get_complete.text.strip() == \
-                                 "http://www.example.com/GetComplete"
+        assert new_idp_list.get_complete.text.strip() == "http://www.example.com/GetComplete"
 
 
 class TestScoping:
-
     def setup_class(self):
         self.scoping = samlp.Scoping()
 
@@ -304,7 +284,6 @@ class TestScoping:
 
 
 class TestRequestedAuthnContext:
-
     def setup_class(self):
         self.context = samlp.RequestedAuthnContext()
 
@@ -315,29 +294,22 @@ class TestRequestedAuthnContext:
         self.context.authn_context_decl_ref.append(saml.AuthnContextDeclRef())
         self.context.comparison = "exact"
 
-        new_context = samlp.requested_authn_context_from_string(
-            self.context.to_string())
+        new_context = samlp.requested_authn_context_from_string(self.context.to_string())
 
-        assert isinstance(new_context.authn_context_class_ref[0],
-                                                        saml.AuthnContextClassRef)
-        assert isinstance(new_context.authn_context_decl_ref[0],
-                                                        saml.AuthnContextDeclRef)
+        assert isinstance(new_context.authn_context_class_ref[0], saml.AuthnContextClassRef)
+        assert isinstance(new_context.authn_context_decl_ref[0], saml.AuthnContextDeclRef)
         assert new_context.comparison == "exact"
 
     def testUsingTestData(self):
         """Test for requested_authn_context_from_string() using test data"""
-        new_context = samlp.requested_authn_context_from_string(
-            samlp_data.TEST_REQUESTED_AUTHN_CONTEXT)
+        new_context = samlp.requested_authn_context_from_string(samlp_data.TEST_REQUESTED_AUTHN_CONTEXT)
 
-        assert isinstance(new_context.authn_context_class_ref[0],
-                                                        saml.AuthnContextClassRef)
-        assert isinstance(new_context.authn_context_decl_ref[0],
-                                                        saml.AuthnContextDeclRef)
+        assert isinstance(new_context.authn_context_class_ref[0], saml.AuthnContextClassRef)
+        assert isinstance(new_context.authn_context_decl_ref[0], saml.AuthnContextDeclRef)
         assert new_context.comparison == "exact"
 
 
 class TestAuthnRequest:
-
     def setup_class(self):
         self.ar = samlp.AuthnRequest()
 
@@ -357,8 +329,8 @@ class TestAuthnRequest:
         self.ar.conditions = saml.Conditions()
         self.ar.requested_authn_context = samlp.RequestedAuthnContext()
         self.ar.scoping = samlp.Scoping()
-        self.ar.force_authn = 'true'
-        self.ar.is_passive = 'true'
+        self.ar.force_authn = "true"
+        self.ar.is_passive = "true"
         self.ar.assertion_consumer_service_index = "1"
         self.ar.assertion_consumer_service_url = "http://www.example.com/acs"
         self.ar.protocol_binding = saml2.BINDING_HTTP_POST
@@ -378,16 +350,14 @@ class TestAuthnRequest:
         assert isinstance(new_ar.subject, saml.Subject)
         assert isinstance(new_ar.name_id_policy, samlp.NameIDPolicy)
         assert isinstance(new_ar.conditions, saml.Conditions)
-        assert isinstance(new_ar.requested_authn_context,
-                                                        samlp.RequestedAuthnContext)
+        assert isinstance(new_ar.requested_authn_context, samlp.RequestedAuthnContext)
         assert isinstance(new_ar.scoping, samlp.Scoping)
-        assert new_ar.force_authn == 'true'
-        assert new_ar.is_passive == 'true'
-        assert new_ar.assertion_consumer_service_index == '1'
-        assert new_ar.assertion_consumer_service_url == \
-                                 'http://www.example.com/acs'
+        assert new_ar.force_authn == "true"
+        assert new_ar.is_passive == "true"
+        assert new_ar.assertion_consumer_service_index == "1"
+        assert new_ar.assertion_consumer_service_url == "http://www.example.com/acs"
         assert new_ar.protocol_binding == saml2.BINDING_HTTP_POST
-        assert new_ar.attribute_consuming_service_index == '2'
+        assert new_ar.attribute_consuming_service_index == "2"
         assert new_ar.provider_name == "provider name"
 
     def testUsingTestData(self):
@@ -405,21 +375,18 @@ class TestAuthnRequest:
         assert isinstance(new_ar.subject, saml.Subject)
         assert isinstance(new_ar.name_id_policy, samlp.NameIDPolicy)
         assert isinstance(new_ar.conditions, saml.Conditions)
-        assert isinstance(new_ar.requested_authn_context,
-                                                        samlp.RequestedAuthnContext)
+        assert isinstance(new_ar.requested_authn_context, samlp.RequestedAuthnContext)
         assert isinstance(new_ar.scoping, samlp.Scoping)
-        assert new_ar.force_authn == 'true'
-        assert new_ar.is_passive == 'true'
-        assert new_ar.assertion_consumer_service_index == '1'
-        assert new_ar.assertion_consumer_service_url == \
-                                 'http://www.example.com/acs'
+        assert new_ar.force_authn == "true"
+        assert new_ar.is_passive == "true"
+        assert new_ar.assertion_consumer_service_index == "1"
+        assert new_ar.assertion_consumer_service_url == "http://www.example.com/acs"
         assert new_ar.protocol_binding == saml2.BINDING_HTTP_POST
-        assert new_ar.attribute_consuming_service_index == '2'
+        assert new_ar.attribute_consuming_service_index == "2"
         assert new_ar.provider_name == "provider name"
 
 
 class TestLogoutRequest:
-
     def setup_class(self):
         self.lr = samlp.LogoutRequest()
 
@@ -478,7 +445,6 @@ class TestLogoutRequest:
 
 
 class TestLogoutResponse:
-    
     def setup_class(self):
         self.lr = samlp.LogoutResponse()
 
@@ -506,11 +472,10 @@ class TestLogoutResponse:
         assert isinstance(new_lr.signature, ds.Signature)
         assert isinstance(new_lr.extensions, samlp.Extensions)
         assert isinstance(new_lr.status, samlp.Status)
-        
+
     def testUsingTestData(self):
         """Test for logout_response_from_string() using test data"""
-        new_lr = samlp.logout_response_from_string(
-            samlp_data.TEST_LOGOUT_RESPONSE)
+        new_lr = samlp.logout_response_from_string(samlp_data.TEST_LOGOUT_RESPONSE)
         assert new_lr.id == "response id"
         assert new_lr.in_response_to == "request id"
         assert new_lr.version == saml2.VERSION
@@ -521,4 +486,3 @@ class TestLogoutResponse:
         assert isinstance(new_lr.signature, ds.Signature)
         assert isinstance(new_lr.extensions, samlp.Extensions)
         assert isinstance(new_lr.status, samlp.Status)
-

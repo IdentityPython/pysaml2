@@ -3,9 +3,19 @@
 import calendar
 import datetime
 import time
-from saml2.time_util import f_quotient, modulo, parse_duration, add_duration
-from saml2.time_util import str_to_time, instant, valid, in_a_while
-from saml2.time_util import before, after, not_before, not_on_or_after
+
+from saml2.time_util import add_duration
+from saml2.time_util import after
+from saml2.time_util import before
+from saml2.time_util import f_quotient
+from saml2.time_util import in_a_while
+from saml2.time_util import instant
+from saml2.time_util import modulo
+from saml2.time_util import not_before
+from saml2.time_util import not_on_or_after
+from saml2.time_util import parse_duration
+from saml2.time_util import str_to_time
+from saml2.time_util import valid
 
 
 def test_f_quotient():
@@ -38,51 +48,42 @@ def test_modulo_2():
     for i in range(1, 13):
         assert modulo(i, 1, 13) == i
     assert modulo(13, 1, 13) == 1
-    #x = 0.123
-    #assert modulo(13+x, 1, 13) == 1+x
+    # x = 0.123
+    # assert modulo(13+x, 1, 13) == 1+x
 
 
 def test_parse_duration():
     (sign, d) = parse_duration("P1Y3M5DT7H10M3.3S")
     assert sign == "+"
-    assert d['tm_sec'] == 3.3
-    assert d['tm_mon'] == 3
-    assert d['tm_hour'] == 7
-    assert d['tm_mday'] == 5
-    assert d['tm_year'] == 1
-    assert d['tm_min'] == 10
+    assert d["tm_sec"] == 3.3
+    assert d["tm_mon"] == 3
+    assert d["tm_hour"] == 7
+    assert d["tm_mday"] == 5
+    assert d["tm_year"] == 1
+    assert d["tm_min"] == 10
 
 
 def test_parse_duration2():
     (sign, d) = parse_duration("PT30M")
     assert sign == "+"
-    assert d['tm_sec'] == 0
-    assert d['tm_mon'] == 0
-    assert d['tm_hour'] == 0
-    assert d['tm_mday'] == 0
-    assert d['tm_year'] == 0
-    assert d['tm_min'] == 30
+    assert d["tm_sec"] == 0
+    assert d["tm_mon"] == 0
+    assert d["tm_hour"] == 0
+    assert d["tm_mday"] == 0
+    assert d["tm_year"] == 0
+    assert d["tm_min"] == 30
 
 
 PATTERNS = {
-    "P3Y6M4DT12H30M5S": {'tm_sec': 5, 'tm_hour': 12, 'tm_mday': 4,
-                         'tm_year': 3, 'tm_mon': 6, 'tm_min': 30},
-    "P23DT23H": {'tm_sec': 0, 'tm_hour': 23, 'tm_mday': 23, 'tm_year': 0,
-                 'tm_mon': 0, 'tm_min': 0},
-    "P4Y": {'tm_sec': 0, 'tm_hour': 0, 'tm_mday': 0, 'tm_year': 4,
-            'tm_mon': 0, 'tm_min': 0},
-    "P1M": {'tm_sec': 0, 'tm_hour': 0, 'tm_mday': 0, 'tm_year': 0,
-            'tm_mon': 1, 'tm_min': 0},
-    "PT1M": {'tm_sec': 0, 'tm_hour': 0, 'tm_mday': 0, 'tm_year': 0,
-             'tm_mon': 0, 'tm_min': 1},
-    "P0.5Y": {'tm_sec': 0, 'tm_hour': 0, 'tm_mday': 0, 'tm_year': 0.5,
-              'tm_mon': 0, 'tm_min': 0},
-    "P0,5Y": {'tm_sec': 0, 'tm_hour': 0, 'tm_mday': 0, 'tm_year': 0.5,
-              'tm_mon': 0, 'tm_min': 0},
-    "PT36H": {'tm_sec': 0, 'tm_hour': 36, 'tm_mday': 0, 'tm_year': 0,
-              'tm_mon': 0, 'tm_min': 0},
-    "P1DT12H": {'tm_sec': 0, 'tm_hour': 12, 'tm_mday': 1, 'tm_year': 0,
-                'tm_mon': 0, 'tm_min': 0}
+    "P3Y6M4DT12H30M5S": {"tm_sec": 5, "tm_hour": 12, "tm_mday": 4, "tm_year": 3, "tm_mon": 6, "tm_min": 30},
+    "P23DT23H": {"tm_sec": 0, "tm_hour": 23, "tm_mday": 23, "tm_year": 0, "tm_mon": 0, "tm_min": 0},
+    "P4Y": {"tm_sec": 0, "tm_hour": 0, "tm_mday": 0, "tm_year": 4, "tm_mon": 0, "tm_min": 0},
+    "P1M": {"tm_sec": 0, "tm_hour": 0, "tm_mday": 0, "tm_year": 0, "tm_mon": 1, "tm_min": 0},
+    "PT1M": {"tm_sec": 0, "tm_hour": 0, "tm_mday": 0, "tm_year": 0, "tm_mon": 0, "tm_min": 1},
+    "P0.5Y": {"tm_sec": 0, "tm_hour": 0, "tm_mday": 0, "tm_year": 0.5, "tm_mon": 0, "tm_min": 0},
+    "P0,5Y": {"tm_sec": 0, "tm_hour": 0, "tm_mday": 0, "tm_year": 0.5, "tm_mon": 0, "tm_min": 0},
+    "PT36H": {"tm_sec": 0, "tm_hour": 36, "tm_mday": 0, "tm_year": 0, "tm_mon": 0, "tm_min": 0},
+    "P1DT12H": {"tm_sec": 0, "tm_hour": 12, "tm_mday": 1, "tm_year": 0, "tm_mon": 0, "tm_min": 0},
 }
 
 
@@ -91,8 +92,9 @@ def test_parse_duration_n():
         (sign, d) = parse_duration(dur)
         assert d == _val
 
+
 def test_add_duration_1():
-    #2000-01-12T12:13:14Z	P1Y3M5DT7H10M3S	2001-04-17T19:23:17Z
+    # 2000-01-12T12:13:14Z	P1Y3M5DT7H10M3S	2001-04-17T19:23:17Z
     t = add_duration(str_to_time("2000-01-12T12:13:14Z"), "P1Y3M5DT7H10M3S")
     assert t.tm_year == 2001
     assert t.tm_mon == 4
@@ -103,7 +105,7 @@ def test_add_duration_1():
 
 
 def test_add_duration_2():
-    #2000-01-12 PT33H   2000-01-13
+    # 2000-01-12 PT33H   2000-01-13
     t = add_duration(str_to_time("2000-01-12T00:00:00Z"), "PT33H")
     assert t.tm_year == 2000
     assert t.tm_mon == 1
@@ -115,15 +117,16 @@ def test_add_duration_2():
 
 def test_str_to_time():
     t = calendar.timegm(str_to_time("2000-01-12T00:00:00Z"))
-    #TODO: Find all instances of time.mktime(.....)
-    #t = time.mktime(str_to_time("2000-01-12T00:00:00Z"))
-    #assert t == 947631600.0
-    #TODO: add something to show how this time was arrived at
+    # TODO: Find all instances of time.mktime(.....)
+    # t = time.mktime(str_to_time("2000-01-12T00:00:00Z"))
+    # assert t == 947631600.0
+    # TODO: add something to show how this time was arrived at
     # do this as an external method in the
     assert t == 947635200
     # some IdPs omit the trailing Z, and SAML spec is unclear if it is actually required
     t = calendar.timegm(str_to_time("2000-01-12T00:00:00"))
     assert t == 947635200
+
 
 def test_instant():
     inst = str_to_time(instant())

@@ -1,29 +1,29 @@
 from contextlib import closing
+
+from pathutils import dotname
+from pathutils import full_path
+
+from saml2 import BINDING_PAOS
+from saml2 import BINDING_SOAP
+from saml2 import create_class_from_xml_string
+from saml2 import ecp_client
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2.client import Saml2Client
 from saml2.httpbase import set_list2dict
+from saml2.profile import ecp as ecp_prof
 from saml2.profile.ecp import RelayState
 from saml2.profile.paos import Request
-from saml2.server import Server
-from saml2.samlp import Response
 from saml2.samlp import STATUS_SUCCESS
 from saml2.samlp import AuthnRequest
-from saml2 import ecp_client
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_PAOS
-from saml2 import create_class_from_xml_string
-
-from saml2.profile import ecp as ecp_prof
-from saml2.client import Saml2Client
-
-from pathutils import dotname, full_path
-
-__author__ = 'rolandh'
+from saml2.samlp import Response
+from saml2.server import Server
 
 
-AUTHN = {
-    "class_ref": INTERNETPROTOCOLPASSWORD,
-    "authn_auth": "http://www.example.com/login"
-}
+__author__ = "rolandh"
+
+
+AUTHN = {"class_ref": INTERNETPROTOCOLPASSWORD, "authn_auth": "http://www.example.com/login"}
+
 
 def _eq(l1, l2):
     if len(l1) == len(l2):
@@ -38,14 +38,13 @@ class DummyResponse(object):
 
 
 def test_complete_flow():
-    client = ecp_client.Client("user", "password",
-                               metadata_file=full_path("idp_all.xml"))
+    client = ecp_client.Client("user", "password", metadata_file=full_path("idp_all.xml"))
 
     sp = Saml2Client(config_file=dotname("servera_conf"))
 
     with closing(Server(config_file=dotname("idp_all_conf"))) as idp:
         IDP_ENTITY_ID = idp.config.entityid
-        #SP_ENTITY_ID = sp.config.entityid
+        # SP_ENTITY_ID = sp.config.entityid
 
         # ------------ @Client -----------------------------
 
@@ -86,20 +85,24 @@ def test_complete_flow():
         # create Response and return in the SOAP response
         sp_entity_id = req.sender()
 
-        name_id = idp.ident.transient_nameid( "id12", sp.config.entityid)
-        binding, destination = idp.pick_binding("assertion_consumer_service",
-                                                [BINDING_PAOS],
-                                                entity_id=sp_entity_id)
+        name_id = idp.ident.transient_nameid("id12", sp.config.entityid)
+        binding, destination = idp.pick_binding("assertion_consumer_service", [BINDING_PAOS], entity_id=sp_entity_id)
 
         resp = idp.create_ecp_authn_request_response(
-            destination, {"eduPersonEntitlement": "Short stop",
-                          "surName": "Jeter",
-                          "givenName": "Derek",
-                          "mail": "derek.jeter@nyy.mlb.com",
-                          "title": "The man"
-                          },
-            req.message.id, destination, sp_entity_id,
-            name_id=name_id, authn=AUTHN)
+            destination,
+            {
+                "eduPersonEntitlement": "Short stop",
+                "surName": "Jeter",
+                "givenName": "Derek",
+                "mail": "derek.jeter@nyy.mlb.com",
+                "title": "The man",
+            },
+            req.message.id,
+            destination,
+            sp_entity_id,
+            name_id=name_id,
+            authn=AUTHN,
+        )
 
         # ------------ @Client -----------------------------
         # The client got the response from the IDP repackage and send it to the SP
@@ -115,12 +118,11 @@ def test_complete_flow():
             if item.c_tag == "Response" and item.c_namespace == ecp_prof.NAMESPACE:
                 _ecp_response = item
 
-        #_acs_url = _ecp_response.assertion_consumer_service_url
+        # _acs_url = _ecp_response.assertion_consumer_service_url
 
         # done phase2 at the client
 
-        ht_args = client.use_soap(idp_response, cargs["rc_url"],
-                                  [cargs["relay_state"]])
+        ht_args = client.use_soap(idp_response, cargs["rc_url"], [cargs["relay_state"]])
 
         print(ht_args)
 

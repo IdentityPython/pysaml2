@@ -2,10 +2,13 @@
 from __future__ import print_function
 
 import argparse
+
+
 try:
     import html
 except:
     import cgi as html
+
 import importlib
 import logging
 import os
@@ -13,21 +16,19 @@ import re
 import sys
 import xml.dom.minidom
 
-from saml2.client_base import MIME_PAOS
-from saml2.sigver import SignatureError
-
 import six
 from six.moves.http_cookies import SimpleCookie
 from six.moves.urllib.parse import parse_qs
 
-import saml2.xmldsig as ds
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_REDIRECT, element_to_extension_element
+from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
 from saml2 import ecp
+from saml2 import element_to_extension_element
 from saml2 import time_util
 from saml2.client import Saml2Client
+from saml2.client_base import MIME_PAOS
 from saml2.ecp_client import PAOS_HEADER_INFO
 from saml2.extension.pefim import SPCertEnc
 from saml2.httputil import BadRequest
@@ -39,7 +40,9 @@ from saml2.httputil import SeeOther
 from saml2.httputil import ServiceError
 from saml2.httputil import Unauthorized
 from saml2.httputil import get_post
-from saml2.httputil import geturl, make_cookie, parse_cookie
+from saml2.httputil import geturl
+from saml2.httputil import make_cookie
+from saml2.httputil import parse_cookie
 from saml2.metadata import create_metadata_string
 from saml2.response import StatusError
 from saml2.response import VerificationError
@@ -50,9 +53,13 @@ from saml2.s_utils import rndstr
 from saml2.s_utils import sid
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.samlp import Extensions
+from saml2.sigver import SignatureError
+import saml2.xmldsig as ds
+
 
 def _html_escape(payload):
     return html.escape(payload, quote=True)
+
 
 logger = logging.getLogger("")
 hdlr = logging.FileHandler("spx.log")
@@ -142,9 +149,7 @@ class ECPResponse(object):
 
     # noinspection PyUnusedLocal
     def __call__(self, environ, start_response):
-        start_response(
-            "%s %s" % (self.code, self.title), [("Content-Type", "text/xml")]
-        )
+        start_response("%s %s" % (self.code, self.title), [("Content-Type", "text/xml")])
         return [self.content]
 
 
@@ -265,13 +270,9 @@ class Service(object):
             except KeyError:
                 _relay_state = ""
             if "SAMLResponse" in _dict:
-                return self.do(
-                    _dict["SAMLResponse"], binding, _relay_state, mtype="response"
-                )
+                return self.do(_dict["SAMLResponse"], binding, _relay_state, mtype="response")
             elif "SAMLRequest" in _dict:
-                return self.do(
-                    _dict["SAMLRequest"], binding, _relay_state, mtype="request"
-                )
+                return self.do(_dict["SAMLRequest"], binding, _relay_state, mtype="request")
 
     def artifact_operation(self, _dict):
         if not _dict:
@@ -293,13 +294,13 @@ class Service(object):
         pass
 
     def redirect(self):
-        """ Expects a HTTP-redirect response """
+        """Expects a HTTP-redirect response"""
 
         _dict = self.unpack_redirect()
         return self.operation(_dict, BINDING_HTTP_REDIRECT)
 
     def post(self):
-        """ Expects a HTTP-POST response """
+        """Expects a HTTP-POST response"""
 
         _dict = self.unpack_post()
         return self.operation(_dict, BINDING_HTTP_POST)
@@ -340,9 +341,7 @@ class User(object):
 
     @property
     def authn_statement(self):
-        xml_doc = xml.dom.minidom.parseString(
-            str(self.response.assertion.authn_statement[0])
-        )
+        xml_doc = xml.dom.minidom.parseString(str(self.response.assertion.authn_statement[0]))
         return xml_doc.toprettyxml()
 
 
@@ -553,21 +552,15 @@ class SSO(object):
                     return self._wayf_redirect(came_from)
             elif self.discosrv:
                 if query:
-                    idp_entity_id = _cli.parse_discovery_service_response(
-                        query=self.environ.get("QUERY_STRING")
-                    )
+                    idp_entity_id = _cli.parse_discovery_service_response(query=self.environ.get("QUERY_STRING"))
                 if not idp_entity_id:
                     sid_ = sid()
                     self.cache.outstanding_queries[sid_] = came_from
                     logger.debug("Redirect to Discovery Service function")
                     eid = _cli.config.entityid
-                    ret = _cli.config.getattr("endpoints", "sp")["discovery_response"][
-                        0
-                    ][0]
+                    ret = _cli.config.getattr("endpoints", "sp")["discovery_response"][0][0]
                     ret += "?sid=%s" % sid_
-                    loc = _cli.create_discovery_service_request(
-                        self.discosrv, eid, **{"return": ret}
-                    )
+                    loc = _cli.create_discovery_service_request(self.discosrv, eid, **{"return": ret})
                     return -1, SeeOther(loc)
             elif len(idps) == 1:
                 # idps is a dictionary
@@ -598,14 +591,8 @@ class SSO(object):
             if _cli.config.generate_cert_func is not None:
                 cert_str, req_key_str = _cli.config.generate_cert_func()
                 cert = {"cert": cert_str, "key": req_key_str}
-                spcertenc = SPCertEnc(
-                    x509_data=ds.X509Data(
-                        x509_certificate=ds.X509Certificate(text=cert_str)
-                    )
-                )
-                extensions = Extensions(
-                    extension_elements=[element_to_extension_element(spcertenc)]
-                )
+                spcertenc = SPCertEnc(x509_data=ds.X509Data(x509_certificate=ds.X509Certificate(text=cert_str)))
+                extensions = Extensions(extension_elements=[element_to_extension_element(spcertenc)])
 
             req_id, req = _cli.create_authn_request(
                 destination,
@@ -615,9 +602,7 @@ class SSO(object):
             )
             _rstate = rndstr()
             self.cache.relay_state[_rstate] = came_from
-            ht_args = _cli.apply_binding(
-                _binding, "%s" % req, destination, relay_state=_rstate, sigalg=sigalg
-            )
+            ht_args = _cli.apply_binding(_binding, "%s" % req, destination, relay_state=_rstate, sigalg=sigalg)
             _sid = req_id
 
             if cert is not None:
@@ -703,11 +688,7 @@ def main(environ, start_response, sp):
         return sso.do()
 
     body = dict_to_table(user.data)
-    body.append(
-        "<br><pre>{authn_stmt}</pre>".format(
-            authn_stmt=_html_escape(user.authn_statement)
-        )
-    )
+    body.append("<br><pre>{authn_stmt}</pre>".format(authn_stmt=_html_escape(user.authn_statement)))
     body.append("<br><a href='/logout'>logout</a>")
 
     resp = Response(body)
@@ -891,12 +872,7 @@ class ToBytesMiddleware(object):
         data = self.app(environ, start_response)
 
         if isinstance(data, list):
-            return (
-                d
-                if isinstance(d, bytes)
-                else d.encode("utf-8")
-                for d in data
-            )
+            return (d if isinstance(d, bytes) else d.encode("utf-8") for d in data)
         elif isinstance(data, str):
             return data.encode("utf-8")
 
@@ -905,21 +881,17 @@ class ToBytesMiddleware(object):
 
 if __name__ == "__main__":
     try:
-        from cheroot.wsgi import Server as WSGIServer
         from cheroot.ssl import pyopenssl
+        from cheroot.wsgi import Server as WSGIServer
     except ImportError:
         from cherrypy.wsgiserver import CherryPyWSGIServer as WSGIServer
         from cherrypy.wsgiserver import ssl_pyopenssl as pyopenssl
 
     _parser = argparse.ArgumentParser()
-    _parser.add_argument(
-        "-d", dest="debug", action="store_true", help="Print debug information"
-    )
+    _parser.add_argument("-d", dest="debug", action="store_true", help="Print debug information")
     _parser.add_argument("-D", dest="discosrv", help="Which disco server to use")
     _parser.add_argument("-s", dest="seed", help="Cookie seed")
-    _parser.add_argument(
-        "-W", dest="wayf", action="store_true", help="Which WAYF url to use"
-    )
+    _parser.add_argument("-W", dest="wayf", action="store_true", help="Which WAYF url to use")
     _parser.add_argument("config", help="SAML client config")
     _parser.add_argument("-p", dest="path", help="Path to configuration file.")
     _parser.add_argument(
@@ -929,16 +901,10 @@ if __name__ == "__main__":
         help="How long, in days, the metadata is valid from " "the time of creation",
     )
     _parser.add_argument("-c", dest="cert", help="certificate")
-    _parser.add_argument(
-        "-i", dest="id", help="The ID of the entities descriptor in the " "metadata"
-    )
-    _parser.add_argument(
-        "-k", dest="keyfile", help="A file with a key to sign the metadata with"
-    )
+    _parser.add_argument("-i", dest="id", help="The ID of the entities descriptor in the " "metadata")
+    _parser.add_argument("-k", dest="keyfile", help="A file with a key to sign the metadata with")
     _parser.add_argument("-n", dest="name")
-    _parser.add_argument(
-        "-S", dest="sign", action="store_true", help="sign the metadata"
-    )
+    _parser.add_argument("-S", dest="sign", action="store_true", help="sign the metadata")
     _parser.add_argument("-C", dest="service_conf_module", help="service config module")
 
     ARGS = {}
@@ -991,9 +957,7 @@ if __name__ == "__main__":
 
     _https = ""
     if service_conf.HTTPS:
-        SRV.ssl_adapter = pyopenssl.pyOpenSSLAdapter(
-            SERVER_CERT, SERVER_KEY, CERT_CHAIN
-        )
+        SRV.ssl_adapter = pyopenssl.pyOpenSSLAdapter(SERVER_CERT, SERVER_KEY, CERT_CHAIN)
         _https = " using SSL/TLS"
     logger.info("Server starting")
     print("SP listening on %s:%s%s" % (HOST, PORT, _https))

@@ -1,9 +1,8 @@
 import ConfigParser
 
-from zope.interface import implements
-
 # from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
+from zope.interface import implements
 
 
 class INIMetadataProvider(object):

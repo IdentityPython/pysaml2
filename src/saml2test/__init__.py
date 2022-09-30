@@ -1,16 +1,19 @@
 import logging
+import socket
+from subprocess import PIPE
+from subprocess import Popen
+import sys
 import time
 import traceback
-import requests
-import sys
-import socket
 
-from subprocess import Popen, PIPE
+import requests
+
 from saml2test.check import CRITICAL
+
 
 logger = logging.getLogger(__name__)
 
-__author__ = 'rolandh'
+__author__ = "rolandh"
 
 
 class FatalError(Exception):
@@ -53,11 +56,11 @@ def start_script(path, *args):
 
 
 def stop_script_by_name(name):
-    import subprocess
-    import signal
     import os
+    import signal
+    import subprocess
 
-    p = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
+    p = subprocess.Popen(["ps", "-A"], stdout=subprocess.PIPE)
     out, err = p.communicate()
 
     for line in out.splitlines():
@@ -67,8 +70,8 @@ def stop_script_by_name(name):
 
 
 def stop_script_by_pid(pid):
-    import signal
     import os
+    import signal
 
     os.kill(pid, signal.SIGKILL)
 
@@ -93,5 +96,4 @@ def exception_trace(tag, exc, log=None):
 
 
 def ip_addresses():
-    return [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
-            if not ip.startswith("127.")]
+    return [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")]

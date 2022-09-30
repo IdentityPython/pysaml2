@@ -1,14 +1,15 @@
-import logging
 import json
-import six
-
-from urlparse import urlparse
+import logging
 
 from mechanize import ParseResponseEx
-from mechanize._form import ControlNotFoundError, AmbiguityError
+from mechanize._form import AmbiguityError
+from mechanize._form import ControlNotFoundError
 from mechanize._form import ListControl
+import six
+from urlparse import urlparse
 
-__author__ = 'rohe0002'
+
+__author__ = "rohe0002"
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +25,9 @@ class FlowException(Exception):
         return json.dumps(self.__dict__)
 
 
-class DResponse():
-    """ A Response class that behaves in the way that mechanize expects it
-    """
+class DResponse:
+    """A Response class that behaves in the way that mechanize expects it"""
+
     def __init__(self, **kwargs):
         self.status = 200  # default
         self.index = 0
@@ -73,10 +74,10 @@ class DResponse():
                 if self._len == self.index:
                     part = None
                 elif self._len - self.index < size:
-                    part = self._message[self.index:]
+                    part = self._message[self.index :]
                     self.index = self._len
                 else:
-                    part = self._message[self.index:self.index + size]
+                    part = self._message[self.index : self.index + size]
                     self.index += size
                 return part
         else:
@@ -113,8 +114,7 @@ def do_request(client, url, method, body="", headers=None):
     logger.info("--> BODY: %s", body)
     logger.info("--> Headers: %s", headers)
 
-    response = client.http_request(url, method=method, data=body,
-                                   headers=headers)
+    response = client.http_request(url, method=method, data=body, headers=headers)
 
     logger.info("<-- RESPONSE: %s", response)
     logger.info("<-- CONTENT: %s", response.text)
@@ -138,9 +138,9 @@ def pick_form(response, content, url=None, **kwargs):
     if not forms:
         raise FlowException(content=content, url=url)
 
-    #if len(forms) == 1:
+    # if len(forms) == 1:
     #    return forms[0]
-    #else:
+    # else:
 
     _form = None
     # ignore the first form for now
@@ -213,9 +213,9 @@ def do_click(client, form, **kwargs):
                     else:
                         _nr += 1
                 except ControlNotFoundError:
-                    raise Exception("No submit control with the name='%s' and "
-                                    "value='%s' could be found" % (_name,
-                                                                   _val))
+                    raise Exception(
+                        "No submit control with the name='%s' and " "value='%s' could be found" % (_name, _val)
+                    )
     else:
         request = form.click()
 
@@ -251,7 +251,7 @@ def select_form(client, orig_response, content, **kwargs):
     response.write(content)
 
     form = pick_form(response, content, _url, **kwargs)
-    #form.backwards_compatible = False
+    # form.backwards_compatible = False
     if not form:
         raise Exception("Can't pick a form !!")
 
@@ -276,7 +276,7 @@ def select_form(client, orig_response, content, **kwargs):
     return do_click(client, form, **kwargs)
 
 
-#noinspection PyUnusedLocal
+# noinspection PyUnusedLocal
 def chose(client, orig_response, content, path, **kwargs):
     """
     Sends a HTTP GET to a url given by the present url and the given
@@ -335,6 +335,7 @@ def interaction(args):
     else:
         return NoneFunc
 
+
 # ========================================================================
 
 
@@ -352,7 +353,7 @@ class Operation(object):
     def update(self, dic):
         self.args.update(dic)
 
-    #noinspection PyUnusedLocal
+    # noinspection PyUnusedLocal
     def post_op(self, result, environ, args):
         pass
 

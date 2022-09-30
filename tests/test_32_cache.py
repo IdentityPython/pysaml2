@@ -4,14 +4,15 @@ import time
 
 from pytest import raises
 
-from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
 from saml2.cache import Cache
-from saml2.time_util import in_a_while, str_to_time
 from saml2.ident import code
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.saml import NameID
+from saml2.time_util import in_a_while
+from saml2.time_util import str_to_time
 
 
-SESSION_INFO_PATTERN = {"ava": {}, "came from": "", "not_on_or_after": 0,
-                        "issuer": "", "session_id": -1}
+SESSION_INFO_PATTERN = {"ava": {}, "came from": "", "not_on_or_after": 0, "issuer": "", "session_id": -1}
 
 
 def _eq(l1, l2):
@@ -25,7 +26,8 @@ def nid_eq(l1, l2):
 nid = [
     NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT, text="1234"),
     NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT, text="9876"),
-    NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT, text="1000")]
+    NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT, text="1000"),
+]
 
 
 class TestClass:
@@ -68,7 +70,7 @@ class TestClass:
     def test_entities(self):
         assert _eq(self.cache.entities(nid[0]), ["abcd", "bcde"])
         with raises(Exception):
-            self.cache.entities('6666')
+            self.cache.entities("6666")
 
     def test_remove_info(self):
         self.cache.reset(nid[0], "bcde")
@@ -76,7 +78,7 @@ class TestClass:
         assert self.cache.active(nid[0], "abcd")
 
         (ava, inactive) = self.cache.get_identity(nid[0])
-        assert inactive == ['bcde']
+        assert inactive == ["bcde"]
         assert _eq(ava.keys(), ["givenName"])
         assert ava["givenName"] == ["Derek"]
 
@@ -90,10 +92,8 @@ class TestClass:
     def test_second_subject(self):
         not_on_or_after = str_to_time(in_a_while(days=1))
         session_info = SESSION_INFO_PATTERN.copy()
-        session_info["ava"] = {"givenName": ["Ichiro"],
-                               "surName": ["Suzuki"]}
-        self.cache.set(nid[1], "abcd", session_info,
-                       not_on_or_after)
+        session_info["ava"] = {"givenName": ["Ichiro"], "surName": ["Suzuki"]}
+        self.cache.set(nid[1], "abcd", session_info, not_on_or_after)
 
         (ava, inactive) = self.cache.get_identity(nid[1])
         assert inactive == []
@@ -107,10 +107,8 @@ class TestClass:
 
         not_on_or_after = str_to_time(in_a_while(days=1))
         session_info = SESSION_INFO_PATTERN.copy()
-        session_info["ava"] = {"givenName": ["Ichiro"],
-                               "surName": ["Suzuki"]}
-        self.cache.set(nid[1], "bcde", session_info,
-                       not_on_or_after)
+        session_info["ava"] = {"givenName": ["Ichiro"], "surName": ["Suzuki"]}
+        self.cache.set(nid[1], "bcde", session_info, not_on_or_after)
 
         assert _eq(self.cache.receivers(nid[1]), ["abcd", "bcde"])
         assert nid_eq(self.cache.subjects(), nid[0:2])
@@ -118,10 +116,8 @@ class TestClass:
     def test_timeout(self):
         not_on_or_after = str_to_time(in_a_while(seconds=1))
         session_info = SESSION_INFO_PATTERN.copy()
-        session_info["ava"] = {"givenName": ["Alex"],
-                               "surName": ["Rodriguez"]}
-        self.cache.set(nid[2], "bcde", session_info,
-                       not_on_or_after)
+        session_info["ava"] = {"givenName": ["Alex"], "surName": ["Rodriguez"]}
+        self.cache.set(nid[2], "bcde", session_info, not_on_or_after)
 
         time.sleep(2)
         (ava, inactive) = self.cache.get_identity(nid[2])

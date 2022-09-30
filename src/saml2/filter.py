@@ -1,4 +1,5 @@
-__author__ = 'roland'
+__author__ = "roland"
+
 
 class Filter(object):
     def __init__(self):
@@ -32,4 +33,4 @@ class AllowDescriptor(Filter):
         if not _all:
             return None
         else:
-            return  entity_descriptor
+            return entity_descriptor

@@ -1,4 +1,4 @@
-__author__ = 'roland'
+__author__ = "roland"
 
 
 def find_paths(cls, arg, path=None, seen=None, res=None, lev=0):

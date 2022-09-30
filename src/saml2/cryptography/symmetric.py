@@ -5,8 +5,8 @@ library. Reference: https://cryptography.io/en/latest/fernet/
 """
 
 import base64 as _base64
-import os as _os
 import logging
+import os as _os
 from warnings import warn as _warn
 
 import cryptography.fernet as _fernet
@@ -36,9 +36,7 @@ class Fernet(object):
         :param key: byte data representing the encyption/decryption key
         """
         if key:
-            fernet_key_error = SymmetricCryptographyError(
-                "Fernet key must be 32 url-safe base64-encoded bytes."
-            )
+            fernet_key_error = SymmetricCryptographyError("Fernet key must be 32 url-safe base64-encoded bytes.")
             try:
                 raw_key = _base64.b64decode(key)
             except Exception as e:
@@ -106,8 +104,8 @@ class AESCipher(object):
     """
 
     POSTFIX_MODE = {
-        'cbc': _ciphers.modes.CBC,
-        'cfb': _ciphers.modes.CFB,
+        "cbc": _ciphers.modes.CBC,
+        "cfb": _ciphers.modes.CFB,
     }
 
     AES_BLOCK_SIZE = int(_ciphers.algorithms.AES.block_size / 8)
@@ -116,11 +114,11 @@ class AESCipher(object):
     def _deprecation_notice(cls):
         """Warn about deprecation of this class."""
         _deprecation_msg = (
-            '{name} {type} is deprecated. '
-            'It will be removed in the next version. '
-            'Use saml2.cryptography.symmetric.Default '
-            'or saml2.cryptography.symmetric.Fernet '
-            'instead.'
+            "{name} {type} is deprecated. "
+            "It will be removed in the next version. "
+            "Use saml2.cryptography.symmetric.Default "
+            "or saml2.cryptography.symmetric.Fernet "
+            "instead."
         ).format(name=cls.__name__, type=type(cls).__name__)
         logger.warning(_deprecation_msg)
         _warn(_deprecation_msg, DeprecationWarning)
@@ -133,36 +131,35 @@ class AESCipher(object):
         self.__class__._deprecation_notice()
         self.key = key
 
-    def build_cipher(self, alg='aes_128_cbc'):
+    def build_cipher(self, alg="aes_128_cbc"):
         """
         :param alg: cipher algorithm
         :return: A Cipher instance
         """
         self.__class__._deprecation_notice()
-        typ, bits, cmode = alg.lower().split('_')
+        typ, bits, cmode = alg.lower().split("_")
         bits = int(bits)
         iv = _os.urandom(self.AES_BLOCK_SIZE)
 
         if len(iv) != self.AES_BLOCK_SIZE:
-            raise Exception('Wrong iv size: {}'.format(len(iv)))
+            raise Exception("Wrong iv size: {}".format(len(iv)))
 
         if bits not in _ciphers.algorithms.AES.key_sizes:
-            raise Exception('Unsupported key length: {}'.format(bits))
+            raise Exception("Unsupported key length: {}".format(bits))
 
         if len(self.key) != bits / 8:
-            raise Exception('Wrong Key length: {}'.format(len(self.key)))
+            raise Exception("Wrong Key length: {}".format(len(self.key)))
 
         try:
             mode = self.POSTFIX_MODE[cmode]
         except KeyError:
-            raise Exception('Unsupported chaining mode: {}'.format(cmode))
+            raise Exception("Unsupported chaining mode: {}".format(cmode))
 
         cipher = _ciphers.Cipher(_ciphers.algorithms.AES(self.key), mode(iv))
 
         return cipher, iv
 
-    def encrypt(self, msg, alg='aes_128_cbc', padding='PKCS#7', b64enc=True,
-                block_size=AES_BLOCK_SIZE):
+    def encrypt(self, msg, alg="aes_128_cbc", padding="PKCS#7", b64enc=True, block_size=AES_BLOCK_SIZE):
         """
         :param key: The encryption key
         :param msg: Message to be encrypted
@@ -172,9 +169,9 @@ class AESCipher(object):
         :return: The encrypted message
         """
         self.__class__._deprecation_notice()
-        if padding == 'PKCS#7':
+        if padding == "PKCS#7":
             _block_size = block_size
-        elif padding == 'PKCS#5':
+        elif padding == "PKCS#5":
             _block_size = 8
         else:
             _block_size = 0
@@ -195,7 +192,7 @@ class AESCipher(object):
 
         return enc_msg
 
-    def decrypt(self, msg, alg='aes_128_cbc', padding='PKCS#7', b64dec=True):
+    def decrypt(self, msg, alg="aes_128_cbc", padding="PKCS#7", b64dec=True):
         """
         :param key: The encryption key
         :param msg: Base64 encoded message to be decrypted
@@ -206,9 +203,9 @@ class AESCipher(object):
 
         cipher, iv = self.build_cipher(alg=alg)
         decryptor = cipher.decryptor()
-        res = decryptor.update(data)[self.AES_BLOCK_SIZE:]
+        res = decryptor.update(data)[self.AES_BLOCK_SIZE :]
         res += decryptor.finalize()
-        if padding in ['PKCS#5', 'PKCS#7']:
+        if padding in ["PKCS#5", "PKCS#7"]:
             idx = bytearray(res)[-1]
             res = res[:-idx]
         return res

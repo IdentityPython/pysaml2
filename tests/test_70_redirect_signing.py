@@ -1,17 +1,19 @@
 from contextlib import closing
-from saml2.pack import http_redirect_message
-from saml2.sigver import verify_redirect_signature
-from saml2.sigver import import_rsa_key_from_file
-from saml2.sigver import SIG_RSA_SHA1
-from saml2.server import Server
+
+from pathutils import dotname
+from six.moves.urllib.parse import parse_qs
+
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
-from six.moves.urllib.parse import parse_qs
+from saml2.pack import http_redirect_message
+from saml2.server import Server
+from saml2.sigver import SIG_RSA_SHA1
+from saml2.sigver import import_rsa_key_from_file
+from saml2.sigver import verify_redirect_signature
 
-from pathutils import dotname
 
-__author__ = 'rolandh'
+__author__ = "rolandh"
 
 
 def list_values2simpletons(_dict):
@@ -24,8 +26,7 @@ def test():
         conf.load_file(dotname("servera_conf"))
         sp = Saml2Client(conf)
 
-        srvs = sp.metadata.single_sign_on_service(idp.config.entityid,
-                                                  BINDING_HTTP_REDIRECT)
+        srvs = sp.metadata.single_sign_on_service(idp.config.entityid, BINDING_HTTP_REDIRECT)
 
         destination = srvs[0]["location"]
         req_id, req = sp.create_authn_request(destination, id="id1")
@@ -47,9 +48,7 @@ def test():
                 _dict = parse_qs(val.split("?")[1])
                 _certs = idp.metadata.certs(sp.config.entityid, "any", "signing")
                 for cert in _certs:
-                    if verify_redirect_signature(
-                            list_values2simpletons(_dict), sp.sec.sec_backend,
-                            cert[1]):
+                    if verify_redirect_signature(list_values2simpletons(_dict), sp.sec.sec_backend, cert[1]):
                         verified_ok = True
 
         assert verified_ok

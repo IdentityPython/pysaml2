@@ -1,4 +1,5 @@
 from pathutils import full_path
+
 from saml2.cert import read_cert_from_file
 
 

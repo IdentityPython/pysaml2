@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import saml2
+from pytest import raises
 
+import saml2
 from saml2 import saml
 from saml2 import samlp
-from saml2.validate import valid_duration, MustValueError
-from saml2.validate import valid_unsigned_short
+from saml2.validate import MustValueError
+from saml2.validate import NotValid
+from saml2.validate import valid_address
+from saml2.validate import valid_any_uri
+from saml2.validate import valid_anytype
+from saml2.validate import valid_duration
+from saml2.validate import valid_instance
 from saml2.validate import valid_non_negative_integer
 from saml2.validate import valid_string
-from saml2.validate import valid_instance
-from saml2.validate import valid_any_uri
-from saml2.validate import NotValid
-from saml2.validate import valid_anytype
-from saml2.validate import valid_address
-
-from pytest import raises
+from saml2.validate import valid_unsigned_short
 
 
 def _eq(l1, l2):
@@ -62,7 +62,7 @@ def test_valid_non_negative_integer():
 
 
 def test_valid_string():
-    assert valid_string(u'example')
+    assert valid_string("example")
 
     import codecs
 
@@ -76,11 +76,13 @@ def test_valid_anyuri():
 
 def test_valid_instance():
     attr_statem = saml.AttributeStatement()
-    text = ["value of test attribute",
-            "value1 of test attribute",
-            "value2 of test attribute",
-            "value1 of test attribute2",
-            "value2 of test attribute2", ]
+    text = [
+        "value of test attribute",
+        "value1 of test attribute",
+        "value2 of test attribute",
+        "value1 of test attribute2",
+        "value2 of test attribute2",
+    ]
 
     attr_statem.attribute.append(saml.Attribute())
     attr_statem.attribute.append(saml.Attribute())

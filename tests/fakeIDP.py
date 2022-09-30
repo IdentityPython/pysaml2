@@ -1,30 +1,28 @@
 from six.moves.urllib.parse import parse_qs
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.samlp import attribute_query_from_string, logout_request_from_string
-from saml2 import BINDING_HTTP_REDIRECT, pack
+
 from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
+from saml2 import pack
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2.samlp import attribute_query_from_string
+from saml2.samlp import logout_request_from_string
 from saml2.server import Server
+from saml2.soap import make_soap_enveloped_saml_thingy
 from saml2.soap import parse_soap_enveloped_saml_attribute_query
 from saml2.soap import parse_soap_enveloped_saml_logout_request
-from saml2.soap import make_soap_enveloped_saml_thingy
-
-__author__ = 'rolandh'
-
-TYP = {
-    "GET": [BINDING_HTTP_REDIRECT],
-    "POST": [BINDING_HTTP_POST, BINDING_SOAP]
-}
 
 
-AUTHN = {
-    "class_ref": INTERNETPROTOCOLPASSWORD,
-    "authn_auth": "http://www.example.com/login"
-}
+__author__ = "rolandh"
+
+TYP = {"GET": [BINDING_HTTP_REDIRECT], "POST": [BINDING_HTTP_POST, BINDING_SOAP]}
+
+
+AUTHN = {"class_ref": INTERNETPROTOCOLPASSWORD, "authn_auth": "http://www.example.com/login"}
 
 
 def unpack_form(_str, ver="SAMLRequest"):
-    SR_STR = "name=\"%s\" value=\"" % ver
+    SR_STR = 'name="%s" value="' % ver
     RS_STR = 'name="RelayState" value="'
 
     i = _str.find(SR_STR)
@@ -53,7 +51,7 @@ class DummyResponse(object):
 class FakeIDP(Server):
     def __init__(self, config_file=""):
         Server.__init__(self, config_file)
-        #self.sign = False
+        # self.sign = False
 
     def receive(self, url, method="GET", **kwargs):
         """
@@ -90,8 +88,7 @@ class FakeIDP(Server):
                 if path == endp:
                     assert binding in TYP[method]
                     if key == "single_sign_on_service":
-                        return self.authn_request_endpoint(req, binding,
-                                                           rstate)
+                        return self.authn_request_endpoint(req, binding, rstate)
                     elif key == "single_logout_service":
                         return self.logout_endpoint(req, binding)
 
@@ -116,20 +113,14 @@ class FakeIDP(Server):
         except Exception:
             raise
 
-        identity = {"surName": "Hedberg", "givenName": "Roland",
-                    "title": "supertramp", "mail": "roland@example.com"}
+        identity = {"surName": "Hedberg", "givenName": "Roland", "title": "supertramp", "mail": "roland@example.com"}
         userid = "Pavill"
 
-        authn_resp = self.create_authn_response(identity,
-                                                userid=userid,
-                                                authn=AUTHN,
-                                                **resp_args)
+        authn_resp = self.create_authn_response(identity, userid=userid, authn=AUTHN, **resp_args)
 
         response = "%s" % authn_resp
 
-        _dict = pack.factory(_binding, response,
-                             resp_args["destination"], relay_state,
-                             "SAMLResponse")
+        _dict = pack.factory(_binding, response, resp_args["destination"], relay_state, "SAMLResponse")
         return DummyResponse(**_dict)
 
     def attribute_query_endpoint(self, xml_str, binding):
@@ -140,16 +131,16 @@ class FakeIDP(Server):
 
         aquery = attribute_query_from_string(_str)
         extra = {"eduPersonAffiliation": "faculty"}
-        #userid = "Pavill"
+        # userid = "Pavill"
 
         name_id = aquery.subject.name_id
         attr_resp = self.create_attribute_response(
-            extra, aquery.id, None, sp_entity_id=aquery.issuer.text,
-            name_id=name_id, attributes=aquery.attribute)
+            extra, aquery.id, None, sp_entity_id=aquery.issuer.text, name_id=name_id, attributes=aquery.attribute
+        )
 
         if binding == BINDING_SOAP:
             # SOAP packing
-            #headers = {"content-type": "application/soap+xml"}
+            # headers = {"content-type": "application/soap+xml"}
             soap_message = make_soap_enveloped_saml_thingy(attr_resp)
             #            if self.sign and self.sec:
             #                _signed = self.sec.sign_statement_using_xmlsec(soap_message,
@@ -174,7 +165,7 @@ class FakeIDP(Server):
 
         if binding == BINDING_SOAP:
             # SOAP packing
-            #headers = {"content-type": "application/soap+xml"}
+            # headers = {"content-type": "application/soap+xml"}
             soap_message = make_soap_enveloped_saml_thingy(_resp)
             #            if self.sign and self.sec:
             #                _signed = self.sec.sign_statement_using_xmlsec(soap_message,
@@ -182,7 +173,7 @@ class FakeIDP(Server):
             #                                                               nodeid=attr_resp.id)
             #                soap_message = _signed
             response = "%s" % soap_message
-        else: # Just POST
+        else:  # Just POST
             response = "%s" % _resp
 
         return DummyResponse(status=200, data=response)

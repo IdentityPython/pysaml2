@@ -1,22 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
-from saml2.samlp import response_from_string
 
-from saml2.server import Server
 from saml2 import client
 from saml2 import config
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.saml import NameID
+from saml2.samlp import response_from_string
+from saml2.server import Server
 import saml2.xmldsig as ds
 
-nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
-             text="123456")
 
-AUTHN = {
-    "class_ref": INTERNETPROTOCOLPASSWORD,
-    "authn_auth": "http://www.example.com/login"
-}
+nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT, text="123456")
+
+AUTHN = {"class_ref": INTERNETPROTOCOLPASSWORD, "authn_auth": "http://www.example.com/login"}
 
 
 def _eq(l1, l2):
@@ -40,16 +38,14 @@ def get_ava(assertion):
     return ava
 
 
-class TestSignedResponse():
+class TestSignedResponse:
     def setup_class(self):
         self.server = Server("idp_conf")
         conf = config.SPConfig()
         conf.load_file("server_conf")
         self.client = client.Saml2Client(conf)
-        self.name_id = self.server.ident.transient_nameid(
-            "urn:mace:example.com:saml:roland:sp", "id12")
-        self.ava = {"givenName": ["Derek"], "surName": ["Jeter"],
-               "mail": ["derek@nyy.mlb.com"], "title": "The man"}
+        self.name_id = self.server.ident.transient_nameid("urn:mace:example.com:saml:roland:sp", "id12")
+        self.ava = {"givenName": ["Derek"], "surName": ["Jeter"], "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
     def teardown_class(self):
         self.server.close()
@@ -60,16 +56,17 @@ class TestSignedResponse():
 
         ava = ava = get_ava(assertion[0])
 
-        assert ava ==\
-               {'mail': ['derek@nyy.mlb.com'], 'givenName': ['Derek'],
-                'surName': ['Jeter'], 'title': ['The man']}
+        assert ava == {
+            "mail": ["derek@nyy.mlb.com"],
+            "givenName": ["Derek"],
+            "surName": ["Jeter"],
+            "title": ["The man"],
+        }
 
     def test_signed_response(self):
         print(ds.DefaultSignature().get_digest_alg())
-        name_id = self.server.ident.transient_nameid(
-            "urn:mace:example.com:saml:roland:sp", "id12")
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
-               "mail": ["derek@nyy.mlb.com"], "title": "The man"}
+        name_id = self.server.ident.transient_nameid("urn:mace:example.com:saml:roland:sp", "id12")
+        ava = {"givenName": ["Derek"], "surName": ["Jeter"], "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
         signed_resp = self.server.create_authn_response(
             ava,
@@ -77,7 +74,7 @@ class TestSignedResponse():
             "http://lingon.catalogix.se:8087/",  # consumer_url
             "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
             name_id=name_id,
-            sign_assertion=True
+            sign_assertion=True,
         )
 
         print(signed_resp)
@@ -101,17 +98,21 @@ class TestSignedResponse():
         sresponse = response_from_string(signed_resp)
         assert ds.SIG_RSA_SHA1 in str(sresponse), "Not correctly signed!"
         assert ds.DIGEST_SHA1 in str(sresponse), "Not correctly signed!"
-        valid = self.server.sec.verify_signature(signed_resp,
-                                                 self.server.config.cert_file,
-                                                 node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id)
+        valid = self.server.sec.verify_signature(
+            signed_resp,
+            self.server.config.cert_file,
+            node_name="urn:oasis:names:tc:SAML:2.0:protocol:Response",
+            node_id=sresponse.id,
+        )
         assert valid
         assert ds.SIG_RSA_SHA1 in str(sresponse.assertion[0]), "Not correctly signed!"
         assert ds.DIGEST_SHA1 in str(sresponse.assertion[0]), "Not correctly signed!"
-        valid = self.server.sec.verify_signature(signed_resp,
-                                                 self.server.config.cert_file,
-                                                 node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=sresponse.assertion[0].id)
+        valid = self.server.sec.verify_signature(
+            signed_resp,
+            self.server.config.cert_file,
+            node_name="urn:oasis:names:tc:SAML:2.0:assertion:Assertion",
+            node_id=sresponse.assertion[0].id,
+        )
         assert valid
 
         self.verify_assertion(sresponse.assertion)
@@ -126,23 +127,27 @@ class TestSignedResponse():
             sign_response=True,
             sign_assertion=True,
             sign_alg=ds.SIG_RSA_SHA256,
-            digest_alg=ds.DIGEST_SHA256
+            digest_alg=ds.DIGEST_SHA256,
         )
 
         sresponse = response_from_string(signed_resp)
         assert ds.SIG_RSA_SHA256 in str(sresponse), "Not correctly signed!"
         assert ds.DIGEST_SHA256 in str(sresponse), "Not correctly signed!"
-        valid = self.server.sec.verify_signature(signed_resp,
-                                                 self.server.config.cert_file,
-                                                 node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id)
+        valid = self.server.sec.verify_signature(
+            signed_resp,
+            self.server.config.cert_file,
+            node_name="urn:oasis:names:tc:SAML:2.0:protocol:Response",
+            node_id=sresponse.id,
+        )
         assert valid
         assert ds.SIG_RSA_SHA256 in str(sresponse.assertion[0]), "Not correctly signed!"
         assert ds.DIGEST_SHA256 in str(sresponse.assertion[0]), "Not correctly signed!"
-        valid = self.server.sec.verify_signature(signed_resp,
-                                                 self.server.config.cert_file,
-                                                 node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=sresponse.assertion[0].id)
+        valid = self.server.sec.verify_signature(
+            signed_resp,
+            self.server.config.cert_file,
+            node_name="urn:oasis:names:tc:SAML:2.0:assertion:Assertion",
+            node_id=sresponse.assertion[0].id,
+        )
         assert valid
 
         self.verify_assertion(sresponse.assertion)
