@@ -1,5 +1,6 @@
 from pathutils import full_path
 
+
 CONFIG = {
     "entityid": "urn:mace:example.com:saml:roland:sp",
     "name": "urn:mace:example.com:saml:roland:sp",
@@ -7,8 +8,7 @@ CONFIG = {
     "service": {
         "sp": {
             "endpoints": {
-                "assertion_consumer_service": [
-                    "http://lingon.catalogix.se:8087/"],
+                "assertion_consumer_service": ["http://lingon.catalogix.se:8087/"],
             },
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],
@@ -36,15 +36,15 @@ CONFIG = {
         "display_name": ("AB Exempel", "se"),
         "url": "http://www.example.org",
     },
-    "contact_person": [{
-                           "given_name": "Roland",
-                           "sur_name": "Hedberg",
-                           "telephone_number": "+46 70 100 0000",
-                           "email_address": ["tech@eample.com",
-                                             "tech@example.org"],
-                           "contact_type": "technical"
-                       },
+    "contact_person": [
+        {
+            "given_name": "Roland",
+            "sur_name": "Hedberg",
+            "telephone_number": "+46 70 100 0000",
+            "email_address": ["tech@eample.com", "tech@example.org"],
+            "contact_type": "technical",
+        },
     ],
     "secret": "0123456789",
-    "only_use_keys_in_metadata": True
+    "only_use_keys_in_metadata": True,
 }

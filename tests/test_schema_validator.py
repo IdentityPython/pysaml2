@@ -1,10 +1,9 @@
 from pathutils import full_path as expand_full_path
-
-from pytest import raises
 from pytest import mark
+from pytest import raises
 
-from saml2.xml.schema import validate as validate_doc_with_schema
 from saml2.xml.schema import XMLSchemaError
+from saml2.xml.schema import validate as validate_doc_with_schema
 
 
 @mark.parametrize("doc", ["invalid_metadata_file.xml", "empty_metadata_file.xml"])

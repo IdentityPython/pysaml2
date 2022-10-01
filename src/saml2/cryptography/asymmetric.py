@@ -26,7 +26,7 @@ def key_verify(rsakey, signature, message, digest):
 
     try:
         rsakey.verify(signature, message, padding, digest)
-    except Exception as e:
+    except Exception:
         return False
     else:
         return True

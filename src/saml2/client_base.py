@@ -5,60 +5,55 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
-import threading
-import six
-import time
 import logging
+import threading
+import time
 from typing import Mapping
 from warnings import warn as _warn
 
-from saml2.entity import Entity
-
-from saml2.mdstore import locations
-from saml2.profile import paos, ecp
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.saml import AuthnContextClassRef
-from saml2.samlp import AuthnQuery
-from saml2.samlp import RequestedAuthnContext
-from saml2.samlp import NameIDMappingRequest
-from saml2.samlp import AttributeQuery
-from saml2.samlp import AuthzDecisionQuery
-from saml2.samlp import AuthnRequest
-from saml2.samlp import Extensions
-from saml2.extension import sp_type
-from saml2.extension.requested_attributes import RequestedAttribute
-from saml2.extension.requested_attributes import RequestedAttributes
-
-import saml2
-from saml2.soap import make_soap_enveloped_saml_thingy
-
+import six
 from six.moves.urllib.parse import parse_qs
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.parse import urlparse
 
-from saml2.s_utils import signature
+import saml2
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_PAOS
+from saml2 import BINDING_SOAP
+from saml2 import SAMLError
+from saml2 import saml
+from saml2 import samlp
+from saml2 import soap
+from saml2.entity import Entity
+from saml2.extension import sp_type
+from saml2.extension.requested_attributes import RequestedAttribute
+from saml2.extension.requested_attributes import RequestedAttributes
+from saml2.mdstore import locations
+from saml2.population import Population
+from saml2.profile import ecp
+from saml2.profile import paos
+from saml2.response import AssertionIDResponse
+from saml2.response import AttributeResponse
+from saml2.response import AuthnQueryResponse
+from saml2.response import AuthnResponse
+from saml2.response import AuthzResponse
+from saml2.response import NameIDMappingResponse
+from saml2.response import StatusError
 from saml2.s_utils import UnravelError
 from saml2.s_utils import do_attributes
-
-from saml2 import samlp, BINDING_SOAP, SAMLError
-from saml2 import saml
-from saml2 import soap
-from saml2.population import Population
-
-from saml2.response import AttributeResponse, StatusError
-from saml2.response import AuthzResponse
-from saml2.response import AssertionIDResponse
-from saml2.response import AuthnQueryResponse
-from saml2.response import NameIDMappingResponse
-from saml2.response import AuthnResponse
-
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_PAOS
-
-from saml2.xmldsig import SIG_ALLOWED_ALG
-from saml2.xmldsig import DIGEST_ALLOWED_ALG
+from saml2.s_utils import signature
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.saml import AuthnContextClassRef
+from saml2.samlp import AttributeQuery
+from saml2.samlp import AuthnQuery
+from saml2.samlp import AuthnRequest
+from saml2.samlp import AuthzDecisionQuery
+from saml2.samlp import Extensions
+from saml2.samlp import NameIDMappingRequest
+from saml2.samlp import RequestedAuthnContext
+from saml2.soap import make_soap_enveloped_saml_thingy
 
 
 logger = logging.getLogger(__name__)
@@ -101,10 +96,10 @@ class NoServiceDefined(SAMLError):
 def create_requested_attribute_node(requested_attrs, attribute_converters):
     items = []
     for attr in requested_attrs:
-        friendly_name = attr.get('friendly_name')
-        name = attr.get('name')
-        name_format = attr.get('name_format')
-        is_required = str(attr.get('required', False)).lower()
+        friendly_name = attr.get("friendly_name")
+        name = attr.get("name")
+        name_format = attr.get("name_format")
+        is_required = str(attr.get("required", False)).lower()
 
         if not name and not friendly_name:
             raise ValueError("Missing required attribute: 'name' or 'friendly_name'")
@@ -145,10 +140,11 @@ def create_requested_attribute_node(requested_attrs, attribute_converters):
 
 
 class Base(Entity):
-    """ The basic pySAML2 service provider class """
+    """The basic pySAML2 service provider class"""
 
-    def __init__(self, config=None, identity_cache=None, state_cache=None,
-                 virtual_organization="", config_file="", msg_cb=None):
+    def __init__(
+        self, config=None, identity_cache=None, state_cache=None, virtual_organization="", config_file="", msg_cb=None
+    ):
         """
         :param config: A saml2.config.Config instance
         :param identity_cache: Where the class should store identity information
@@ -156,8 +152,7 @@ class Base(Entity):
         :param virtual_organization: A specific virtual organization
         """
 
-        Entity.__init__(self, "sp", config, config_file, virtual_organization,
-                        msg_cb=msg_cb)
+        Entity.__init__(self, "sp", config, config_file, virtual_organization, msg_cb=msg_cb)
 
         self.users = Population(identity_cache)
         self.lock = threading.Lock()
@@ -178,12 +173,8 @@ class Base(Entity):
         }
         for attr, val_default in attribute_defaults.items():
             val_config = self.config.getattr(attr, "sp")
-            val = (
-                val_config
-                if val_config is not None
-                else val_default
-            )
-            if val == 'true':
+            val = val_config if val_config is not None else val_default
+            if val == "true":
                 val = True
             setattr(self, attr, val)
 
@@ -252,7 +243,7 @@ class Base(Entity):
     #
 
     def add_vo_information_about_user(self, name_id):
-        """ Add information to the knowledge I have about the user. This is
+        """Add information to the knowledge I have about the user. This is
         for Virtual organizations.
 
         :param name_id: The subject identifier
@@ -275,8 +266,7 @@ class Base(Entity):
     # noinspection PyUnusedLocal
     @staticmethod
     def is_session_valid(_session_id):
-        """ Place holder. Supposed to check if the session is still valid.
-        """
+        """Place holder. Supposed to check if the session is still valid."""
         return True
 
     def service_urls(self, binding=BINDING_HTTP_POST):
@@ -306,7 +296,7 @@ class Base(Entity):
         requested_attributes=None,
         **kwargs,
     ):
-        """ Creates an authentication request.
+        """Creates an authentication request.
 
         :param destination: Where the request should be sent.
         :param vorg: The virtual organization the service belongs to.
@@ -338,10 +328,9 @@ class Base(Entity):
 
         # AssertionConsumerServiceURL
         # AssertionConsumerServiceIndex
-        hide_assertion_consumer_service = self.config.getattr('hide_assertion_consumer_service', 'sp')
-        assertion_consumer_service_url = (
-            kwargs.pop("assertion_consumer_service_urls", [None])[0]
-            or kwargs.pop("assertion_consumer_service_url", None)
+        hide_assertion_consumer_service = self.config.getattr("hide_assertion_consumer_service", "sp")
+        assertion_consumer_service_url = kwargs.pop("assertion_consumer_service_urls", [None])[0] or kwargs.pop(
+            "assertion_consumer_service_url", None
         )
         assertion_consumer_service_index = kwargs.pop("assertion_consumer_service_index", None)
         service_url = (self.service_urls(service_url_binding or binding) or [None])[0]
@@ -362,33 +351,26 @@ class Base(Entity):
         args["provider_name"] = provider_name
 
         requested_authn_context = (
-            kwargs.pop("requested_authn_context", None)
-            or self.config.getattr("requested_authn_context", "sp")
-            or {}
+            kwargs.pop("requested_authn_context", None) or self.config.getattr("requested_authn_context", "sp") or {}
         )
         if isinstance(requested_authn_context, RequestedAuthnContext):
             args["requested_authn_context"] = requested_authn_context
         elif isinstance(requested_authn_context, Mapping):
-            requested_authn_context_accrs = requested_authn_context.get(
-                "authn_context_class_ref", []
-            )
-            requested_authn_context_comparison = requested_authn_context.get(
-                "comparison", "exact"
-            )
+            requested_authn_context_accrs = requested_authn_context.get("authn_context_class_ref", [])
+            requested_authn_context_comparison = requested_authn_context.get("comparison", "exact")
             if requested_authn_context_accrs:
                 args["requested_authn_context"] = RequestedAuthnContext(
-                    authn_context_class_ref=[
-                        AuthnContextClassRef(accr)
-                        for accr in requested_authn_context_accrs
-                    ],
+                    authn_context_class_ref=[AuthnContextClassRef(accr) for accr in requested_authn_context_accrs],
                     comparison=requested_authn_context_comparison,
                 )
         else:
-            logger.warning({
-                "message": "Cannot process requested_authn_context",
-                "requested_authn_context": requested_authn_context,
-                "type_of_requested_authn_context": type(requested_authn_context),
-            })
+            logger.warning(
+                {
+                    "message": "Cannot process requested_authn_context",
+                    "requested_authn_context": requested_authn_context,
+                    "type_of_requested_authn_context": type(requested_authn_context),
+                }
+            )
 
         # Allow argument values either as class instances or as dictionaries
         # all of these have cardinality 0..1
@@ -405,11 +387,7 @@ class Base(Entity):
 
         # NameIDPolicy
         nameid_policy_format_config = self.config.getattr("name_id_policy_format", "sp")
-        nameid_policy_format = (
-            nameid_format
-            or nameid_policy_format_config
-            or None
-        )
+        nameid_policy_format = nameid_format or nameid_policy_format_config or None
 
         allow_create_config = self.config.getattr("name_id_format_allow_create", "sp")
         allow_create = (
@@ -426,9 +404,7 @@ class Base(Entity):
             if "name_id_policy" in kwargs
             else None
             if not nameid_policy_format
-            else samlp.NameIDPolicy(
-                allow_create=allow_create, format=nameid_policy_format
-            )
+            else samlp.NameIDPolicy(allow_create=allow_create, format=nameid_policy_format)
         )
 
         if name_id_policy and vorg:
@@ -438,8 +414,8 @@ class Base(Entity):
         args["name_id_policy"] = name_id_policy
 
         # eIDAS SPType
-        conf_sp_type = self.config.getattr('sp_type', 'sp')
-        conf_sp_type_in_md = self.config.getattr('sp_type_in_metadata', 'sp')
+        conf_sp_type = self.config.getattr("sp_type", "sp")
+        conf_sp_type_in_md = self.config.getattr("sp_type_in_metadata", "sp")
         if conf_sp_type and conf_sp_type_in_md is False:
             if not extensions:
                 extensions = Extensions()
@@ -447,35 +423,27 @@ class Base(Entity):
             extensions.add_extension_element(item)
 
         # eIDAS RequestedAttributes
-        requested_attrs = (
-            requested_attributes
-            or self.config.getattr('requested_attributes', 'sp')
-            or []
-        )
+        requested_attrs = requested_attributes or self.config.getattr("requested_attributes", "sp") or []
         if requested_attrs:
-            req_attrs_node = create_requested_attribute_node(
-                requested_attrs, self.config.attribute_converters
-            )
+            req_attrs_node = create_requested_attribute_node(requested_attrs, self.config.attribute_converters)
             if not extensions:
                 extensions = Extensions()
             extensions.add_extension_element(req_attrs_node)
 
         # ForceAuthn
-        force_authn = str(
-            kwargs.pop("force_authn", None)
-            or self.config.getattr("force_authn", "sp")
-        ).lower() in ["true", "1"]
+        force_authn = str(kwargs.pop("force_authn", None) or self.config.getattr("force_authn", "sp")).lower() in [
+            "true",
+            "1",
+        ]
         if force_authn:
             kwargs["force_authn"] = "true"
 
         if kwargs:
-            _args, extensions = self._filter_args(
-                AuthnRequest(), extensions, **kwargs
-            )
+            _args, extensions = self._filter_args(AuthnRequest(), extensions, **kwargs)
             args.update(_args)
         args.pop("id", None)
 
-        client_crt = kwargs.get("client_crt")
+        # client_crt = kwargs.get("client_crt")
         nsprefix = kwargs.get("nsprefix")
 
         msg = self._message(
@@ -511,7 +479,7 @@ class Base(Entity):
         digest_alg=None,
         **kwargs,
     ):
-        """ Constructs an AttributeQuery
+        """Constructs an AttributeQuery
 
         :param destination: To whom the query should be sent
         :param name_id: The identifier of the subject
@@ -538,8 +506,7 @@ class Base(Entity):
         if name_id is None:
             if "subject_id" in kwargs:
                 name_id = saml.NameID(text=kwargs["subject_id"])
-                for key in ["sp_name_qualifier", "name_qualifier",
-                            "format"]:
+                for key in ["sp_name_qualifier", "name_qualifier", "format"]:
                     try:
                         setattr(name_id, key, kwargs[key])
                     except KeyError:
@@ -598,7 +565,7 @@ class Base(Entity):
         digest_alg=None,
         **kwargs,
     ):
-        """ Creates an authz decision query.
+        """Creates an authz decision query.
 
         :param destination: The IdP endpoint
         :param action: The action you want to perform (has to be at least one)
@@ -644,7 +611,7 @@ class Base(Entity):
         digest_alg=None,
         nsprefix=None,
     ):
-        """ Makes an authz decision query based on a previously received
+        """Makes an authz decision query based on a previously received
         Assertion.
 
         :param destination: The IdP endpoint to send the request to
@@ -768,22 +735,12 @@ class Base(Entity):
         """
 
         if not name_id and not base_id and not encrypted_id:
-            raise ValueError(
-                "At least one of name_id, base_id or encrypted_id must be present."
-            )
+            raise ValueError("At least one of name_id, base_id or encrypted_id must be present.")
 
         id_attr = {
             "name_id": name_id,
-            "base_id": (
-                base_id
-                if not name_id
-                else None
-            ),
-            "encrypted_id": (
-                encrypted_id
-                if not name_id and not base_id
-                else None
-            ),
+            "base_id": (base_id if not name_id else None),
+            "encrypted_id": (encrypted_id if not name_id and not base_id else None),
         }
 
         return self._message(
@@ -802,10 +759,8 @@ class Base(Entity):
 
     # ======== response handling ===========
 
-    def parse_authn_request_response(
-        self, xmlstr, binding, outstanding=None, outstanding_certs=None, conv_info=None
-    ):
-        """ Deal with an AuthnResponse
+    def parse_authn_request_response(self, xmlstr, binding, outstanding=None, outstanding_certs=None, conv_info=None):
+        """Deal with an AuthnResponse
 
         :param xmlstr: The reply as a xml string
         :param binding: Which binding that was used for the transport
@@ -817,7 +772,7 @@ class Base(Entity):
         :return: An response.AuthnResponse or None
         """
 
-        if not getattr(self.config, 'entityid', None):
+        if not getattr(self.config, "entityid", None):
             raise SAMLError("Missing entity_id specification")
 
         if not xmlstr:
@@ -834,31 +789,25 @@ class Base(Entity):
             "entity_id": self.config.entityid,
             "attribute_converters": self.config.attribute_converters,
             "allow_unknown_attributes": self.config.allow_unknown_attributes,
-            'conv_info': conv_info,
+            "conv_info": conv_info,
         }
 
         try:
-            resp = self._parse_response(
-                xmlstr, AuthnResponse, "assertion_consumer_service", binding, **kwargs
-            )
+            resp = self._parse_response(xmlstr, AuthnResponse, "assertion_consumer_service", binding, **kwargs)
         except StatusError as err:
-            logger.error("SAML status error: %s", err)
+            logger.error("SAML status error: %s", str(err))
             raise
         except UnravelError:
             return None
         except Exception as err:
-            logger.error("XML parse error: %s", err)
+            logger.error("XML parse error: %s", str(err))
             raise
 
         if not isinstance(resp, AuthnResponse):
             logger.error("Response type not supported: %s", saml2.class_name(resp))
             return None
 
-        if (
-            resp.assertion
-            and len(resp.response.encrypted_assertion) == 0
-            and resp.assertion.subject.name_id
-        ):
+        if resp.assertion and len(resp.response.encrypted_assertion) == 0 and resp.assertion.subject.name_id:
             self.users.add_information_about_person(resp.session_info())
             logger.info("--- ADDED person info ----")
 
@@ -869,8 +818,7 @@ class Base(Entity):
     # AuthzDecisionQuery all get Response as response
 
     def parse_authz_decision_query_response(self, response, binding=BINDING_SOAP):
-        """ Verify that the response is OK
-        """
+        """Verify that the response is OK"""
         kwargs = {
             "entity_id": self.config.entityid,
             "attribute_converters": self.config.attribute_converters,
@@ -879,33 +827,24 @@ class Base(Entity):
         return self._parse_response(response, AuthzResponse, "", binding, **kwargs)
 
     def parse_authn_query_response(self, response, binding=BINDING_SOAP):
-        """ Verify that the response is OK
-        """
-        kwargs = {"entity_id": self.config.entityid,
-                  "attribute_converters": self.config.attribute_converters}
+        """Verify that the response is OK"""
+        kwargs = {"entity_id": self.config.entityid, "attribute_converters": self.config.attribute_converters}
 
-        return self._parse_response(response, AuthnQueryResponse, "", binding,
-                                    **kwargs)
+        return self._parse_response(response, AuthnQueryResponse, "", binding, **kwargs)
 
     def parse_assertion_id_request_response(self, response, binding):
-        """ Verify that the response is OK
-        """
-        kwargs = {"entity_id": self.config.entityid,
-                  "attribute_converters": self.config.attribute_converters}
+        """Verify that the response is OK"""
+        kwargs = {"entity_id": self.config.entityid, "attribute_converters": self.config.attribute_converters}
 
-        res = self._parse_response(response, AssertionIDResponse, "", binding,
-                                   **kwargs)
+        res = self._parse_response(response, AssertionIDResponse, "", binding, **kwargs)
         return res
 
     # ------------------------------------------------------------------------
 
     def parse_attribute_query_response(self, response, binding):
-        kwargs = {"entity_id": self.config.entityid,
-                  "attribute_converters": self.config.attribute_converters}
+        kwargs = {"entity_id": self.config.entityid, "attribute_converters": self.config.attribute_converters}
 
-        return self._parse_response(response, AttributeResponse,
-                                    "attribute_consuming_service", binding,
-                                    **kwargs)
+        return self._parse_response(response, AttributeResponse, "attribute_consuming_service", binding, **kwargs)
 
     def parse_name_id_mapping_request_response(self, txt, binding=BINDING_SOAP):
         """
@@ -929,7 +868,7 @@ class Base(Entity):
         digest_alg=None,
         **kwargs,
     ):
-        """ Makes an authentication request.
+        """Makes an authentication request.
 
         :param entityid: The entity ID of the IdP to send the request to
         :param relay_state: A token that can be used by the SP to know
@@ -983,9 +922,7 @@ class Base(Entity):
 
             # The IDP publishes support for ECP by using the SOAP binding on
             # SingleSignOnService
-            _, location = self.pick_binding(
-                "single_sign_on_service", [_binding], entity_id=entityid
-            )
+            _, location = self.pick_binding("single_sign_on_service", [_binding], entity_id=entityid)
             req_id, authn_req = self.create_authn_request(
                 location,
                 service_url_binding=BINDING_PAOS,
@@ -999,26 +936,19 @@ class Base(Entity):
         # The SOAP envelope
         # ----------------------------------------
 
-        soap_envelope = make_soap_enveloped_saml_thingy(
-            authn_req, [paos_request, relay_state]
-        )
+        soap_envelope = make_soap_enveloped_saml_thingy(authn_req, [paos_request, relay_state])
 
         return req_id, str(soap_envelope)
 
     def parse_ecp_authn_response(self, txt, outstanding=None):
-        rdict = soap.class_instances_from_soap_enveloped_saml_thingies(txt,
-                                                                       [paos,
-                                                                        ecp,
-                                                                        samlp])
+        rdict = soap.class_instances_from_soap_enveloped_saml_thingies(txt, [paos, ecp, samlp])
 
         _relay_state = None
         for item in rdict["header"]:
-            if item.c_tag == "RelayState" and \
-                            item.c_namespace == ecp.NAMESPACE:
+            if item.c_tag == "RelayState" and item.c_namespace == ecp.NAMESPACE:
                 _relay_state = item
 
-        response = self.parse_authn_request_response(rdict["body"],
-                                                     BINDING_PAOS, outstanding)
+        response = self.parse_authn_request_response(rdict["body"], BINDING_PAOS, outstanding)
 
         return response, _relay_state
 
@@ -1067,25 +997,18 @@ class Base(Entity):
             "policy": kwargs.get("policy"),
             "returnIDParam": kwargs.get("returnIDParam"),
             "return": kwargs.get("return_url") or kwargs.get("return"),
-            "isPassive": (
-                None
-                if "isPassive" not in kwargs.keys()
-                else "true"
-                if kwargs.get("isPassive")
-                else "false"
-            ),
+            "isPassive": (None if "isPassive" not in kwargs.keys() else "true" if kwargs.get("isPassive") else "false"),
         }
 
         params = urlencode({k: v for k, v in args.items() if v})
         # url can already contain some parameters
-        if '?' in url:
+        if "?" in url:
             return "%s&%s" % (url, params)
         else:
             return "%s?%s" % (url, params)
 
     @staticmethod
-    def parse_discovery_service_response(url="", query="",
-            returnIDParam="entityID"):
+    def parse_discovery_service_response(url="", query="", returnIDParam="entityID"):
         """
         Deal with the response url from a Discovery Service
 

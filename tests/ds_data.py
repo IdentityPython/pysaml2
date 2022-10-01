@@ -3,7 +3,7 @@
 
 """Test data for ds"""
 
-__author__ = 'tmatsuo@example.com (Takashi MATSUO)'
+__author__ = "tmatsuo@example.com (Takashi MATSUO)"
 
 TEST_OBJECT = """<?xml version="1.0" encoding="utf-8"?>
 <Object Id="object_id" Encoding="http://www.w3.org/2000/09/xmldsig#base64"

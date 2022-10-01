@@ -1,20 +1,21 @@
-from saml2.saml import AuthnContext, AuthnContextClassRef
+from saml2 import extension_elements_to_elements
+from saml2.authn_context import ippword
+from saml2.authn_context import mobiletwofactor
+from saml2.authn_context import ppt
+from saml2.authn_context import pword
+from saml2.authn_context import sslcert
+from saml2.saml import AuthnContext
+from saml2.saml import AuthnContextClassRef
 from saml2.samlp import RequestedAuthnContext
 
-__author__ = 'rolandh'
-
-from saml2 import extension_elements_to_elements
 
 UNSPECIFIED = "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified"
 
-INTERNETPROTOCOLPASSWORD = \
-    'urn:oasis:names:tc:SAML:2.0:ac:classes:InternetProtocolPassword'
-MOBILETWOFACTORCONTRACT = \
-    'urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract'
-PASSWORDPROTECTEDTRANSPORT = \
-    'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport'
-PASSWORD = 'urn:oasis:names:tc:SAML:2.0:ac:classes:Password'
-TLSCLIENT = 'urn:oasis:names:tc:SAML:2.0:ac:classes:TLSClient'
+INTERNETPROTOCOLPASSWORD = "urn:oasis:names:tc:SAML:2.0:ac:classes:InternetProtocolPassword"
+MOBILETWOFACTORCONTRACT = "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract"
+PASSWORDPROTECTEDTRANSPORT = "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
+PASSWORD = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password"
+TLSCLIENT = "urn:oasis:names:tc:SAML:2.0:ac:classes:TLSClient"
 TIMESYNCTOKEN = "urn:oasis:names:tc:SAML:2.0:ac:classes:TimeSyncToken"
 
 AL1 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel1"
@@ -22,13 +23,7 @@ AL2 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel2"
 AL3 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel3"
 AL4 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel4"
 
-from saml2.authn_context import ippword
-from saml2.authn_context import mobiletwofactor
-from saml2.authn_context import ppt
-from saml2.authn_context import pword
-from saml2.authn_context import sslcert
-
-CMP_TYPE = ['exact', 'minimum', 'maximum', 'better']
+CMP_TYPE = ["exact", "minimum", "maximum", "better"]
 
 
 class AuthnBroker(object):
@@ -68,20 +63,10 @@ class AuthnBroker(object):
 
         if spec.authn_context_class_ref:
             key = spec.authn_context_class_ref.text
-            _info = {
-                "class_ref": key,
-                "method": method,
-                "level": level,
-                "authn_auth": authn_authority
-            }
+            _info = {"class_ref": key, "method": method, "level": level, "authn_auth": authn_authority}
         elif spec.authn_context_decl:
             key = spec.authn_context_decl.c_namespace
-            _info = {
-                "method": method,
-                "decl": spec.authn_context_decl,
-                "level": level,
-                "authn_auth": authn_authority
-            }
+            _info = {"method": method, "decl": spec.authn_context_decl, "level": level, "authn_auth": authn_authority}
         else:
             raise NotImplementedError()
 
@@ -114,8 +99,7 @@ class AuthnBroker(object):
                         _remain.append(_ref)
                     if level and level != item["level"]:
                         _remain.append(_ref)
-                    if authn_authority and \
-                            authn_authority != item["authn_authority"]:
+                    if authn_authority and authn_authority != item["authn_authority"]:
                         _remain.append(_ref)
                 if _remain:
                     self.db[_cls_ref] = _remain
@@ -169,21 +153,19 @@ class AuthnBroker(object):
                 _cmp = req_authn_context.comparison
             else:
                 _cmp = "exact"
-            if _cmp == 'exact':
+            if _cmp == "exact":
                 res = []
                 for cls_ref in req_authn_context.authn_context_class_ref:
-                    res += (self._pick_by_class_ref(cls_ref.text, _cmp))
+                    res += self._pick_by_class_ref(cls_ref.text, _cmp)
                 return res
             else:
-                return self._pick_by_class_ref(
-                    req_authn_context.authn_context_class_ref[0].text, _cmp)
+                return self._pick_by_class_ref(req_authn_context.authn_context_class_ref[0].text, _cmp)
         elif req_authn_context.authn_context_decl_ref:
             if req_authn_context.comparison:
                 _cmp = req_authn_context.comparison
             else:
                 _cmp = "exact"
-            return self._pick_by_class_ref(
-                req_authn_context.authn_context_decl_ref, _cmp)
+            return self._pick_by_class_ref(req_authn_context.authn_context_decl_ref, _cmp)
 
     def match(self, requested, provided):
         if requested == provided:
@@ -210,8 +192,7 @@ def authn_context_factory(text):
 
 
 def authn_context_decl_from_extension_elements(extelems):
-    res = extension_elements_to_elements(extelems, [ippword, mobiletwofactor,
-                                                    ppt, pword, sslcert])
+    res = extension_elements_to_elements(extelems, [ippword, mobiletwofactor, ppt, pword, sslcert])
     try:
         return res[0]
     except IndexError:
@@ -226,5 +207,5 @@ def requested_authn_context(class_ref, comparison="minimum"):
     if not isinstance(class_ref, list):
         class_ref = [class_ref]
     return RequestedAuthnContext(
-        authn_context_class_ref=[AuthnContextClassRef(text=i) for i in class_ref],
-        comparison=comparison)
+        authn_context_class_ref=[AuthnContextClassRef(text=i) for i in class_ref], comparison=comparison
+    )

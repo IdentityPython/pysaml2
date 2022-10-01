@@ -1,23 +1,28 @@
 #!/usr/bin/env python
-from saml2.sigver import _get_xmlsec_cryptobackend, SecurityContext
-from saml2.httpbase import HTTPBase
-from saml2.attribute_converter import ac_factory
 import argparse
 
-from saml2.mdstore import MetaDataFile, MetaDataExtern, MetadataStore
+from saml2.attribute_converter import ac_factory
+from saml2.httpbase import HTTPBase
+from saml2.mdstore import MetaDataExtern
+from saml2.mdstore import MetaDataFile
+from saml2.mdstore import MetadataStore
+from saml2.sigver import SecurityContext
+from saml2.sigver import _get_xmlsec_cryptobackend
 
-__author__ = 'rolandh'
+
+__author__ = "rolandh"
 
 """
 A script that imports and verifies metadata.
 """
 
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-a', dest='attrsmap')
-    parser.add_argument('-o', dest='output', default="local")
-    parser.add_argument('-x', dest='xmlsec')
-    parser.add_argument('-i', dest='ignore_valid', action='store_true')
+    parser.add_argument("-a", dest="attrsmap")
+    parser.add_argument("-o", dest="output", default="local")
+    parser.add_argument("-x", dest="xmlsec")
+    parser.add_argument("-i", dest="ignore_valid", action="store_true")
     parser.add_argument(dest="conf")
     args = parser.parse_args()
 
@@ -30,9 +35,9 @@ def main():
     #
     # for instance
     #
-    #local metadata_sp_1.xml
-    #local InCommon-metadata.xml
-    #remote https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2 kalmar2.pem
+    # local metadata_sp_1.xml
+    # local InCommon-metadata.xml
+    # remote https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2 kalmar2.pem
     #
 
     ATTRCONV = ac_factory(args.attrsmap)
@@ -59,19 +64,15 @@ def main():
             httpc = HTTPBase()
             crypto = _get_xmlsec_cryptobackend(args.xmlsec)
             sc = SecurityContext(crypto, key_type="", cert_type="")
-            metad = MetaDataExtern(ATTRCONV, spec[1], sc, cert=spec[2], http=httpc,
-                                   **kwargs)
+            metad = MetaDataExtern(ATTRCONV, spec[1], sc, cert=spec[2], http=httpc, **kwargs)
 
         if metad is not None:
-            try:
-                metad.load()
-            except:
-                raise
+            metad.load()
 
         mds.metadata[spec[1]] = metad
 
     print(mds.dumps(args.output))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,19 +1,20 @@
 from contextlib import closing
-from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
+
+from pymongo.errors import ConnectionFailure
+from pymongo.errors import ServerSelectionTimeoutError
 import pytest
+
 from saml2 import BINDING_HTTP_POST
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
-from saml2.server import Server
 from saml2.mongo_store import EptidMDB
+from saml2.server import Server
 
-__author__ = 'rolandh'
+
+__author__ = "rolandh"
 
 
-AUTHN = {
-    "class_ref": INTERNETPROTOCOLPASSWORD,
-    "authn_auth": "http://www.example.com/login"
-}
+AUTHN = {"class_ref": INTERNETPROTOCOLPASSWORD, "authn_auth": "http://www.example.com/login"}
 
 
 def _eq(l1, l2):
@@ -36,17 +37,19 @@ def test_flow():
 
                 rinfo = idp1.response_args(orig_req, [BINDING_HTTP_POST])
 
-                #name_id = idp1.ident.transient_nameid("id12", rinfo["sp_entity_id"])
+                # name_id = idp1.ident.transient_nameid("id12", rinfo["sp_entity_id"])
                 resp = idp1.create_authn_response(
                     {
                         "eduPersonEntitlement": "Short stop",
                         "surName": "Jeter",
                         "givenName": "Derek",
                         "mail": "derek.jeter@nyy.mlb.com",
-                        "title": "The man"},
+                        "title": "The man",
+                    },
                     userid="jeter",
                     authn=AUTHN,
-                    **rinfo)
+                    **rinfo
+                )
 
                 # What's stored away is the assertion
                 a_info = idp2.session_db.get_assertion(resp.assertion.id)
@@ -73,27 +76,22 @@ def test_eptid_mongo_db():
         pass
     else:
         try:
-            e1 = edb.get("idp_entity_id", "sp_entity_id", "user_id",
-                         "some other data")
+            e1 = edb.get("idp_entity_id", "sp_entity_id", "user_id", "some other data")
         except ServerSelectionTimeoutError:
             pass
         else:
             print(e1)
             assert e1.startswith("idp_entity_id!sp_entity_id!")
-            e2 = edb.get("idp_entity_id", "sp_entity_id", "user_id",
-                         "some other data")
+            e2 = edb.get("idp_entity_id", "sp_entity_id", "user_id", "some other data")
             assert e1 == e2
 
-            e3 = edb.get("idp_entity_id", "sp_entity_id", "user_2",
-                         "some other data")
+            e3 = edb.get("idp_entity_id", "sp_entity_id", "user_2", "some other data")
             print(e3)
             assert e1 != e3
 
-            e4 = edb.get("idp_entity_id", "sp_entity_id2", "user_id",
-                         "some other data")
+            e4 = edb.get("idp_entity_id", "sp_entity_id2", "user_id", "some other data")
             assert e4 != e1
             assert e4 != e3
-
 
 
 if __name__ == "__main__":

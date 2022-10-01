@@ -1,25 +1,29 @@
 #!/usr/bin/env python
 
-from saml2 import attribute_converter, saml
-
 from attribute_statement_data import *
-
 from pathutils import full_path
-from saml2.attribute_converter import AttributeConverterNOOP, from_local
+
+from saml2 import attribute_converter
+from saml2 import saml
 from saml2.attribute_converter import AttributeConverter
+from saml2.attribute_converter import AttributeConverterNOOP
+from saml2.attribute_converter import from_local
 from saml2.attribute_converter import to_local
-from saml2.saml import attribute_from_string, name_id_from_string, NameID, NAMEID_FORMAT_PERSISTENT
-from saml2.saml import attribute_statement_from_string
 import saml2.attributemaps.saml_uri as saml_map
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
+from saml2.saml import NameID
+from saml2.saml import attribute_from_string
+from saml2.saml import attribute_statement_from_string
+from saml2.saml import name_id_from_string
 
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
 
 
-BASIC_NF = 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic'
-URI_NF = 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri'
-SAML1 = 'urn:mace:shibboleth:1.0:attributeNamespace:uri'
+BASIC_NF = "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+URI_NF = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+SAML1 = "urn:mace:shibboleth:1.0:attributeNamespace:uri"
 
 
 def test_default():
@@ -27,7 +31,7 @@ def test_default():
     assert acs
 
 
-class TestAC():
+class TestAC:
     def setup_class(self):
         self.acs = attribute_converter.ac_factory(full_path("attributemaps"))
 
@@ -50,13 +54,26 @@ class TestAC():
             if ava:
                 break
         print(ava.keys())
-        assert _eq(ava.keys(), ['givenName', 'displayName', 'uid',
-                                'eduPersonNickname', 'street',
-                                'eduPersonScopedAffiliation',
-                                'employeeType', 'eduPersonAffiliation',
-                                'eduPersonPrincipalName', 'sn', 'postalCode',
-                                'physicalDeliveryOfficeName', 'ou',
-                                'eduPersonTargetedID', 'cn'])
+        assert _eq(
+            ava.keys(),
+            [
+                "givenName",
+                "displayName",
+                "uid",
+                "eduPersonNickname",
+                "street",
+                "eduPersonScopedAffiliation",
+                "employeeType",
+                "eduPersonAffiliation",
+                "eduPersonPrincipalName",
+                "sn",
+                "postalCode",
+                "physicalDeliveryOfficeName",
+                "ou",
+                "eduPersonTargetedID",
+                "cn",
+            ],
+        )
 
     def test_ava_fro_2(self):
         ats = saml.attribute_statement_from_string(STATEMENT2)
@@ -66,8 +83,7 @@ class TestAC():
             ava.update(ac.fro(ats))
 
         print(ava.keys())
-        assert _eq(ava.keys(), ['eduPersonEntitlement', 'eduPersonAffiliation',
-                                'uid', 'mail', 'givenName', 'sn'])
+        assert _eq(ava.keys(), ["eduPersonEntitlement", "eduPersonAffiliation", "uid", "mail", "givenName", "sn"])
 
     def test_to_attrstat_1(self):
         ava = {"givenName": "Roland", "sn": "Hedberg"}
@@ -78,17 +94,17 @@ class TestAC():
         assert len(statement) == 2
         a0 = statement[0]
         a1 = statement[1]
-        if a0.friendly_name == 'sn':
-            assert a0.name == 'urn:mace:dir:attribute-def:sn'
+        if a0.friendly_name == "sn":
+            assert a0.name == "urn:mace:dir:attribute-def:sn"
             assert a0.name_format == BASIC_NF
             assert a1.friendly_name == "givenName"
-            assert a1.name == 'urn:mace:dir:attribute-def:givenName'
+            assert a1.name == "urn:mace:dir:attribute-def:givenName"
             assert a1.name_format == BASIC_NF
-        elif a0.friendly_name == 'givenName':
-            assert a0.name == 'urn:mace:dir:attribute-def:givenName'
+        elif a0.friendly_name == "givenName":
+            assert a0.name == "urn:mace:dir:attribute-def:givenName"
             assert a0.name_format == BASIC_NF
             assert a1.friendly_name == "sn"
-            assert a1.name == 'urn:mace:dir:attribute-def:sn'
+            assert a1.name == "urn:mace:dir:attribute-def:sn"
             assert a1.name_format == BASIC_NF
         else:
             assert False
@@ -101,17 +117,17 @@ class TestAC():
         assert len(statement) == 2
         a0 = statement[0]
         a1 = statement[1]
-        if a0.friendly_name == 'surname':
-            assert a0.name == 'urn:oid:2.5.4.4'
+        if a0.friendly_name == "surname":
+            assert a0.name == "urn:oid:2.5.4.4"
             assert a0.name_format == URI_NF
             assert a1.friendly_name == "givenName"
-            assert a1.name == 'urn:oid:2.5.4.42'
+            assert a1.name == "urn:oid:2.5.4.42"
             assert a1.name_format == URI_NF
-        elif a0.friendly_name == 'givenName':
-            assert a0.name == 'urn:oid:2.5.4.42'
+        elif a0.friendly_name == "givenName":
+            assert a0.name == "urn:oid:2.5.4.42"
             assert a0.name_format == URI_NF
             assert a1.friendly_name == "surname"
-            assert a1.name == 'urn:oid:2.5.4.4'
+            assert a1.name == "urn:oid:2.5.4.4"
             assert a1.name_format == URI_NF
         else:
             print(a0.friendly_name)
@@ -123,19 +139,23 @@ class TestAC():
             saml.Attribute(
                 friendly_name="surName",
                 name="urn:oid:2.5.4.4",
-                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+            ),
             saml.Attribute(
                 friendly_name="efternamn",
                 name="urn:oid:2.5.4.42",
-                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+            ),
             saml.Attribute(
                 friendly_name="titel",
                 name="urn:oid:2.5.4.12",
-                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+            ),
+        ]
 
         lan = [attribute_converter.to_local_name(self.acs, a) for a in attr]
 
-        assert _eq(lan, ['sn', 'givenName', 'title'])
+        assert _eq(lan, ["sn", "givenName", "title"])
 
     def test_to_local_name_from_unspecified(self):
         _xml = """<?xml version='1.0' encoding='UTF-8'?>
@@ -152,18 +172,19 @@ class TestAC():
         attr = attribute_statement_from_string(_xml)
         ava = attribute_converter.to_local(self.acs, attr)
 
-        assert _eq(list(ava.keys()), ['EmailAddress'])
+        assert _eq(list(ava.keys()), ["EmailAddress"])
 
     def test_to_local_name_from_basic(self):
         attr = [
             saml.Attribute(
                 name="urn:mace:dir:attribute-def:eduPersonPrimaryOrgUnitDN",
-                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:basic")
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:basic",
+            )
         ]
 
         lan = [attribute_converter.to_local_name(self.acs, a) for a in attr]
 
-        assert _eq(lan, ['eduPersonPrimaryOrgUnitDN'])
+        assert _eq(lan, ["eduPersonPrimaryOrgUnitDN"])
 
     def test_to_and_for(self):
         ava = {"givenName": "Roland", "surname": "Hedberg"}
@@ -179,22 +200,30 @@ class TestAC():
     def test_unspecified_name_format(self):
         ats = saml.attribute_statement_from_string(STATEMENT4)
         ava = to_local(self.acs, ats)
-        assert ava == {'user_id': ['bob'], 'NameID': ['bobsnameagain']}
+        assert ava == {"user_id": ["bob"], "NameID": ["bobsnameagain"]}
 
     def test_mixed_attributes_1(self):
         ats = saml.attribute_statement_from_string(STATEMENT_MIXED)
         ava = to_local(self.acs, ats)
-        assert ava == {'eduPersonAffiliation': ['staff'],
-                       'givenName': ['Roland'], 'sn': ['Hedberg'],
-                       'uid': ['demouser'], 'user_id': ['bob']}
+        assert ava == {
+            "eduPersonAffiliation": ["staff"],
+            "givenName": ["Roland"],
+            "sn": ["Hedberg"],
+            "uid": ["demouser"],
+            "user_id": ["bob"],
+        }
 
         # Allow unknown
         ava = to_local(self.acs, ats, True)
-        assert ava == {'eduPersonAffiliation': ['staff'],
-                       'givenName': ['Roland'], 'sn': ['Hedberg'],
-                       'urn:oid:2.16.756.1.2.5.1.1.5': ['others'],
-                       'uid': ['demouser'], 'urn:example:com:foo': ['Thing'],
-                       'user_id': ['bob']}
+        assert ava == {
+            "eduPersonAffiliation": ["staff"],
+            "givenName": ["Roland"],
+            "sn": ["Hedberg"],
+            "urn:oid:2.16.756.1.2.5.1.1.5": ["others"],
+            "uid": ["demouser"],
+            "urn:example:com:foo": ["Thing"],
+            "user_id": ["bob"],
+        }
 
     def test_adjust_with_only_from_defined(self):
         attr_conv = AttributeConverter()
@@ -262,7 +291,7 @@ def test_noop_attribute_conversion():
             assert attr.attribute_value[0].text == "Roland"
 
 
-class BuilderAVA():
+class BuilderAVA:
     def __init__(self, name, friendly_name, name_format):
         template = """<?xml version='1.0' encoding='UTF-8'?>
         <ns0:Attribute xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion"
@@ -276,20 +305,14 @@ class BuilderAVA():
         </ns0:Attribute>
         """
 
-        self.ava = template.format(
-            attr_name=name,
-            attr_friendly_name=friendly_name,
-            attr_name_format=name_format)
+        self.ava = template.format(attr_name=name, attr_friendly_name=friendly_name, attr_name_format=name_format)
 
 
-class TestSchac():
+class TestSchac:
     def test(self):
         failures = 0
         friendly_name = "schacHomeOrganization"
-        ava_schac = BuilderAVA(
-            "urn:oid:1.3.6.1.4.1.25178.1.2.9",
-            friendly_name,
-            saml_map.MAP['identifier'])
+        ava_schac = BuilderAVA("urn:oid:1.3.6.1.4.1.25178.1.2.9", friendly_name, saml_map.MAP["identifier"])
 
         attr = attribute_from_string(ava_schac.ava)
         acs = attribute_converter.ac_factory()
@@ -305,14 +328,11 @@ class TestSchac():
         assert failures != len(acs)
 
 
-class TestEIDAS():
+class TestEIDAS:
     def test(self):
         failures = 0
-        friendly_name = 'PersonIdentifier'
-        ava_eidas = BuilderAVA(
-            saml_map.EIDAS_NATURALPERSON + friendly_name,
-            friendly_name,
-            saml_map.MAP['identifier'])
+        friendly_name = "PersonIdentifier"
+        ava_eidas = BuilderAVA(saml_map.EIDAS_NATURALPERSON + friendly_name, friendly_name, saml_map.MAP["identifier"])
 
         attr = attribute_from_string(ava_eidas.ava)
         acs = attribute_converter.ac_factory()

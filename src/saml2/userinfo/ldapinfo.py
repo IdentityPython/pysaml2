@@ -1,11 +1,13 @@
 import ldap
 from ldap import SCOPE_SUBTREE
+
 from saml2.userinfo import UserInfo
 
 
 class UserInfoLDAP(UserInfo):
-    def __init__(self, uri, base, filter_pattern, scope=SCOPE_SUBTREE,
-                 tls=False, user="", passwd="", attr=None, attrsonly=False):
+    def __init__(
+        self, uri, base, filter_pattern, scope=SCOPE_SUBTREE, tls=False, user="", passwd="", attr=None, attrsonly=False
+    ):
         UserInfo.__init__(self)
         self.ldapuri = uri
         self.base = base
@@ -18,8 +20,9 @@ class UserInfoLDAP(UserInfo):
         self.ld.protocol_version = ldap.VERSION3
         self.ld.simple_bind_s(user, passwd)
 
-    def __call__(self, userid, base="", filter_pattern="", scope=SCOPE_SUBTREE,
-                 tls=False, attr=None, attrsonly=False, **kwargs):
+    def __call__(
+        self, userid, base="", filter_pattern="", scope=SCOPE_SUBTREE, tls=False, attr=None, attrsonly=False, **kwargs
+    ):
 
         if filter_pattern:
             _filter = filter_pattern % userid

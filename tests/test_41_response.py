@@ -1,51 +1,47 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from contextlib import closing
 import datetime
 from unittest.mock import Mock
 from unittest.mock import patch
 
-from contextlib import closing
+from pathutils import full_path
+from pytest import raises
 
 from saml2 import config
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-
-from saml2.server import Server
-from saml2.response import response_factory
-from saml2.response import StatusResponse
 from saml2.response import AuthnResponse
+from saml2.response import StatusResponse
+from saml2.response import response_factory
+from saml2.server import Server
 from saml2.sigver import SignatureError
-
-from pathutils import full_path
-
-from pytest import raises
 
 
 FALSE_ASSERT_SIGNED = full_path("saml_false_signed.xml")
 
-TIMESLACK = 60*5
+TIMESLACK = 60 * 5
 
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
 
 
-IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
-            "surName": ["Jeter"], "givenName": ["Derek"],
-            "mail": ["foo@gmail.com"],
-            "title": ["shortstop"]}
-
-AUTHN = {
-    "class_ref": INTERNETPROTOCOLPASSWORD,
-    "authn_auth": "http://www.example.com/login"
+IDENTITY = {
+    "eduPersonAffiliation": ["staff", "member"],
+    "surName": ["Jeter"],
+    "givenName": ["Derek"],
+    "mail": ["foo@gmail.com"],
+    "title": ["shortstop"],
 }
+
+AUTHN = {"class_ref": INTERNETPROTOCOLPASSWORD, "authn_auth": "http://www.example.com/login"}
 
 
 class TestResponse:
     def setup_class(self):
         with closing(Server("idp_conf")) as server:
-            name_id = server.ident.transient_nameid(
-                "urn:mace:example.com:saml:roland:sp", "id12")
+            name_id = server.ident.transient_nameid("urn:mace:example.com:saml:roland:sp", "id12")
 
             self._resp_ = server.create_authn_response(
                 IDENTITY,
@@ -87,9 +83,10 @@ class TestResponse:
             self.conf = conf
 
     def test_1(self):
-        xml_response = ("%s" % (self._resp_,))
+        xml_response = "%s" % (self._resp_,)
         resp = response_factory(
-            xml_response, self.conf,
+            xml_response,
+            self.conf,
             return_addrs=["http://lingon.catalogix.se:8087/"],
             outstanding_queries={"id12": "http://localhost:8088/sso"},
             timeslack=TIMESLACK,
@@ -114,7 +111,7 @@ class TestResponse:
         assert isinstance(resp, AuthnResponse)
 
     def test_issuer_none(self):
-        xml_response = ("%s" % (self._resp_issuer_none,))
+        xml_response = "%s" % (self._resp_issuer_none,)
         resp = response_factory(
             xml_response,
             self.conf,
@@ -128,11 +125,9 @@ class TestResponse:
         assert isinstance(resp, AuthnResponse)
         assert resp.issuer() == ""
 
-    @patch('saml2.time_util.datetime')
+    @patch("saml2.time_util.datetime")
     def test_false_sign(self, mock_datetime):
-        mock_datetime.utcnow = Mock(
-            return_value=datetime.datetime(2016, 9, 4, 9, 59, 39)
-        )
+        mock_datetime.utcnow = Mock(return_value=datetime.datetime(2016, 9, 4, 9, 59, 39))
         with open(FALSE_ASSERT_SIGNED) as fp:
             xml_response = fp.read()
 
@@ -156,15 +151,17 @@ class TestResponse:
         with open(full_path("attribute_response.xml")) as fp:
             xml_response = fp.read()
         resp = response_factory(
-            xml_response, self.conf,
-            return_addrs=['https://myreviewroom.com/saml2/acs/'],
-            outstanding_queries={'id-f4d370f3d03650f3ec0da694e2348bfe':
-                                 "http://localhost:8088/sso"},
-            timeslack=TIMESLACK, decode=False)
+            xml_response,
+            self.conf,
+            return_addrs=["https://myreviewroom.com/saml2/acs/"],
+            outstanding_queries={"id-f4d370f3d03650f3ec0da694e2348bfe": "http://localhost:8088/sso"},
+            timeslack=TIMESLACK,
+            decode=False,
+        )
 
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
-        resp.sec.only_use_keys_in_metadata=False
+        resp.sec.only_use_keys_in_metadata = False
         resp.parse_assertion()
         si = resp.session_info()
         assert si

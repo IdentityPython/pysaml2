@@ -1,29 +1,30 @@
 import inspect
 import json
+
 import six
 
-__author__ = 'rolandh'
 
-import traceback
+__author__ = "rolandh"
+
 import sys
+import traceback
+
 
 INFORMATION = 0
 OK = 1
 WARNING = 2
-ERROR = 3   # an error condition in the test target
-CRITICAL = 4 # an error condition in the test driver
+ERROR = 3  # an error condition in the test target
+CRITICAL = 4  # an error condition in the test driver
 INTERACTION = 5
 
-STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
-              "INTERACTION"]
+STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL", "INTERACTION"]
 
 CONT_JSON = "application/json"
 CONT_JWT = "application/jwt"
 
 
 class Check(object):
-    """ General test
-    """
+    """General test"""
 
     cid = "check"
     msg = "OK"
@@ -46,16 +47,11 @@ class Check(object):
 
     def response(self, **kwargs):
         try:
-            name = " ".join(
-                [s.strip() for s in self.__doc__.strip().split("\n")])
+            name = " ".join([s.strip() for s in self.__doc__.strip().split("\n")])
         except AttributeError:
             name = ""
 
-        res = {
-            "id": self.cid,
-            "status": self._status,
-            "name": name
-        }
+        res = {"id": self.cid, "status": self._status, "name": name}
 
         if self._message:
             res["message"] = self._message
@@ -105,6 +101,7 @@ class CheckErrorResponse(ExpectedError):
     Checks that the HTTP response status is outside the 200 or 300 range
     or that an JSON encoded error message has been received
     """
+
     cid = "check-error-response"
     msg = "OP error"
 
@@ -128,12 +125,13 @@ class VerifyBadRequestResponse(ExpectedError):
     Verifies that the test target returned a 400 Bad Request response
     containing a an error message.
     """
+
     cid = "verify-bad-request-response"
     msg = "OP error"
 
     def _func(self, conv):
         _response = conv.last_response
-        _content = conv.last_content
+        # _content = conv.last_content
         res = {}
         if _response.status_code == 400:
             pass
@@ -178,6 +176,7 @@ class WrapException(CriticalError):
     """
     A runtime exception
     """
+
     cid = "exception"
     msg = "Test tool exception"
 
@@ -188,7 +187,8 @@ class WrapException(CriticalError):
 
 
 class Other(CriticalError):
-    """ Other error """
+    """Other error"""
+
     msg = "Other error"
 
 
@@ -196,18 +196,19 @@ class CheckSpHttpResponseOK(Error):
     """
     Checks that the SP's HTTP response status is within the 200 or 300 range
     """
+
     cid = "check-sp-http-response-ok"
     msg = "SP error OK"
 
     def _func(self, conv):
         _response = conv.last_response
-        _content = conv.last_response.content
+        # _content = conv.last_response.content
 
         res = {}
         if _response.status_code >= 400:
             self._status = self.status
             self._message = self.msg
-            #res["content"] = _content   #too big + charset converstion needed
+            # res["content"] = _content   #too big + charset converstion needed
             res["url"] = conv.position
             res["http_status"] = _response.status_code
 
@@ -215,21 +216,22 @@ class CheckSpHttpResponseOK(Error):
 
 
 class CheckSpHttpResponse500(Error):
-    """ Checks that the SP's HTTP response status is >= 500. This is useful
-        to check if the SP correctly flags errors such as an invalid signature
+    """Checks that the SP's HTTP response status is >= 500. This is useful
+    to check if the SP correctly flags errors such as an invalid signature
     """
+
     cid = "check-sp-http-response-500"
     msg = "SP does not return a HTTP 5xx status when it shold do so."
 
     def _func(self, conv):
         _response = conv.last_response
-        _content = conv.last_response.content
+        # _content = conv.last_response.content
 
         res = {}
         if _response.status_code < 500:
             self._status = self.status
             self._message = self.msg
-            #res["content"] = _content   #too big + charset converstion needed
+            # res["content"] = _content   #too big + charset converstion needed
             res["url"] = conv.position
             res["http_status"] = _response.status_code
 
@@ -237,8 +239,8 @@ class CheckSpHttpResponse500(Error):
 
 
 class MissingRedirect(CriticalError):
-    """ At this point in the flow a redirect back to the client was expected.
-    """
+    """At this point in the flow a redirect back to the client was expected."""
+
     cid = "missing-redirect"
     msg = "Expected redirect to the RP, got something else"
 
@@ -248,7 +250,8 @@ class MissingRedirect(CriticalError):
 
 
 class Parse(CriticalError):
-    """ Parsing the response """
+    """Parsing the response"""
+
     cid = "response-parse"
     errmsg = "Parse error"
 
@@ -264,14 +267,12 @@ class Parse(CriticalError):
                 self._status = self.status
                 self._message = (
                     "Didn't get a response of the type I expected:",
-                    " '%s' instead of '%s', content:'%s'" % (
-                        cname, conv.response_type, _rmsg))
-                return {
-                    "response_type": conv.response_type,
-                    "url": conv.position
-                }
+                    " '%s' instead of '%s', content:'%s'" % (cname, conv.response_type, _rmsg),
+                )
+                return {"response_type": conv.response_type, "url": conv.position}
 
         return {}
+
 
 def factory(cid, classes):
     if len(classes) == 0:

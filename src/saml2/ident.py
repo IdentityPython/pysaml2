@@ -1,25 +1,26 @@
 import copy
-import shelve
-import logging
-import six
-
 from hashlib import sha256
+import logging
+import shelve
+
+import six
 from six.moves.urllib.parse import quote
 from six.moves.urllib.parse import unquote
+
 from saml2 import SAMLError
-from saml2.s_utils import rndbytes
 from saml2.s_utils import PolicyError
-from saml2.saml import NameID
+from saml2.s_utils import rndbytes
+from saml2.saml import NAMEID_FORMAT_EMAILADDRESS
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.saml import NAMEID_FORMAT_EMAILADDRESS
+from saml2.saml import NameID
 
-__author__ = 'rolandh'
+
+__author__ = "rolandh"
 
 logger = logging.getLogger(__name__)
 
-ATTR = ["name_qualifier", "sp_name_qualifier", "format", "sp_provided_id",
-        "text"]
+ATTR = ["name_qualifier", "sp_name_qualifier", "format", "sp_provided_id", "text"]
 
 
 class Unknown(SAMLError):
@@ -52,7 +53,7 @@ def code_binary(item):
     """
     code_str = code(item)
     if isinstance(code_str, six.string_types):
-        return code_str.encode('utf-8')
+        return code_str.encode("utf-8")
     return code_str
 
 
@@ -67,15 +68,16 @@ def decode(txt):
             i, val = part.split("=")
             try:
                 setattr(_nid, ATTR[int(i)], unquote(val))
-            except:
+            except Exception:
                 pass
     return _nid
 
 
 class IdentDB(object):
-    """ A class that handles identifiers of entities
-     Keeps a list of all nameIDs returned per SP
+    """A class that handles identifiers of entities
+    Keeps a list of all nameIDs returned per SP
     """
+
     def __init__(self, db, domain="", name_qualifier=""):
         if isinstance(db, six.string_types):
             self.db = shelve.open(db, protocol=2)
@@ -87,15 +89,15 @@ class IdentDB(object):
     def _create_id(self, nformat, name_qualifier="", sp_name_qualifier=""):
         _id = sha256(rndbytes(32))
         if not isinstance(nformat, six.binary_type):
-            nformat = nformat.encode('utf-8')
+            nformat = nformat.encode("utf-8")
         _id.update(nformat)
         if name_qualifier:
             if not isinstance(name_qualifier, six.binary_type):
-                name_qualifier = name_qualifier.encode('utf-8')
+                name_qualifier = name_qualifier.encode("utf-8")
             _id.update(name_qualifier)
         if sp_name_qualifier:
             if not isinstance(sp_name_qualifier, six.binary_type):
-                sp_name_qualifier = sp_name_qualifier.encode('utf-8')
+                sp_name_qualifier = sp_name_qualifier.encode("utf-8")
             _id.update(sp_name_qualifier)
         return _id.hexdigest()
 
@@ -158,11 +160,7 @@ class IdentDB(object):
         if nformat == NAMEID_FORMAT_PERSISTENT:
             nameid = self.match_local_id(userid, sp_name_qualifier, name_qualifier)
             if nameid:
-                logger.debug(
-                    "Found existing persistent NameId {nid} for user {uid}".format(
-                        nid=nameid, uid=userid
-                    )
-                )
+                logger.debug("Found existing persistent NameId %s for user %s" % (nameid, userid))
                 return nameid
 
         _id = self.create_id(nformat, name_qualifier, sp_name_qualifier)
@@ -211,8 +209,7 @@ class IdentDB(object):
 
         return res
 
-    def nim_args(self, local_policy=None, sp_name_qualifier="",
-                 name_id_policy=None, name_qualifier=""):
+    def nim_args(self, local_policy=None, sp_name_qualifier="", name_id_policy=None, name_qualifier=""):
         """
 
         :param local_policy:
@@ -222,8 +219,7 @@ class IdentDB(object):
         :return:
         """
 
-        logger.debug("local_policy: %s, name_id_policy: %s", local_policy,
-                                                               name_id_policy)
+        logger.debug("local_policy: %s, name_id_policy: %s", local_policy, name_id_policy)
 
         if name_id_policy and name_id_policy.sp_name_qualifier:
             sp_name_qualifier = name_id_policy.sp_name_qualifier
@@ -240,14 +236,12 @@ class IdentDB(object):
         if not name_qualifier:
             name_qualifier = self.name_qualifier
 
-        return {"nformat": nameid_format,
-                "sp_name_qualifier": sp_name_qualifier,
-                "name_qualifier": name_qualifier}
+        return {"nformat": nameid_format, "sp_name_qualifier": sp_name_qualifier, "name_qualifier": name_qualifier}
 
-    def construct_nameid(self, userid, local_policy=None,
-                         sp_name_qualifier=None, name_id_policy=None,
-                         name_qualifier=""):
-        """ Returns a name_id for the userid. How the name_id is
+    def construct_nameid(
+        self, userid, local_policy=None, sp_name_qualifier=None, name_id_policy=None, name_qualifier=""
+    ):
+        """Returns a name_id for the userid. How the name_id is
         constructed depends on the context.
 
         :param local_policy: The policy the server is configured to follow
@@ -268,17 +262,14 @@ class IdentDB(object):
         return self.get_nameid(userid, **args)
 
     def transient_nameid(self, userid, sp_name_qualifier="", name_qualifier=""):
-        return self.get_nameid(userid, NAMEID_FORMAT_TRANSIENT,
-                               sp_name_qualifier, name_qualifier)
+        return self.get_nameid(userid, NAMEID_FORMAT_TRANSIENT, sp_name_qualifier, name_qualifier)
 
-    def persistent_nameid(self, userid, sp_name_qualifier="",
-                          name_qualifier=""):
+    def persistent_nameid(self, userid, sp_name_qualifier="", name_qualifier=""):
         nameid = self.match_local_id(userid, sp_name_qualifier, name_qualifier)
         if nameid:
             return nameid
         else:
-            return self.get_nameid(userid, NAMEID_FORMAT_PERSISTENT,
-                                   sp_name_qualifier, name_qualifier)
+            return self.get_nameid(userid, NAMEID_FORMAT_PERSISTENT, sp_name_qualifier, name_qualifier)
 
     def find_local_id(self, name_id):
         """
@@ -292,7 +283,7 @@ class IdentDB(object):
             return self.db[name_id.text]
         except KeyError:
             logger.debug("name: %s", name_id.text)
-            #logger.debug("id sub keys: %s", self.subkeys())
+            # logger.debug("id sub keys: %s", self.subkeys())
             return None
 
     def match_local_id(self, userid, sp_name_qualifier, name_qualifier):
@@ -346,8 +337,7 @@ class IdentDB(object):
         # else create and return a new one
         return self.construct_nameid(_id, name_id_policy=name_id_policy)
 
-    def handle_manage_name_id_request(self, name_id, new_id=None,
-                                      new_encrypted_id="", terminate=""):
+    def handle_manage_name_id_request(self, name_id, new_id=None, new_encrypted_id="", terminate=""):
         """
         Requests from the SP is about the SPProvidedID attribute.
         So this is about adding,replacing and removing said attribute.
@@ -370,7 +360,7 @@ class IdentDB(object):
         elif terminate:
             name_id.sp_provided_id = None
         else:
-            #NOOP
+            # NOOP
             return name_id
 
         self.remove_remote(orig_name_id)
@@ -378,9 +368,9 @@ class IdentDB(object):
         return name_id
 
     def close(self):
-        if hasattr(self.db, 'close'):
+        if hasattr(self.db, "close"):
             self.db.close()
 
     def sync(self):
-        if hasattr(self.db, 'sync'):
+        if hasattr(self.db, "sync"):
             self.db.sync()

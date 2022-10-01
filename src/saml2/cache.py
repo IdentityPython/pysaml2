@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 
-import shelve
-import six
-from saml2.ident import code, decode
-from saml2 import time_util, SAMLError
 import logging
+import shelve
+
+import six
+
+from saml2 import SAMLError
+from saml2 import time_util
+from saml2.ident import code
+from saml2.ident import decode
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +52,8 @@ class Cache(object):
             except AttributeError:
                 pass
 
-    def get_identity(self, name_id, entities=None,
-                     check_not_on_or_after=True):
-        """ Get all the identity information that has been received and
+    def get_identity(self, name_id, entities=None, check_not_on_or_after=True):
+        """Get all the identity information that has been received and
         are still valid about the subject.
 
         :param name_id: The subject identifier, a NameID instance
@@ -88,7 +92,7 @@ class Cache(object):
         return res, oldees
 
     def get(self, name_id, entity_id, check_not_on_or_after=True):
-        """ Get session information about a subject gotten from a
+        """Get session information about a subject gotten from a
         specified IdP/AA.
 
         :param name_id: The subject identifier, a NameID instance
@@ -104,12 +108,12 @@ class Cache(object):
         if check_not_on_or_after and time_util.after(timestamp):
             raise TooOld("past %s" % str(timestamp))
 
-        if 'name_id' in info and isinstance(info['name_id'], six.string_types):
-            info['name_id'] = decode(info['name_id'])
+        if "name_id" in info and isinstance(info["name_id"], six.string_types):
+            info["name_id"] = decode(info["name_id"])
         return info or None
 
     def set(self, name_id, entity_id, info, not_on_or_after=0):
-        """ Stores session information in the cache. Assumes that the name_id
+        """Stores session information in the cache. Assumes that the name_id
         is unique within the context of the Service Provider.
 
         :param name_id: The subject identifier, a NameID instance
@@ -119,9 +123,9 @@ class Cache(object):
         :param not_on_or_after: A time after which the assertion is not valid.
         """
         info = dict(info)
-        if 'name_id' in info and not isinstance(info['name_id'], six.string_types):
+        if "name_id" in info and not isinstance(info["name_id"], six.string_types):
             # make friendly to (JSON) serialization
-            info['name_id'] = code(name_id)
+            info["name_id"] = code(name_id)
 
         cni = code(name_id)
         if cni not in self._db:
@@ -135,7 +139,7 @@ class Cache(object):
                 pass
 
     def reset(self, name_id, entity_id):
-        """ Scrap the assertions received from a IdP or an AA about a special
+        """Scrap the assertions received from a IdP or an AA about a special
         subject.
 
         :param name_id: The subject identifier, a NameID instance
@@ -145,7 +149,7 @@ class Cache(object):
         self.set(name_id, entity_id, {}, 0)
 
     def entities(self, name_id):
-        """ Returns all the entities of assertions for a subject, disregarding
+        """Returns all the entities of assertions for a subject, disregarding
         whether the assertion still is valid or not.
 
         :param name_id: The subject identifier, a NameID instance
@@ -155,12 +159,12 @@ class Cache(object):
         return list(self._db[cni].keys())
 
     def receivers(self, name_id):
-        """ Another name for entities() just to make it more logic in the IdP
-            scenario """
+        """Another name for entities() just to make it more logic in the IdP
+        scenario"""
         return self.entities(name_id)
 
     def active(self, name_id, entity_id):
-        """ Returns the status of assertions from a specific entity_id.
+        """Returns the status of assertions from a specific entity_id.
 
         :param name_id: The ID of the subject
         :param entity_id: The entity ID of the entity_id of the assertion
@@ -179,7 +183,7 @@ class Cache(object):
             return time_util.not_on_or_after(timestamp)
 
     def subjects(self):
-        """ Return identifiers for all the subjects that are in the cache.
+        """Return identifiers for all the subjects that are in the cache.
 
         :return: list of subject identifiers
         """

@@ -1,2 +1,2 @@
-#profile schema descriptions
-__author__ = 'rolandh'
+# profile schema descriptions
+__author__ = "rolandh"

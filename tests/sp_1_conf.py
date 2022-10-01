@@ -8,8 +8,7 @@ CONFIG = {
     "service": {
         "sp": {
             "endpoints": {
-                "assertion_consumer_service": [
-                    "http://lingon.catalogix.se:8087/"],
+                "assertion_consumer_service": ["http://lingon.catalogix.se:8087/"],
             },
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],
@@ -20,10 +19,12 @@ CONFIG = {
     "key_file": full_path("test.key"),
     "cert_file": full_path("test.pem"),
     "xmlsec_binary": None,
-    "metadata": [{
-        "class": "saml2.mdstore.MetaDataFile",
-        "metadata": [(full_path("idp.xml"), ), (full_path("vo_metadata.xml"), )],
-    }],
+    "metadata": [
+        {
+            "class": "saml2.mdstore.MetaDataFile",
+            "metadata": [(full_path("idp.xml"),), (full_path("vo_metadata.xml"),)],
+        }
+    ],
     "virtual_organization": {
         "urn:mace:example.com:it:tek": {
             "nameid_format": "urn:oid:1.3.6.1.4.1.1466.115.121.1.15-NameID",
@@ -38,15 +39,15 @@ CONFIG = {
         "display_name": ("AB Exempel", "se"),
         "url": "http://www.example.org",
     },
-    "contact_person": [{
-                           "given_name": "Roland",
-                           "sur_name": "Hedberg",
-                           "telephone_number": "+46 70 100 0000",
-                           "email_address": ["tech@eample.com",
-                                             "tech@example.org"],
-                           "contact_type": "technical"
-                       },
+    "contact_person": [
+        {
+            "given_name": "Roland",
+            "sur_name": "Hedberg",
+            "telephone_number": "+46 70 100 0000",
+            "email_address": ["tech@eample.com", "tech@example.org"],
+            "contact_type": "technical",
+        },
     ],
     "secret": "0123456789",
     "http_client_timeout": 10,
-}  
+}

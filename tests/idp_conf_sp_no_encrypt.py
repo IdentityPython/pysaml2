@@ -1,11 +1,12 @@
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
-from saml2.saml import NAME_FORMAT_URI
-
 from pathutils import full_path
 from pathutils import xmlsec_path
+
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
+from saml2.saml import NAME_FORMAT_URI
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
+
 
 BASE = "http://localhost:8088"
 
@@ -15,11 +16,8 @@ CONFIG = {
     "service": {
         "idp": {
             "endpoints": {
-                "single_sign_on_service": [
-                    ("%s/sso" % BASE, BINDING_HTTP_REDIRECT)],
-                "single_logout_service": [
-                    ("%s/slo" % BASE, BINDING_SOAP),
-                    ("%s/slop" % BASE, BINDING_HTTP_POST)]
+                "single_sign_on_service": [("%s/sso" % BASE, BINDING_HTTP_REDIRECT)],
+                "single_logout_service": [("%s/slo" % BASE, BINDING_SOAP), ("%s/slop" % BASE, BINDING_HTTP_POST)],
             },
             "policy": {
                 "default": {
@@ -34,21 +32,22 @@ CONFIG = {
                     #     "givenName": None,
                     #     "surName": None,
                     # }
-                }
+                },
             },
-            #"domain": "umu.se",
-            #"name_qualifier": ""
+            # "domain": "umu.se",
+            # "name_qualifier": ""
         },
     },
     "debug": 1,
     "key_file": full_path("test.key"),
     "cert_file": full_path("test.pem"),
     "xmlsec_binary": xmlsec_path,
-    "metadata": [{
-        "class": "saml2.mdstore.MetaDataFile",
-        "metadata": [(full_path("metadata_sp_1_no_encryption.xml"), ),
-                     (full_path("vo_metadata.xml"), )],
-    }],
+    "metadata": [
+        {
+            "class": "saml2.mdstore.MetaDataFile",
+            "metadata": [(full_path("metadata_sp_1_no_encryption.xml"),), (full_path("vo_metadata.xml"),)],
+        }
+    ],
     "attribute_map_dir": full_path("attributemaps"),
     "organization": {
         "name": "Exempel AB",

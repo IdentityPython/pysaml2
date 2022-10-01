@@ -1,19 +1,20 @@
 import calendar
-import six
-from six.moves import http_cookiejar
 import copy
-import re
-from six.moves.urllib.parse import urlparse
-from six.moves.urllib.parse import urlencode
-import requests
-import time
-from six.moves.http_cookies import SimpleCookie
-from saml2.time_util import utc_now
-from saml2 import class_name, SAMLError
-from saml2.pack import http_post_message
-from saml2.pack import make_soap_enveloped_saml_thingy
-
 import logging
+import re
+import time
+
+import requests
+from six.moves import http_cookiejar
+from six.moves.http_cookies import SimpleCookie
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import urlparse
+
+from saml2 import SAMLError
+from saml2 import class_name
+from saml2.pack import make_soap_enveloped_saml_thingy
+from saml2.time_util import utc_now
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,31 +23,29 @@ if requests.__version__ < "2.0.0":
 else:
     DICT_HEADERS = True
 
-__author__ = 'rolandh'
+__author__ = "rolandh"
 
-ATTRS = {"version": None,
-         "name": "",
-         "value": None,
-         "port": None,
-         "port_specified": False,
-         "domain": "",
-         "domain_specified": False,
-         "domain_initial_dot": False,
-         "path": "",
-         "path_specified": False,
-         "secure": False,
-         "expires": None,
-         "discard": True,
-         "comment": None,
-         "comment_url": None,
-         "rest": "",
-         "rfc2109": True}
-
-PAIRS = {
-    "port": "port_specified",
-    "domain": "domain_specified",
-    "path": "path_specified"
+ATTRS = {
+    "version": None,
+    "name": "",
+    "value": None,
+    "port": None,
+    "port_specified": False,
+    "domain": "",
+    "domain_specified": False,
+    "domain_initial_dot": False,
+    "path": "",
+    "path_specified": False,
+    "secure": False,
+    "expires": None,
+    "discard": True,
+    "comment": None,
+    "comment_url": None,
+    "rest": "",
+    "rfc2109": True,
 }
+
+PAIRS = {"port": "port_specified", "domain": "domain_specified", "path": "path_specified"}
 
 
 class ConnectionError(SAMLError):
@@ -57,8 +56,7 @@ class HTTPError(SAMLError):
     pass
 
 
-TIME_FORMAT = ["%d-%b-%Y %H:%M:%S %Z", "%d-%b-%y %H:%M:%S %Z",
-               "%d %b %Y %H:%M:%S %Z"]
+TIME_FORMAT = ["%d-%b-%Y %H:%M:%S %Z", "%d-%b-%y %H:%M:%S %Z", "%d %b %Y %H:%M:%S %Z"]
 
 
 def _since_epoch(cdate):
@@ -71,20 +69,18 @@ def _since_epoch(cdate):
         if len(cdate) < 5:
             return utc_now()
 
-    cdate = cdate[5:] # assume short weekday, i.e. do not support obsolete RFC 1036 date format
+    cdate = cdate[5:]  # assume short weekday, i.e. do not support obsolete RFC 1036 date format
     t = -1
-    for time_format in TIME_FORMAT :
+    for time_format in TIME_FORMAT:
         try:
-            t = time.strptime(cdate, time_format)   # e.g. 18-Apr-2014 12:30:51 GMT
+            t = time.strptime(cdate, time_format)  # e.g. 18-Apr-2014 12:30:51 GMT
         except ValueError:
             pass
         else:
             break
 
     if t == -1:
-        err = 'ValueError: Date "{0}" does not match any of: {1}'.format(
-            cdate, TIME_FORMAT
-        )
+        err = 'ValueError: Date "{0}" does not match any of: {1}'.format(cdate, TIME_FORMAT)
         raise Exception(err)
 
     return calendar.timegm(t)
@@ -99,10 +95,9 @@ def dict2set_list(dic):
 
 
 class HTTPBase(object):
-    def __init__(self, verify=True, ca_bundle=None, key_file=None,
-                 cert_file=None, http_client_timeout=None):
+    def __init__(self, verify=True, ca_bundle=None, key_file=None, cert_file=None, http_client_timeout=None):
         self.request_args = {"allow_redirects": False}
-        #self.cookies = {}
+        # self.cookies = {}
         self.cookiejar = http_cookiejar.CookieJar()
 
         self.request_args["verify"] = verify
@@ -126,9 +121,9 @@ class HTTPBase(object):
         """
         part = urlparse(url)
 
-        #if part.port:
+        # if part.port:
         #    _domain = "%s:%s" % (part.hostname, part.port)
-        #else:
+        # else:
         _domain = part.hostname
 
         cookie_dict = {}
@@ -198,16 +193,12 @@ class HTTPBase(object):
 
             if morsel["max-age"] == 0:
                 try:
-                    self.cookiejar.clear(domain=std_attr["domain"],
-                                         path=std_attr["path"],
-                                         name=std_attr["name"])
+                    self.cookiejar.clear(domain=std_attr["domain"], path=std_attr["path"], name=std_attr["name"])
                 except ValueError:
                     pass
             elif std_attr["expires"] and std_attr["expires"] < utc_now():
                 try:
-                    self.cookiejar.clear(domain=std_attr["domain"],
-                                         path=std_attr["path"],
-                                         name=std_attr["name"])
+                    self.cookiejar.clear(domain=std_attr["domain"], path=std_attr["path"], name=std_attr["name"])
                 except ValueError:
                     pass
             else:
@@ -256,14 +247,10 @@ class HTTPBase(object):
     @staticmethod
     def use_http_artifact(message, destination="", relay_state=""):
         if relay_state:
-            query = urlencode({"SAMLart": message,
-                               "RelayState": relay_state})
+            query = urlencode({"SAMLart": message, "RelayState": relay_state})
         else:
             query = urlencode({"SAMLart": message})
-        info = {
-            "data": "",
-            "url": "%s?%s" % (destination, query)
-        }
+        info = {"data": "", "url": "%s?%s" % (destination, query)}
         return info
 
     @staticmethod
@@ -278,27 +265,22 @@ class HTTPBase(object):
                 "headers": [
                     ("Content-Type", "application/samlassertion+xml"),
                     ("Cache-Control", "no-cache, no-store"),
-                    ("Pragma", "no-cache")
-                ]
+                    ("Pragma", "no-cache"),
+                ],
             }
         elif typ == "SAMLRequest":
             # msg should be an identifier
             if relay_state:
-                query = urlencode({"ID": message,
-                                   "RelayState": relay_state})
+                query = urlencode({"ID": message, "RelayState": relay_state})
             else:
                 query = urlencode({"ID": message})
-            info = {
-                "data": "",
-                "url": "%s?%s" % (destination, query)
-            }
+            info = {"data": "", "url": "%s?%s" % (destination, query)}
         else:
             raise NotImplementedError
 
         return info
 
-    def use_soap(self, request, destination="", soap_headers=None, sign=False,
-                 **kwargs):
+    def use_soap(self, request, destination="", soap_headers=None, sign=False, **kwargs):
         """
         Construct the necessary information for using SOAP+POST
 
@@ -315,13 +297,10 @@ class HTTPBase(object):
         logger.debug("SOAP message: %s", soap_message)
 
         if sign and self.sec:
-            _signed = self.sec.sign_statement(soap_message,
-                                              node_name=class_name(request),
-                                              node_id=request.id)
+            _signed = self.sec.sign_statement(soap_message, node_name=class_name(request), node_id=request.id)
             soap_message = _signed
 
-        return {"url": destination, "method": "POST",
-                "data": soap_message, "headers": headers}
+        return {"url": destination, "method": "POST", "data": soap_message, "headers": headers}
 
     def send_using_soap(self, request, destination, headers=None, sign=False):
         """
@@ -340,7 +319,7 @@ class HTTPBase(object):
             args["headers"] = dict(args["headers"])
             response = self.send(**args)
         except Exception as exc:
-            logger.info("HTTPClient exception: %s", exc)
+            logger.info("HTTPClient exception: %s", str(exc))
             raise
 
         if response.status_code == 200:

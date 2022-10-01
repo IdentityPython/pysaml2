@@ -2,8 +2,8 @@
 
 from logging import getLogger as get_logger
 
-import cryptography.x509 as _x509
 from cryptography.hazmat.primitives.serialization import Encoding as _cryptography_encoding
+import cryptography.x509 as _x509
 
 
 logger = get_logger(__name__)

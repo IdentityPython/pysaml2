@@ -2,18 +2,22 @@
 # -*- coding: utf-8 -*-
 #
 
+from importlib import import_module
+import logging
 import os
 import sys
-from importlib import import_module
 
-from saml2.s_utils import factory
-from saml2.s_utils import do_ava
-from saml2 import saml, ExtensionElement, NAMESPACE
-from saml2 import extension_elements_to_elements
+from saml2 import NAMESPACE
+from saml2 import ExtensionElement
 from saml2 import SAMLError
-from saml2.saml import NAME_FORMAT_UNSPECIFIED, NAMEID_FORMAT_PERSISTENT
+from saml2 import extension_elements_to_elements
+from saml2 import saml
+from saml2.s_utils import do_ava
+from saml2.s_utils import factory
+from saml2.saml import NAME_FORMAT_UNSPECIFIED
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
 
-import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +30,7 @@ class ConverterError(SAMLError):
 
 
 def load_maps(dirspec):
-    """ load the attribute maps
+    """load the attribute maps
 
     :param dirspec: a directory specification
     :return: a dictionary with the name of the map as key and the
@@ -98,14 +102,12 @@ def _find_maps_in_module(module):
     for key, item in module.__dict__.items():
         if key.startswith("__"):
             continue
-        if isinstance(item, dict) and "identifier" in item and (
-            "to" in item or "fro" in item
-        ):
+        if isinstance(item, dict) and "identifier" in item and ("to" in item or "fro" in item):
             yield item
 
 
 def to_local(acs, statement, allow_unknown_attributes=False):
-    """ Replaces the attribute names in a attribute value assertion with the
+    """Replaces the attribute names in a attribute value assertion with the
     equivalent name from a local name format.
 
     :param acs: List of Attribute Converters
@@ -117,7 +119,7 @@ def to_local(acs, statement, allow_unknown_attributes=False):
 
 
 def list_to_local(acs, attrlist, allow_unknown_attributes=False):
-    """ Replaces the attribute names in a attribute value assertion with the
+    """Replaces the attribute names in a attribute value assertion with the
     equivalent name from a local name format.
 
     :param acs: List of Attribute Converters
@@ -136,10 +138,7 @@ def list_to_local(acs, attrlist, allow_unknown_attributes=False):
         try:
             _func = acsd[attr.name_format].ava_from
         except KeyError:
-            if (
-                attr.name_format == NAME_FORMAT_UNSPECIFIED
-                or allow_unknown_attributes
-            ):
+            if attr.name_format == NAME_FORMAT_UNSPECIFIED or allow_unknown_attributes:
                 _func = acs[0].lcd_ava_from
             else:
                 logger.info("Unsupported attribute name format: %s", attr.name_format)
@@ -166,9 +165,9 @@ def list_to_local(acs, attrlist, allow_unknown_attributes=False):
 
 def from_local(acs, ava, name_format):
     for aconv in acs:
-        #print(ac.format, name_format)
+        # print(ac.format, name_format)
         if aconv.name_format == name_format:
-            #print("Found a name_form converter")
+            # print("Found a name_form converter")
             return aconv.to_(ava)
 
     return None
@@ -182,9 +181,9 @@ def from_local_name(acs, attr, name_format):
     :return: An Attribute instance
     """
     for aconv in acs:
-        #print(ac.format, name_format)
+        # print(ac.format, name_format)
         if aconv.name_format == name_format:
-            #print("Found a name_form converter")
+            # print("Found a name_form converter")
             return aconv.to_format(attr)
     return attr
 
@@ -205,7 +204,7 @@ def to_local_name(acs, attr):
 
 def get_local_name(acs, attr, name_format):
     for aconv in acs:
-        #print(ac.format, name_format)
+        # print(ac.format, name_format)
         if aconv.name_format == name_format:
             return aconv._fro.get(attr)
 
@@ -229,8 +228,8 @@ def d_to_local_name(acs, attr):
 
 
 class AttributeConverter(object):
-    """ Converts from an attribute statement to a key,value dictionary and
-        vice-versa """
+    """Converts from an attribute statement to a key,value dictionary and
+    vice-versa"""
 
     def __init__(self, name_format=""):
         self.name_format = name_format
@@ -238,27 +237,24 @@ class AttributeConverter(object):
         self._fro = None
 
     def adjust(self):
-        """ If one of the transformations is not defined it is expected to
+        """If one of the transformations is not defined it is expected to
         be the mirror image of the other.
         """
 
         if self._fro is None and self._to is not None:
-            self._fro = dict(
-                [(value.lower(), key) for key, value in self._to.items()])
+            self._fro = dict([(value.lower(), key) for key, value in self._to.items()])
         if self._to is None and self._fro is not None:
-            self._to = dict(
-                [(value.lower(), key) for key, value in self._fro.items()])
+            self._to = dict([(value.lower(), key) for key, value in self._fro.items()])
 
     def from_dict(self, mapdict):
-        """ Import the attribute map from  a dictionary
+        """Import the attribute map from  a dictionary
 
         :param mapdict: The dictionary
         """
 
         self.name_format = mapdict["identifier"]
         try:
-            self._fro = dict(
-                [(k.lower(), v) for k, v in mapdict["fro"].items()])
+            self._fro = dict([(k.lower(), v) for k, v in mapdict["fro"].items()])
         except KeyError:
             pass
         try:
@@ -280,13 +276,11 @@ class AttributeConverter(object):
         :return:
         """
         name = attribute.name.strip()
-        values = [
-            (value.text or '').strip()
-            for value in attribute.attribute_value]
+        values = [(value.text or "").strip() for value in attribute.attribute_value]
         return name, values
 
     def fail_safe_fro(self, statement):
-        """ In case there is not formats defined or if the name format is
+        """In case there is not formats defined or if the name format is
         undefined
 
         :param statement: AttributeStatement instance
@@ -294,8 +288,7 @@ class AttributeConverter(object):
         """
         result = {}
         for attribute in statement.attribute:
-            if attribute.name_format and \
-                    attribute.name_format != NAME_FORMAT_UNSPECIFIED:
+            if attribute.name_format and attribute.name_format != NAME_FORMAT_UNSPECIFIED:
                 continue
             try:
                 name = attribute.friendly_name.strip()
@@ -305,7 +298,7 @@ class AttributeConverter(object):
             result[name] = []
             for value in attribute.attribute_value:
                 if not value.text:
-                    result[name].append('')
+                    result[name].append("")
                 else:
                     result[name].append(value.text.strip())
         return result
@@ -327,8 +320,7 @@ class AttributeConverter(object):
         val = []
         for value in attribute.attribute_value:
             if value.extension_elements:
-                ext = extension_elements_to_elements(value.extension_elements,
-                                                     [saml])
+                ext = extension_elements_to_elements(value.extension_elements, [saml])
                 for ex in ext:
                     if attr == "eduPersonTargetedID" and ex.text:
                         val.append(ex.text.strip())
@@ -342,14 +334,14 @@ class AttributeConverter(object):
                             cval["value"] = ex.text.strip()
                         val.append({ex.c_tag: cval})
             elif not value.text:
-                val.append('')
+                val.append("")
             else:
                 val.append(value.text.strip())
 
         return attr, val
 
     def fro(self, statement):
-        """ Get the attributes and the attribute values.
+        """Get the attributes and the attribute values.
 
         :param statement: The AttributeStatement.
         :return: A dictionary containing attributes and values
@@ -360,8 +352,7 @@ class AttributeConverter(object):
 
         result = {}
         for attribute in statement.attribute:
-            if attribute.name_format and self.name_format and \
-                    attribute.name_format != self.name_format:
+            if attribute.name_format and self.name_format and attribute.name_format != self.name_format:
                 continue
 
             try:
@@ -374,7 +365,7 @@ class AttributeConverter(object):
         return result
 
     def to_format(self, attr):
-        """ Creates an Attribute instance with name, name_format and
+        """Creates an Attribute instance with name, name_format and
         friendly_name
 
         :param attr: The local name of the attribute
@@ -386,18 +377,15 @@ class AttributeConverter(object):
             try:
                 _attr = self._to[attr.lower()]
             except KeyError:
-                _attr = ''
+                _attr = ""
 
         if _attr:
-            return factory(saml.Attribute,
-                           name=_attr,
-                           name_format=self.name_format,
-                           friendly_name=attr)
+            return factory(saml.Attribute, name=_attr, name_format=self.name_format, friendly_name=attr)
         else:
             return factory(saml.Attribute, name=attr)
 
     def from_format(self, attr):
-        """ Find out the local name of an attribute
+        """Find out the local name of an attribute
 
         :param attr: An saml.Attribute instance
         :return: The local attribute name or "" if no mapping could be made
@@ -417,7 +405,7 @@ class AttributeConverter(object):
         return ""
 
     def d_from_format(self, attr):
-        """ Find out the local name of an attribute
+        """Find out the local name of an attribute
 
         :param attr: An Attribute dictionary
         :return: The local attribute name or "" if no mapping could be made
@@ -437,7 +425,7 @@ class AttributeConverter(object):
         return ""
 
     def to_(self, attrvals):
-        """ Create a list of Attribute instances.
+        """Create a list of Attribute instances.
 
         :param attrvals: A dictionary of attributes and values
         :return: A list of Attribute instances
@@ -451,15 +439,17 @@ class AttributeConverter(object):
                     attr_value = self.to_eptid_value(value)
                 else:
                     attr_value = do_ava(value)
-                attributes.append(factory(saml.Attribute,
-                                          name=name,
-                                          name_format=self.name_format,
-                                          friendly_name=key,
-                                          attribute_value=attr_value))
+                attributes.append(
+                    factory(
+                        saml.Attribute,
+                        name=name,
+                        name_format=self.name_format,
+                        friendly_name=key,
+                        attribute_value=attr_value,
+                    )
+                )
             else:
-                attributes.append(factory(saml.Attribute,
-                                          name=key,
-                                          attribute_value=do_ava(value)))
+                attributes.append(factory(saml.Attribute, name=key, attribute_value=do_ava(value)))
 
         return attributes
 
@@ -492,26 +482,21 @@ class AttributeConverter(object):
                 if isinstance(value, dict)
                 else {"Format": NAMEID_FORMAT_PERSISTENT}
             )
-            element = ExtensionElement(
-                "NameID", NAMESPACE, attributes=attributes, text=text
-            )
+            element = ExtensionElement("NameID", NAMESPACE, attributes=attributes, text=text)
             return element
 
-        attribute_values = [
-            saml.AttributeValue(extension_elements=[_create_nameid_ext_el(v)])
-            for v in values
-        ]
+        attribute_values = [saml.AttributeValue(extension_elements=[_create_nameid_ext_el(v)]) for v in values]
         return attribute_values
 
 
 class AttributeConverterNOOP(AttributeConverter):
-    """ Does a NOOP conversion, that is no conversion is made """
+    """Does a NOOP conversion, that is no conversion is made"""
 
     def __init__(self, name_format=""):
         AttributeConverter.__init__(self, name_format)
 
     def to_(self, attrvals):
-        """ Create a list of Attribute instances.
+        """Create a list of Attribute instances.
 
         :param attrvals: A dictionary of attributes and values
         :return: A list of Attribute instances
@@ -519,9 +504,8 @@ class AttributeConverterNOOP(AttributeConverter):
         attributes = []
         for key, value in attrvals.items():
             key = key.lower()
-            attributes.append(factory(saml.Attribute,
-                                      name=key,
-                                      name_format=self.name_format,
-                                      attribute_value=do_ava(value)))
+            attributes.append(
+                factory(saml.Attribute, name=key, name_format=self.name_format, attribute_value=do_ava(value))
+            )
 
         return attributes

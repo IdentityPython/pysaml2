@@ -1,17 +1,21 @@
 import logging
-import six
 import time
+
+import six
+from six.moves.urllib.parse import parse_qs
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import urlsplit
+
 from saml2 import SAMLError
 import saml2.cryptography.symmetric
-from saml2.httputil import Response
-from saml2.httputil import make_cookie
 from saml2.httputil import Redirect
+from saml2.httputil import Response
 from saml2.httputil import Unauthorized
+from saml2.httputil import make_cookie
 from saml2.httputil import parse_cookie
 
-from six.moves.urllib.parse import urlencode, parse_qs, urlsplit
 
-__author__ = 'rolandh'
+__author__ = "rolandh"
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +107,7 @@ def create_return_url(base, query, **kwargs):
 class UsernamePasswordMako(UserAuthnMethod):
     """Do user authentication using the normal username password form
     using Mako as template system"""
+
     cookie_name = "userpassmako"
 
     def __init__(self, srv, mako_template, template_lookup, pwd, return_to):
@@ -122,8 +127,7 @@ class UsernamePasswordMako(UserAuthnMethod):
         self.query_param = "upm_answer"
         self.symmetric = saml2.cryptography.symmetric.Default(srv.symkey)
 
-    def __call__(self, cookie=None, policy_url=None, logo_url=None,
-                 query="", **kwargs):
+    def __call__(self, cookie=None, policy_url=None, logo_url=None, query="", **kwargs):
         """
         Put up the login form
         """
@@ -134,12 +138,14 @@ class UsernamePasswordMako(UserAuthnMethod):
 
         resp = Response(headers=headers)
 
-        argv = {"login": "",
-                "password": "",
-                "action": "verify",
-                "policy_url": policy_url,
-                "logo_url": logo_url,
-                "query": query}
+        argv = {
+            "login": "",
+            "password": "",
+            "action": "verify",
+            "policy_url": policy_url,
+            "logo_url": logo_url,
+            "query": query,
+        }
         logger.info("do_authentication argv: %s" % argv)
         mte = self.template_lookup.get_template(self.mako_template)
         resp.message = mte.render(**argv)
@@ -175,8 +181,7 @@ class UsernamePasswordMako(UserAuthnMethod):
             info = self.symmetric.encrypt(msg.encode())
             self.active[info] = timestamp
             cookie = make_cookie(self.cookie_name, info, self.srv.seed)
-            return_to = create_return_url(self.return_to, _dict["query"][0],
-                                          **{self.query_param: "true"})
+            return_to = create_return_url(self.return_to, _dict["query"][0], **{self.query_param: "true"})
             resp = Redirect(return_to, headers=[cookie])
         except (ValueError, KeyError):
             resp = Unauthorized("Unknown user or wrong password")
@@ -189,8 +194,7 @@ class UsernamePasswordMako(UserAuthnMethod):
         else:
             logger.debug("kwargs: %s" % kwargs)
             try:
-                info, timestamp = parse_cookie(self.cookie_name,
-                                               self.srv.seed, cookie)
+                info, timestamp = parse_cookie(self.cookie_name, self.srv.seed, cookie)
                 if self.active[info] == timestamp:
                     msg = self.symmetric.decrypt(info).decode()
                     uid, _ts = msg.split("::")
@@ -233,21 +237,19 @@ class AuthnMethodChooser(object):
         else:
             pass  # TODO
 
+
 try:
     import ldap
 
-
     class LDAPAuthn(UsernamePasswordMako):
-        def __init__(self, srv, ldapsrv, return_to,
-                     dn_pattern, mako_template, template_lookup):
+        def __init__(self, srv, ldapsrv, return_to, dn_pattern, mako_template, template_lookup):
             """
             :param srv: The server instance
             :param ldapsrv: Which LDAP server to us
             :param return_to: Where to send the user after authentication
             :return:
             """
-            UsernamePasswordMako.__init__(self, srv, mako_template, template_lookup,
-                                          None, return_to)
+            UsernamePasswordMako.__init__(self, srv, mako_template, template_lookup, None, return_to)
 
             self.ldap = ldap.initialize(ldapsrv)
             self.ldap.protocol_version = 3
@@ -266,6 +268,8 @@ try:
                 self.ldap.simple_bind_s(_dn, pwd)
             except Exception:
                 raise AssertionError()
+
 except ImportError:
+
     class LDAPAuthn(UserAuthnMethod):
         pass

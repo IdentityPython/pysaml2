@@ -1,50 +1,52 @@
+import cgi
 import hashlib
 import hmac
 import logging
 import time
-import cgi
-import six
 
-from six.moves.urllib.parse import quote, parse_qs
+import six
 from six.moves.http_cookies import SimpleCookie
+from six.moves.urllib.parse import parse_qs
+from six.moves.urllib.parse import quote
 
 from saml2 import BINDING_HTTP_ARTIFACT
-from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_URI
+from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
+from saml2 import BINDING_URI
 from saml2 import SAMLError
 from saml2 import time_util
 
-__author__ = 'rohe0002'
+
+__author__ = "rohe0002"
 
 logger = logging.getLogger(__name__)
 
 
 class Response(object):
     _template = None
-    _status = '200 OK'
-    _content_type = 'text/html'
+    _status = "200 OK"
+    _content_type = "text/html"
     _mako_template = None
     _mako_lookup = None
 
     def __init__(self, message=None, **kwargs):
-        self.status = kwargs.get('status', self._status)
-        self.response = kwargs.get('response', self._response)
-        self.template = kwargs.get('template', self._template)
-        self.mako_template = kwargs.get('mako_template', self._mako_template)
-        self.mako_lookup = kwargs.get('template_lookup', self._mako_lookup)
+        self.status = kwargs.get("status", self._status)
+        self.response = kwargs.get("response", self._response)
+        self.template = kwargs.get("template", self._template)
+        self.mako_template = kwargs.get("mako_template", self._mako_template)
+        self.mako_lookup = kwargs.get("template_lookup", self._mako_lookup)
 
         self.message = message
 
-        self.headers = kwargs.get('headers', [])
-        _content_type = kwargs.get('content', self._content_type)
+        self.headers = kwargs.get("headers", [])
+        _content_type = kwargs.get("content", self._content_type)
         addContentType = True
         for header in self.headers:
-            if 'content-type' == header[0].lower():
+            if "content-type" == header[0].lower():
                 addContentType = False
         if addContentType:
-            self.headers.append(('Content-type', _content_type))
+            self.headers.append(("Content-type", _content_type))
 
     def __call__(self, environ, start_response, **kwargs):
         try:
@@ -62,7 +64,7 @@ class Response(object):
             message = mte.render(**argv)
 
         if isinstance(message, six.string_types):
-            return [message.encode('utf-8')]
+            return [message.encode("utf-8")]
         elif isinstance(message, six.binary_type):
             return [message]
         else:
@@ -84,29 +86,33 @@ class Created(Response):
 
 
 class Redirect(Response):
-    _template = '<html>\n<head><title>Redirecting to %s</title></head>\n' \
-                '<body>\nYou are being redirected to <a href="%s">%s</a>\n' \
-                '</body>\n</html>'
-    _status = '302 Found'
+    _template = (
+        "<html>\n<head><title>Redirecting to %s</title></head>\n"
+        '<body>\nYou are being redirected to <a href="%s">%s</a>\n'
+        "</body>\n</html>"
+    )
+    _status = "302 Found"
 
     def __call__(self, environ, start_response, **kwargs):
         location = self.message
-        self.headers.append(('location', location))
+        self.headers.append(("location", location))
         start_response(self.status, self.headers)
         return self.response((location, location, location))
 
 
 class SeeOther(Response):
-    _template = '<html>\n<head><title>Redirecting to %s</title></head>\n' \
-                '<body>\nYou are being redirected to <a href="%s">%s</a>\n' \
-                '</body>\n</html>'
-    _status = '303 See Other'
+    _template = (
+        "<html>\n<head><title>Redirecting to %s</title></head>\n"
+        '<body>\nYou are being redirected to <a href="%s">%s</a>\n'
+        "</body>\n</html>"
+    )
+    _status = "303 See Other"
 
     def __call__(self, environ, start_response, **kwargs):
         location = ""
         if self.message:
             location = self.message
-            self.headers.append(('location', location))
+            self.headers.append(("location", location))
         else:
             for param, item in self.headers:
                 if param == "location":
@@ -117,7 +123,7 @@ class SeeOther(Response):
 
 
 class Forbidden(Response):
-    _status = '403 Forbidden'
+    _status = "403 Forbidden"
     _template = "<html>Not allowed to mess with: '%s'</html>"
 
 
@@ -132,22 +138,21 @@ class Unauthorized(Response):
 
 
 class NotFound(Response):
-    _status = '404 NOT FOUND'
+    _status = "404 NOT FOUND"
 
 
 class NotAcceptable(Response):
-    _status = '406 Not Acceptable'
+    _status = "406 Not Acceptable"
 
 
 class ServiceError(Response):
-    _status = '500 Internal Service Error'
+    _status = "500 Internal Service Error"
 
 
 class NotImplemented(Response):
     _status = "501 Not Implemented"
     # override template since we need an environment variable
-    template = ('The request method %s is not implemented '
-                'for this server.\r\n%s')
+    template = "The request method %s is not implemented " "for this server.\r\n%s"
 
 
 class BadGateway(Response):
@@ -158,9 +163,11 @@ class HttpParameters(object):
     """GET or POST signature parameters for Redirect or POST-SimpleSign bindings
     because they are not contained in XML unlike the POST binding
     """
+
     signature = None
     sigalg = None
     # Relaystate and SAML message are stored elsewhere
+
     def __init__(self, dict):
         try:
             self.signature = dict["Signature"][0]
@@ -176,7 +183,7 @@ def extract(environ, empty=False, err=False):
     :param empty: Stops on empty fields (default: Fault)
     :param err: Stops on errors in fields (default: Fault)
     """
-    formdata = cgi.parse(environ['wsgi.input'], environ, empty, err)
+    formdata = cgi.parse(environ["wsgi.input"], environ, empty, err)
     # Remove single entries from lists
     for key, value in iter(formdata.items()):
         if len(value) == 1:
@@ -195,41 +202,40 @@ def geturl(environ, query=True, path=True, use_server_name=False):
     :param use_server_name: If SERVER_NAME/_HOST should be used instead of
         HTTP_HOST
     """
-    url = [environ['wsgi.url_scheme'] + '://']
+    url = [environ["wsgi.url_scheme"] + "://"]
     if use_server_name:
-        url.append(environ['SERVER_NAME'])
-        if environ['wsgi.url_scheme'] == 'https':
-            if environ['SERVER_PORT'] != '443':
-                url.append(':' + environ['SERVER_PORT'])
+        url.append(environ["SERVER_NAME"])
+        if environ["wsgi.url_scheme"] == "https":
+            if environ["SERVER_PORT"] != "443":
+                url.append(":" + environ["SERVER_PORT"])
         else:
-            if environ['SERVER_PORT'] != '80':
-                url.append(':' + environ['SERVER_PORT'])
+            if environ["SERVER_PORT"] != "80":
+                url.append(":" + environ["SERVER_PORT"])
     else:
-        url.append(environ['HTTP_HOST'])
+        url.append(environ["HTTP_HOST"])
     if path:
         url.append(getpath(environ))
-    if query and environ.get('QUERY_STRING'):
-        url.append('?' + environ['QUERY_STRING'])
-    return ''.join(url)
+    if query and environ.get("QUERY_STRING"):
+        url.append("?" + environ["QUERY_STRING"])
+    return "".join(url)
 
 
 def getpath(environ):
     """Builds a path."""
-    return ''.join([quote(environ.get('SCRIPT_NAME', '')),
-                    quote(environ.get('PATH_INFO', ''))])
+    return "".join([quote(environ.get("SCRIPT_NAME", "")), quote(environ.get("PATH_INFO", ""))])
 
 
 def get_post(environ):
     # the environment variable CONTENT_LENGTH may be empty or missing
     try:
-        request_body_size = int(environ.get('CONTENT_LENGTH', 0))
+        request_body_size = int(environ.get("CONTENT_LENGTH", 0))
     except ValueError:
         request_body_size = 0
 
     # When the method is POST the query string will be sent
     # in the HTTP request body which is passed by the WSGI server
     # in the file like wsgi.input environment variable.
-    return environ['wsgi.input'].read(request_body_size)
+    return environ["wsgi.input"].read(request_body_size)
 
 
 def get_response(environ, start_response):
@@ -275,7 +281,7 @@ def unpack_artifact(environ):
 
 
 def unpack_any(environ):
-    if environ['REQUEST_METHOD'].upper() == 'GET':
+    if environ["REQUEST_METHOD"].upper() == "GET":
         # Could be either redirect or artifact
         _dict = unpack_redirect(environ)
         if "ID" in _dict:
@@ -285,8 +291,8 @@ def unpack_any(environ):
         else:
             binding = BINDING_HTTP_REDIRECT
     else:
-        content_type = environ.get('CONTENT_TYPE', 'application/soap+xml')
-        if content_type != 'application/soap+xml':
+        content_type = environ.get("CONTENT_TYPE", "application/soap+xml")
+        if content_type != "application/soap+xml":
             # normal post
             _dict = unpack_post(environ)
             if "SAMLart" in _dict:
@@ -317,8 +323,7 @@ def cookie_signature(seed, *parts):
     return sha1.hexdigest()
 
 
-def make_cookie(name, load, seed, expire=0, domain="", path="",
-                timestamp=""):
+def make_cookie(name, load, seed, expire=0, domain="", path="", timestamp=""):
     """
     Create and return a cookie
 
@@ -340,8 +345,7 @@ def make_cookie(name, load, seed, expire=0, domain="", path="",
     if domain:
         cookie[name]["domain"] = domain
     if expire:
-        cookie[name]["expires"] = _expiration(expire,
-                                              "%a, %d-%b-%Y %H:%M:%S GMT")
+        cookie[name]["expires"] = _expiration(expire, "%a, %d-%b-%Y %H:%M:%S GMT")
 
     return tuple(cookie.output().split(": ", 1))
 

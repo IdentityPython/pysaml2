@@ -1,94 +1,89 @@
 from __future__ import print_function
+
 import hashlib
+from hashlib import sha1
 import importlib
+from itertools import chain
 import json
 import logging
 import os
-import sys
-from itertools import chain
-from warnings import warn as _warn
-from hashlib import sha1
 from os.path import isfile
 from os.path import join
 from re import compile as regex_compile
+import sys
+from warnings import warn as _warn
 
 import requests
-
 import six
 
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
+from saml2 import SAMLError
 from saml2 import md
 from saml2 import saml
 from saml2 import samlp
 from saml2 import xmldsig
 from saml2 import xmlenc
-from saml2 import SAMLError
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_SOAP
-from saml2.httpbase import HTTPBase
+from saml2.extension.algsupport import NAMESPACE as NS_ALGSUPPORT
+from saml2.extension.algsupport import DigestMethod
+from saml2.extension.algsupport import SigningMethod
 from saml2.extension.idpdisc import BINDING_DISCO
 from saml2.extension.idpdisc import DiscoveryResponse
-from saml2.md import NAMESPACE as NS_MD
-from saml2.md import EntitiesDescriptor
-from saml2.md import EntityDescriptor
-from saml2.md import ArtifactResolutionService
-from saml2.md import NameIDMappingService
-from saml2.md import SingleSignOnService
-from saml2.mdie import to_dict
-from saml2.s_utils import UnsupportedBinding
-from saml2.s_utils import UnknownSystemEntity
-from saml2.sigver import split_len
-from saml2.validate import valid_instance
-from saml2.time_util import valid
-from saml2.time_util import instant
-from saml2.time_util import add_duration
-from saml2.time_util import before
-from saml2.time_util import str_to_time
-from saml2.validate import NotValid
-from saml2.sigver import SignatureError
-from saml2.sigver import security_context
 from saml2.extension.mdattr import NAMESPACE as NS_MDATTR
 from saml2.extension.mdattr import EntityAttributes
-from saml2.extension.algsupport import NAMESPACE as NS_ALGSUPPORT
-from saml2.extension.algsupport import SigningMethod, DigestMethod
-from saml2.extension.mdui import NAMESPACE as NS_MDUI
-from saml2.extension.mdui import UIInfo
-from saml2.extension.mdui import DisplayName
-from saml2.extension.mdui import Description
-from saml2.extension.mdui import InformationURL
-from saml2.extension.mdui import PrivacyStatementURL
-from saml2.extension.mdui import Logo
 from saml2.extension.mdrpi import NAMESPACE as NS_MDRPI
 from saml2.extension.mdrpi import RegistrationInfo
 from saml2.extension.mdrpi import RegistrationPolicy
+from saml2.extension.mdui import NAMESPACE as NS_MDUI
+from saml2.extension.mdui import Description
+from saml2.extension.mdui import DisplayName
+from saml2.extension.mdui import InformationURL
+from saml2.extension.mdui import Logo
+from saml2.extension.mdui import PrivacyStatementURL
+from saml2.extension.mdui import UIInfo
 from saml2.extension.shibmd import NAMESPACE as NS_SHIBMD
 from saml2.extension.shibmd import Scope
+from saml2.httpbase import HTTPBase
+from saml2.md import NAMESPACE as NS_MD
+from saml2.md import ArtifactResolutionService
+from saml2.md import EntitiesDescriptor
+from saml2.md import EntityDescriptor
+from saml2.md import NameIDMappingService
+from saml2.md import SingleSignOnService
+from saml2.mdie import to_dict
+from saml2.s_utils import UnknownSystemEntity
+from saml2.s_utils import UnsupportedBinding
+from saml2.sigver import SignatureError
+from saml2.sigver import security_context
+from saml2.sigver import split_len
+from saml2.time_util import add_duration
+from saml2.time_util import before
+from saml2.time_util import instant
+from saml2.time_util import str_to_time
+from saml2.time_util import valid
+from saml2.validate import NotValid
+from saml2.validate import valid_instance
 
 
 logger = logging.getLogger(__name__)
 
 classnames = {
-    "mdattr_entityattributes": "{ns}&{tag}".format(
-        ns=NS_MDATTR, tag=EntityAttributes.c_tag
-    ),
+    "mdattr_entityattributes": "{ns}&{tag}".format(ns=NS_MDATTR, tag=EntityAttributes.c_tag),
     "algsupport_signing_method": "{ns}&{tag}".format(ns=NS_ALGSUPPORT, tag=SigningMethod.c_tag),
     "algsupport_digest_method": "{ns}&{tag}".format(ns=NS_ALGSUPPORT, tag=DigestMethod.c_tag),
     "mdui_uiinfo": "{ns}&{tag}".format(ns=NS_MDUI, tag=UIInfo.c_tag),
     "mdui_uiinfo_display_name": "{ns}&{tag}".format(ns=NS_MDUI, tag=DisplayName.c_tag),
     "mdui_uiinfo_description": "{ns}&{tag}".format(ns=NS_MDUI, tag=Description.c_tag),
-    "mdui_uiinfo_information_url": "{ns}&{tag}".format(
-        ns=NS_MDUI, tag=InformationURL.c_tag
-    ),
-    "mdui_uiinfo_privacy_statement_url": "{ns}&{tag}".format(
-        ns=NS_MDUI, tag=PrivacyStatementURL.c_tag
-    ),
+    "mdui_uiinfo_information_url": "{ns}&{tag}".format(ns=NS_MDUI, tag=InformationURL.c_tag),
+    "mdui_uiinfo_privacy_statement_url": "{ns}&{tag}".format(ns=NS_MDUI, tag=PrivacyStatementURL.c_tag),
     "mdui_uiinfo_logo": "{ns}&{tag}".format(ns=NS_MDUI, tag=Logo.c_tag),
     "service_artifact_resolution": "{ns}&{tag}".format(ns=NS_MD, tag=ArtifactResolutionService.c_tag),
     "service_single_sign_on": "{ns}&{tag}".format(ns=NS_MD, tag=SingleSignOnService.c_tag),
     "service_nameid_mapping": "{ns}&{tag}".format(ns=NS_MD, tag=NameIDMappingService.c_tag),
     "mdrpi_registration_info": "{ns}&{tag}".format(ns=NS_MDRPI, tag=RegistrationInfo.c_tag),
     "mdrpi_registration_policy": "{ns}&{tag}".format(ns=NS_MDRPI, tag=RegistrationPolicy.c_tag),
-    "shibmd_scope": "{ns}&{tag}".format(ns=NS_SHIBMD, tag=Scope.c_tag)
+    "shibmd_scope": "{ns}&{tag}".format(ns=NS_SHIBMD, tag=Scope.c_tag),
 }
 
 ENTITY_CATEGORY = "http://macedir.org/entity-category"
@@ -117,7 +112,7 @@ REQ2SRV = {
     # SP
     "assertion_response": "assertion_consumer_service",
     "attribute_response": "attribute_consuming_service",
-    "discovery_service_request": "discovery_response"
+    "discovery_service_request": "discovery_response",
 }
 
 
@@ -134,14 +129,14 @@ class SourceNotFound(Exception):
 
 
 def load_extensions():
-    from saml2 import extension
     import pkgutil
+
+    from saml2 import extension
 
     package = extension
     prefix = package.__name__ + "."
     ext_map = {}
-    for importer, modname, ispkg in pkgutil.iter_modules(package.__path__,
-                                                         prefix):
+    for importer, modname, ispkg in pkgutil.iter_modules(package.__path__, prefix):
         module = __import__(modname, fromlist="dummy")
         ext_map[module.NAMESPACE] = module
 
@@ -149,12 +144,7 @@ def load_extensions():
 
 
 def load_metadata_modules():
-    mods = {
-        saml.NAMESPACE: saml,
-        md.NAMESPACE: md,
-        xmldsig.NAMESPACE: xmldsig,
-        xmlenc.NAMESPACE: xmlenc
-    }
+    mods = {saml.NAMESPACE: saml, md.NAMESPACE: md, xmldsig.NAMESPACE: xmldsig, xmlenc.NAMESPACE: xmlenc}
 
     mods.update(load_extensions())
     return mods
@@ -179,7 +169,8 @@ def response_locations(srvs):
         s["response_location"]
         for s in srvs
         if "response_location" in s
-        if s["__class__"] not in [
+        if s["__class__"]
+        not in [
             classnames["service_artifact_resolution"],
             classnames["service_single_sign_on"],
             classnames["service_nameid_mapping"],
@@ -189,11 +180,7 @@ def response_locations(srvs):
 
 
 def locations(srvs):
-    values = (
-        s["location"]
-        for s in srvs
-        if "location" in s
-    )
+    values = (s["location"] for s in srvs if "location" in s)
     return values
 
 
@@ -236,9 +223,7 @@ def name(ent, langpref="en"):
     except KeyError:
         return None
 
-    for info in ["organization_display_name",
-                 "organization_name",
-                 "organization_url"]:
+    for info in ["organization_display_name", "organization_name", "organization_url"]:
         try:
             for item in org[info]:
                 if item["lang"] == langpref:
@@ -258,8 +243,7 @@ def repack_cert(cert):
 
 
 class MetaData(object):
-    def __init__(self, attrc, metadata='', node_name=None,
-                 check_validity=True, security=None, **kwargs):
+    def __init__(self, attrc, metadata="", node_name=None, check_validity=True, security=None, **kwargs):
         self.attrc = attrc
         self.metadata = metadata
         self.entity = None
@@ -270,73 +254,73 @@ class MetaData(object):
         self.security = security
 
     def items(self):
-        '''
+        """
         Returns list of items contained in the storage
-        '''
+        """
         raise NotImplementedError
 
     def keys(self):
-        '''
+        """
         Returns keys (identifiers) of items in storage
-        '''
+        """
         raise NotImplementedError
 
     def values(self):
-        '''
+        """
         Returns values of items in storage
-        '''
+        """
         raise NotImplementedError
 
     def __len__(self):
-        '''
+        """
         Returns number of stored items
-        '''
+        """
         raise NotImplementedError
 
     def __contains__(self, item):
-        '''
+        """
         Returns True if the storage contains item
-        '''
+        """
         raise NotImplementedError
 
     def __getitem__(self, item):
-        '''
+        """
         Returns the item specified by the key
-        '''
+        """
         raise NotImplementedError
 
     def __setitem__(self, key, value):
-        '''
+        """
         Sets a key to a value
-        '''
+        """
         raise NotImplementedError
 
     def __delitem__(self, key):
-        '''
+        """
         Removes key from storage
-        '''
+        """
         raise NotImplementedError
 
     def do_entity_descriptor(self, entity_descr):
-        '''
+        """
         #FIXME - Add description
-        '''
+        """
         raise NotImplementedError
 
     def parse(self, xmlstr):
-        '''
+        """
         #FIXME - Add description
-        '''
+        """
         raise NotImplementedError
 
     def load(self, *args, **kwargs):
-        '''
+        """
         Loads the metadata
-        '''
+        """
         self.parse(self.metadata)
 
     def service(self, entity_id, typ, service, binding=None):
-        """ Get me all services with a specified
+        """Get me all services with a specified
         entity ID and type, that supports the specified version of binding.
 
         :param entity_id: The EntityId
@@ -396,7 +380,7 @@ class MetaData(object):
         for entid, item in self.items():
             hit = False
             try:
-                descr = item['{}sso_descriptor'.format(typ)]
+                descr = item["{}sso_descriptor".format(typ)]
             except KeyError:
                 continue
             else:
@@ -407,7 +391,7 @@ class MetaData(object):
                         continue
                     else:
                         for srv in srvs:
-                            if srv['binding'] == binding:
+                            if srv["binding"] == binding:
                                 res[entid] = item
                                 hit = True
                                 break
@@ -426,7 +410,7 @@ class MetaData(object):
         return self.service(entity_id, typ, service)
 
     def attribute_requirement(self, entity_id, index=None):
-        """ Returns what attributes the SP requires and which are optional
+        """Returns what attributes the SP requires and which are optional
         if any such demands are registered in the Metadata.
 
         :param entity_id: The entity id of the SP
@@ -441,9 +425,9 @@ class MetaData(object):
         return json.dumps(list(self.items()), indent=2)
 
     def with_descriptor(self, descriptor):
-        '''
+        """
         Returns any entities with the specified descriptor
-        '''
+        """
         res = {}
         desc = "%s_descriptor" % descriptor
         for eid, ent in self.items():
@@ -484,9 +468,9 @@ class MetaData(object):
         return True
 
     def certs(self, entity_id, descriptor, use="signing"):
-        '''
+        """
         Returns certificates for the given Entity
-        '''
+        """
         ent = self[entity_id]
 
         def extract_certs(srvs):
@@ -507,8 +491,7 @@ class MetaData(object):
 
         if descriptor == "any":
             res = []
-            for descr in ["spsso", "idpsso", "role", "authn_authority",
-                          "attribute_authority", "pdp"]:
+            for descr in ["spsso", "idpsso", "role", "authn_authority", "attribute_authority", "pdp"]:
                 try:
                     srvs = ent["%s_descriptor" % descr]
                 except KeyError:
@@ -523,8 +506,7 @@ class MetaData(object):
 
 
 class InMemoryMetaData(MetaData):
-    def __init__(self, attrc, metadata="", node_name=None,
-                 check_validity=True, security=None, **kwargs):
+    def __init__(self, attrc, metadata="", node_name=None, check_validity=True, security=None, **kwargs):
         super(InMemoryMetaData, self).__init__(attrc, metadata=metadata)
         self.entity = {}
         self.security = security
@@ -565,8 +547,7 @@ class InMemoryMetaData(MetaData):
         if self.check_validity:
             try:
                 if not valid(entity_descr.valid_until):
-                    logger.error("Entity descriptor (entity id:%s) too old",
-                                 entity_descr.entity_id)
+                    logger.error("Entity descriptor (entity id:%s) too old", entity_descr.entity_id)
                     self.to_old.append(entity_descr.entity_id)
                     return
             except AttributeError:
@@ -574,15 +555,13 @@ class InMemoryMetaData(MetaData):
 
         # have I seen this entity_id before ? If so if log: ignore it
         if entity_descr.entity_id in self.entity:
-            print("Duplicated Entity descriptor (entity id: '%s')" %
-                  entity_descr.entity_id, file=sys.stderr)
+            print("Duplicated Entity descriptor (entity id: '%s')" % entity_descr.entity_id, file=sys.stderr)
             return
 
         _ent = to_dict(entity_descr, metadata_modules())
         flag = 0
         # verify support for SAML2
-        for descr in ["spsso", "idpsso", "role", "authn_authority",
-                      "attribute_authority", "pdp", "affiliation"]:
+        for descr in ["spsso", "idpsso", "role", "authn_authority", "attribute_authority", "pdp", "affiliation"]:
             _res = []
             try:
                 _items = _ent["%s_descriptor" % descr]
@@ -617,13 +596,13 @@ class InMemoryMetaData(MetaData):
             self.entities_descr = md.entities_descriptor_from_string(xmlstr)
         except Exception as e:
             _md_desc = (
-                f'metadata file: {self.filename}'
-                if isinstance(self,MetaDataFile)
-                else f'remote metadata: {self.url}'
+                f"metadata file: {self.filename}"
+                if isinstance(self, MetaDataFile)
+                else f"remote metadata: {self.url}"
                 if isinstance(self, MetaDataExtern)
-                else 'metadata'
+                else "metadata"
             )
-            raise SAMLError(f'Failed to parse {_md_desc}') from e
+            raise SAMLError(f"Failed to parse {_md_desc}") from e
 
         if not self.entities_descr:
             self.entity_descr = md.entity_descriptor_from_string(xmlstr)
@@ -641,8 +620,8 @@ class InMemoryMetaData(MetaData):
                     if not valid(self.entities_descr.valid_until):
                         raise TooOld(
                             "Metadata not valid anymore, it's only valid "
-                            "until %s" % (
-                                self.entities_descr.valid_until,))
+                            "until %s" % (self.entities_descr.valid_until,)
+                        )
                 except AttributeError:
                     pass
 
@@ -650,7 +629,7 @@ class InMemoryMetaData(MetaData):
                 self.do_entity_descriptor(entity_descr)
 
     def service(self, entity_id, typ, service, binding=None):
-        """ Get me all services with a specified
+        """Get me all services with a specified
         entity ID and type, that supports the specified version of binding.
 
         :param entity_id: The EntityId
@@ -689,7 +668,7 @@ class InMemoryMetaData(MetaData):
         return res
 
     def attribute_requirement(self, entity_id, index=None):
-        """ Returns what attributes the SP requires and which are optional
+        """Returns what attributes the SP requires and which are optional
         if any such demands are registered in the Metadata.
 
         :param entity_id: The entity id of the SP
@@ -718,7 +697,7 @@ class InMemoryMetaData(MetaData):
                     for srv in ent[desc]:
                         if "artifact_resolution_service" in srv:
                             if isinstance(eid, six.string_types):
-                                eid = eid.encode('utf-8')
+                                eid = eid.encode("utf-8")
                             s = sha1(eid)
                             res[s.digest()] = ent
                 except KeyError:
@@ -746,9 +725,7 @@ class InMemoryMetaData(MetaData):
 
         if self.node_name is not None:
             try:
-                self.security.verify_signature(
-                    txt, node_name=self.node_name, cert_file=self.cert
-                )
+                self.security.verify_signature(txt, node_name=self.node_name, cert_file=self.cert)
             except SignatureError as e:
                 error_context = {
                     "message": "Failed to verify signature",
@@ -760,10 +737,8 @@ class InMemoryMetaData(MetaData):
 
         def try_verify_signature(node_name):
             try:
-                self.security.verify_signature(
-                    txt, node_name=node_name, cert_file=self.cert
-                )
-            except SignatureError as e:
+                self.security.verify_signature(txt, node_name=node_name, cert_file=self.cert)
+            except SignatureError:
                 return False
             else:
                 return True
@@ -776,10 +751,7 @@ class InMemoryMetaData(MetaData):
             ]
         ]
 
-        verified_w_descriptor_name = any(
-            try_verify_signature(node_name)
-            for node_name in descriptor_names
-        )
+        verified_w_descriptor_name = any(try_verify_signature(node_name) for node_name in descriptor_names)
         if not verified_w_descriptor_name:
             error_context = {
                 "message": "Failed to verify signature",
@@ -799,12 +771,12 @@ class MetaDataFile(InMemoryMetaData):
     def __init__(self, attrc, filename=None, cert=None, **kwargs):
         super(MetaDataFile, self).__init__(attrc, **kwargs)
         if not filename:
-            raise SAMLError('No file specified.')
+            raise SAMLError("No file specified.")
         self.filename = filename
         self.cert = cert
 
     def get_metadata_content(self):
-        with open(self.filename, 'rb') as fp:
+        with open(self.filename, "rb") as fp:
             return fp.read()
 
     def load(self, *args, **kwargs):
@@ -818,37 +790,31 @@ class MetaDataLoader(MetaDataFile):
     The format of the file is the SAML Metadata format.
     """
 
-    def __init__(self, attrc, loader_callable, cert=None,
-                 security=None, **kwargs):
+    def __init__(self, attrc, loader_callable, cert=None, security=None, **kwargs):
         super(MetaDataLoader, self).__init__(attrc, **kwargs)
-        self.metadata_provider_callable = self.get_metadata_loader(
-            loader_callable)
+        self.metadata_provider_callable = self.get_metadata_loader(loader_callable)
         self.cert = cert
         self.security = security
 
     @staticmethod
     def get_metadata_loader(func):
-        if hasattr(func, '__call__'):
+        if callable(func):
             return func
 
-        i = func.rfind('.')
-        module, attr = func[:i], func[i + 1:]
+        i = func.rfind(".")
+        module, attr = func[:i], func[i + 1 :]
         try:
             mod = importlib.import_module(module)
         except Exception as e:
-            raise RuntimeError(
-                'Cannot find metadata provider function %s: "%s"' % (func, e))
+            raise RuntimeError('Cannot find metadata provider function %s: "%s"' % (func, e))
 
         try:
             metadata_loader = getattr(mod, attr)
         except AttributeError:
-            raise RuntimeError(
-                'Module "%s" does not define a "%s" metadata loader' % (
-                    module, attr))
+            raise RuntimeError('Module "%s" does not define a "%s" metadata loader' % (module, attr))
 
-        if not hasattr(metadata_loader, '__call__'):
-            raise RuntimeError(
-                'Metadata loader %s.%s must be callable' % (module, attr))
+        if not callable(metadata_loader):
+            raise RuntimeError("Metadata loader %s.%s must be callable" % (module, attr))
 
         return metadata_loader
 
@@ -862,8 +828,7 @@ class MetaDataExtern(InMemoryMetaData):
     Accessible by HTTP GET.
     """
 
-    def __init__(self, attrc, url=None, security=None, cert=None,
-                 http=None, **kwargs):
+    def __init__(self, attrc, url=None, security=None, cert=None, http=None, **kwargs):
         """
         :params attrc:
         :params url: Location of the metadata
@@ -873,7 +838,7 @@ class MetaDataExtern(InMemoryMetaData):
         """
         super(MetaDataExtern, self).__init__(attrc, **kwargs)
         if not url:
-            raise SAMLError('URL not specified.')
+            raise SAMLError("URL not specified.")
         else:
             self.url = url
 
@@ -884,7 +849,7 @@ class MetaDataExtern(InMemoryMetaData):
         self.http = http
 
     def load(self, *args, **kwargs):
-        """ Imports metadata by the use of HTTP GET.
+        """Imports metadata by the use of HTTP GET.
         If the fingerprint is known the file will be checked for
         compliance before it is imported.
         """
@@ -927,9 +892,16 @@ class MetaDataMDX(InMemoryMetaData):
         transform = "{{sha1}}{digest}".format(digest=entity_id_sha1)
         return transform
 
-    def __init__(self, url=None, security=None, cert=None,
-                 entity_transform=None, freshness_period=None,
-                 http_client_timeout=None, **kwargs):
+    def __init__(
+        self,
+        url=None,
+        security=None,
+        cert=None,
+        entity_transform=None,
+        freshness_period=None,
+        http_client_timeout=None,
+        **kwargs,
+    ):
         """
         :params url: mdx service url
         :params security: SecurityContext()
@@ -945,9 +917,9 @@ class MetaDataMDX(InMemoryMetaData):
         """
         super(MetaDataMDX, self).__init__(None, **kwargs)
         if not url:
-            raise SAMLError('URL for MDQ server not specified.')
+            raise SAMLError("URL for MDQ server not specified.")
 
-        self.url = url.rstrip('/')
+        self.url = url.rstrip("/")
 
         if entity_transform:
             self.entity_transform = entity_transform
@@ -966,33 +938,26 @@ class MetaDataMDX(InMemoryMetaData):
         # <EntitiesDescriptor> element but we will not currently support
         # that use case since it is unlikely to be leveraged for most
         # flows.
-        self.node_name = "{ns}:{tag}".format(
-            ns=EntityDescriptor.c_namespace, tag=EntityDescriptor.c_tag
-        )
+        self.node_name = "{ns}:{tag}".format(ns=EntityDescriptor.c_namespace, tag=EntityDescriptor.c_tag)
 
     def load(self, *args, **kwargs):
         # Do nothing
         pass
 
     def _fetch_metadata(self, item):
-        mdx_url = "{url}/entities/{id}".format(
-            url=self.url, id=self.entity_transform(item)
-        )
+        mdx_url = "{url}/entities/{id}".format(url=self.url, id=self.entity_transform(item))
 
-        response = requests.get(mdx_url, headers={"Accept": SAML_METADATA_CONTENT_TYPE},
-                                timeout=self.http_client_timeout)
+        response = requests.get(
+            mdx_url, headers={"Accept": SAML_METADATA_CONTENT_TYPE}, timeout=self.http_client_timeout
+        )
         if response.status_code != 200:
-            error_msg = "Fething {item}: Got response status {status}".format(
-                item=item, status=response.status_code
-            )
+            error_msg = "Fething {item}: Got response status {status}".format(item=item, status=response.status_code)
             logger.info(error_msg)
             raise KeyError(error_msg)
 
         _txt = response.content
         if not self.parse_and_check_signature(_txt):
-            error_msg = "Fething {item}: invalid signature".format(
-                item=item, status=response.status_code
-            )
+            error_msg = "Fething {item}: invalid signature".format(item=item)
             logger.info(error_msg)
             raise KeyError(error_msg)
 
@@ -1009,7 +974,7 @@ class MetaDataMDX(InMemoryMetaData):
         elif not self._is_metadata_fresh(item):
             msg = "Metadata for {} have expired; refreshing metadata".format(item)
             logger.info(msg)
-            old_entity = self.entity.pop(item)
+            _ = self.entity.pop(item)
             entity = self._fetch_metadata(item)
         else:
             entity = self.entity[item]
@@ -1018,15 +983,20 @@ class MetaDataMDX(InMemoryMetaData):
     def single_sign_on_service(self, entity_id, binding=None, typ="idpsso"):
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
-        return self.service(entity_id, "idpsso_descriptor",
-                            "single_sign_on_service", binding)
+        return self.service(entity_id, "idpsso_descriptor", "single_sign_on_service", binding)
 
 
 class MetadataStore(MetaData):
-    def __init__(self, attrc, config, ca_certs=None,
-                 check_validity=True,
-                 disable_ssl_certificate_validation=False,
-                 filter=None, http_client_timeout=None):
+    def __init__(
+        self,
+        attrc,
+        config,
+        ca_certs=None,
+        check_validity=True,
+        disable_ssl_certificate_validation=False,
+        filter=None,
+        http_client_timeout=None,
+    ):
         """
         :params attrc:
         :params config: Config()
@@ -1087,9 +1057,7 @@ class MetadataStore(MetaData):
             if "cert" not in kwargs:
                 kwargs["cert"] = ""
 
-            _md = MetaDataExtern(self.attrc,
-                                 kwargs["url"], self.security,
-                                 kwargs["cert"], self.http, **_args)
+            _md = MetaDataExtern(self.attrc, kwargs["url"], self.security, kwargs["cert"], self.http, **_args)
         elif typ == "mdfile":
             key = args[1]
             _md = MetaDataMD(self.attrc, args[1], **_args)
@@ -1097,16 +1065,21 @@ class MetadataStore(MetaData):
             key = args[1]
             _md = MetaDataLoader(self.attrc, args[1], **_args)
         elif typ == "mdq":
-            if 'url' in kwargs:
-                key = kwargs['url']
-                url = kwargs['url']
-                cert = kwargs.get('cert')
-                freshness_period = kwargs.get('freshness_period', None)
+            if "url" in kwargs:
+                key = kwargs["url"]
+                url = kwargs["url"]
+                cert = kwargs.get("cert")
+                freshness_period = kwargs.get("freshness_period", None)
                 security = self.security
-                entity_transform = kwargs.get('entity_transform', None)
-                _md = MetaDataMDX(url, security, cert, entity_transform,
-                                  freshness_period=freshness_period,
-                                  http_client_timeout=self.http_client_timeout)
+                entity_transform = kwargs.get("entity_transform", None)
+                _md = MetaDataMDX(
+                    url,
+                    security,
+                    cert,
+                    entity_transform,
+                    freshness_period=freshness_period,
+                    http_client_timeout=self.http_client_timeout,
+                )
             else:
                 key = args[1]
                 url = args[1]
@@ -1143,10 +1116,10 @@ class MetadataStore(MetaData):
         else:
             for item in spec:
                 try:
-                    key = item['class']
+                    key = item["class"]
                 except (KeyError, AttributeError):
                     raise SAMLError("Misconfiguration in metadata %s" % item)
-                mod, clas = key.rsplit('.', 1)
+                mod, clas = key.rsplit(".", 1)
                 try:
                     mod = importlib.import_module(mod)
                     MDloader = getattr(mod, clas)
@@ -1155,21 +1128,17 @@ class MetadataStore(MetaData):
 
                 # Separately handle MDExtern
                 if MDloader == MetaDataExtern:
-                    kwargs = {
-                        'http': self.http,
-                        'security': self.security
-                    }
+                    kwargs = {"http": self.http, "security": self.security}
                 else:
                     kwargs = {}
 
                 if self.filter:
                     kwargs["filter"] = self.filter
 
-                for key in item['metadata']:
+                for key in item["metadata"]:
                     # Separately handle MetaDataFile and directory
                     if MDloader == MetaDataFile and os.path.isdir(key[0]):
-                        files = [f for f in os.listdir(key[0]) if
-                                 isfile(join(key[0], f))]
+                        files = [f for f in os.listdir(key[0]) if isfile(join(key[0], f))]
                         for fil in files:
                             _fil = join(key[0], fil)
                             _md = MetaDataFile(self.attrc, _fil)
@@ -1245,38 +1214,31 @@ class MetadataStore(MetaData):
 
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
-        return self.service(entity_id, "idpsso_descriptor",
-                            "single_sign_on_service", binding)
+        return self.service(entity_id, "idpsso_descriptor", "single_sign_on_service", binding)
 
     def name_id_mapping_service(self, entity_id, binding=None, typ="idpsso"):
         # IDP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
-        return self.service(entity_id, "idpsso_descriptor",
-                            "name_id_mapping_service", binding)
+        return self.service(entity_id, "idpsso_descriptor", "name_id_mapping_service", binding)
 
-    def authn_query_service(self, entity_id, binding=None,
-                            typ="authn_authority"):
+    def authn_query_service(self, entity_id, binding=None, typ="authn_authority"):
         # AuthnAuthority
         if binding is None:
             binding = BINDING_SOAP
-        return self.service(entity_id, "authn_authority_descriptor",
-                            "authn_query_service", binding)
+        return self.service(entity_id, "authn_authority_descriptor", "authn_query_service", binding)
 
-    def attribute_service(self, entity_id, binding=None,
-                          typ="attribute_authority"):
+    def attribute_service(self, entity_id, binding=None, typ="attribute_authority"):
         # AttributeAuthority
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
-        return self.service(entity_id, "attribute_authority_descriptor",
-                            "attribute_service", binding)
+        return self.service(entity_id, "attribute_authority_descriptor", "attribute_service", binding)
 
     def authz_service(self, entity_id, binding=None, typ="pdp"):
         # PDP
         if binding is None:
             binding = BINDING_SOAP
-        return self.service(entity_id, "pdp_descriptor",
-                            "authz_service", binding)
+        return self.service(entity_id, "pdp_descriptor", "authz_service", binding)
 
     def assertion_id_request_service(self, entity_id, binding=None, typ=None):
         # AuthnAuthority + IDP + PDP + AttributeAuthority
@@ -1284,51 +1246,44 @@ class MetadataStore(MetaData):
             raise AttributeError("Missing type specification")
         if binding is None:
             binding = BINDING_SOAP
-        return self.service(entity_id, "%s_descriptor" % typ,
-                            "assertion_id_request_service", binding)
+        return self.service(entity_id, "%s_descriptor" % typ, "assertion_id_request_service", binding)
 
     def single_logout_service(self, entity_id, binding=None, typ=None):
         # IDP + SP
         if typ is None:
             raise AttributeError("Missing type specification")
-        return self.service(entity_id, "%s_descriptor" % typ,
-                            "single_logout_service", binding)
+        return self.service(entity_id, "%s_descriptor" % typ, "single_logout_service", binding)
 
     def manage_name_id_service(self, entity_id, binding=None, typ=None):
         # IDP + SP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
-        return self.service(entity_id, "%s_descriptor" % typ,
-                            "manage_name_id_service", binding)
+        return self.service(entity_id, "%s_descriptor" % typ, "manage_name_id_service", binding)
 
     def artifact_resolution_service(self, entity_id, binding=None, typ=None):
         # IDP + SP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
-        return self.service(entity_id, "%s_descriptor" % typ,
-                            "artifact_resolution_service", binding)
+        return self.service(entity_id, "%s_descriptor" % typ, "artifact_resolution_service", binding)
 
     def assertion_consumer_service(self, entity_id, binding=None, _="spsso"):
         # SP
         if binding is None:
             binding = BINDING_HTTP_POST
-        return self.service(entity_id, "spsso_descriptor",
-                            "assertion_consumer_service", binding)
+        return self.service(entity_id, "spsso_descriptor", "assertion_consumer_service", binding)
 
     def attribute_consuming_service(self, entity_id, binding=None, _="spsso"):
         # SP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
-        return self.service(entity_id, "spsso_descriptor",
-                            "attribute_consuming_service", binding)
+        return self.service(entity_id, "spsso_descriptor", "attribute_consuming_service", binding)
 
     def discovery_response(self, entity_id, binding=None, _="spsso"):
         if binding is None:
             binding = BINDING_DISCO
-        return self.ext_service(entity_id, "spsso_descriptor",
-                                "%s&%s" % (DiscoveryResponse.c_namespace,
-                                           DiscoveryResponse.c_tag),
-                                binding)
+        return self.ext_service(
+            entity_id, "spsso_descriptor", "%s&%s" % (DiscoveryResponse.c_namespace, DiscoveryResponse.c_tag), binding
+        )
 
     def attribute_requirement(self, entity_id, index=None):
         for _md in self.metadata.values():
@@ -1439,10 +1394,7 @@ class MetadataStore(MetaData):
             if elem["__class__"] != classnames["mdattr_entityattributes"]:
                 continue
             for attr in elem["attribute"]:
-                res[attr["name"]] = [
-                    *res.get(attr["name"], []),
-                    *(v["text"] for v in attr.get("attribute_value", []))
-                ]
+                res[attr["name"]] = [*res.get(attr["name"], []), *(v["text"] for v in attr.get("attribute_value", []))]
         return res
 
     def supported_algorithms(self, entity_id):
@@ -1460,19 +1412,16 @@ class MetadataStore(MetaData):
         :type entity_id: string
         :rtype: dict
         """
-        res = {
-            'digest_methods': [],
-            'signing_methods': []
-        }
+        res = {"digest_methods": [], "signing_methods": []}
         try:
             ext = self.__getitem__(entity_id)["extensions"]
         except KeyError:
             return res
         for elem in ext["extension_elements"]:
             if elem["__class__"] == classnames["algsupport_digest_method"]:
-                res['digest_methods'].append(elem['algorithm'])
+                res["digest_methods"].append(elem["algorithm"])
             elif elem["__class__"] == classnames["algsupport_signing_method"]:
-                res['signing_methods'].append(elem['algorithm'])
+                res["signing_methods"].append(elem["algorithm"])
         return res
 
     def registration_info(self, entity_id):
@@ -1503,11 +1452,7 @@ class MetadataStore(MetaData):
 
         ext_elems = ext.get("extensions", {}).get("extension_elements", [])
         reg_info = next(
-            (
-                elem
-                for elem in ext_elems
-                if elem["__class__"] == classnames["mdrpi_registration_info"]
-            ),
+            (elem for elem in ext_elems if elem["__class__"] == classnames["mdrpi_registration_info"]),
             {},
         )
         res = {
@@ -1556,12 +1501,7 @@ class MetadataStore(MetaData):
         return elements
 
     def _lookup_elements_by_key(self, root, key):
-        elements = (
-            element
-            for uiinfo in root
-            for elements in [uiinfo.get(key, [])]
-            for element in elements
-        )
+        elements = (element for uiinfo in root for elements in [uiinfo.get(key, [])] for element in elements)
         return elements
 
     def sbibmd_scopes(self, entity_id, typ=None):
@@ -1614,11 +1554,7 @@ class MetadataStore(MetaData):
         except KeyError:
             data = {}
 
-        descriptor_names = (
-            item
-            for item in data.keys()
-            if item.endswith("_descriptor")
-        )
+        descriptor_names = (item for item in data.keys() if item.endswith("_descriptor"))
         descriptors = (
             descriptor
             for descriptor_name in descriptor_names
@@ -1629,38 +1565,22 @@ class MetadataStore(MetaData):
             for descriptor in descriptors
             for extension in descriptor.get("extensions", {}).get("extension_elements", [])
         )
-        uiinfos = (
-            extension
-            for extension in extensions
-            if extension.get("__class__") == classnames["mdui_uiinfo"]
-        )
+        uiinfos = (extension for extension in extensions if extension.get("__class__") == classnames["mdui_uiinfo"])
         return uiinfos
 
     def _mdui_uiinfo_i18n_elements_lookup(self, entity_id, langpref, element_hint, lookup):
         uiinfos = self.mdui_uiinfo(entity_id)
         elements = lookup(uiinfos, element_hint)
-        lang_elements = (
-            element
-            for element in elements
-            if langpref is None or element.get("lang") == langpref
-        )
-        values = (
-            value
-            for element in lang_elements
-            for value in [element.get("text")]
-        )
+        lang_elements = (element for element in elements if langpref is None or element.get("lang") == langpref)
+        values = (value for element in lang_elements for value in [element.get("text")])
         return values
 
     def mdui_uiinfo_i18n_element_cls(self, entity_id, langpref, element_cls):
-        values = self._mdui_uiinfo_i18n_elements_lookup(
-            entity_id, langpref, element_cls, self._lookup_elements_by_cls
-        )
+        values = self._mdui_uiinfo_i18n_elements_lookup(entity_id, langpref, element_cls, self._lookup_elements_by_cls)
         return values
 
     def mdui_uiinfo_i18n_element_key(self, entity_id, langpref, element_key):
-        values = self._mdui_uiinfo_i18n_elements_lookup(
-            entity_id, langpref, element_key, self._lookup_elements_by_key
-        )
+        values = self._mdui_uiinfo_i18n_elements_lookup(entity_id, langpref, element_key, self._lookup_elements_by_key)
         return values
 
     def mdui_uiinfo_display_name(self, entity_id, langpref=None):
@@ -1706,10 +1626,7 @@ class MetadataStore(MetaData):
                 "contact_type": _contact_type,
                 "given_name": contact.get("given_name", {}).get("text", ""),
                 "email_address": [
-                    address
-                    for email in contact.get("email_address", {})
-                    for address in [email.get("text")]
-                    if address
+                    address for email in contact.get("email_address", {}) for address in [email.get("text")] if address
                 ],
             }
             for contact in data.get("contact_person", [])
@@ -1778,8 +1695,7 @@ class MetadataStore(MetaData):
             res = EntitiesDescriptor()
             for _md in self.metadata.values():
                 try:
-                    res.entity_descriptor.extend(
-                        _md.entities_descr.entity_descriptor)
+                    res.entity_descriptor.extend(_md.entities_descr.entity_descriptor)
                 except AttributeError:
                     res.entity_descriptor.append(_md.entity_descr)
 

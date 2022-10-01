@@ -1,12 +1,12 @@
-from paste.request import construct_url
-import zope.interface
-from repoze.who.interfaces import IRequestClassifier
-
-from paste.httpheaders import REQUEST_METHOD
-from paste.httpheaders import CONTENT_TYPE
-from paste.httpheaders import USER_AGENT
-
 import re
+
+from paste.httpheaders import CONTENT_TYPE
+from paste.httpheaders import REQUEST_METHOD
+from paste.httpheaders import USER_AGENT
+from paste.request import construct_url
+from repoze.who.interfaces import IRequestClassifier
+import zope.interface
+
 
 _DAV_METHODS = (
     "OPTIONS",
@@ -35,7 +35,7 @@ _DAV_USERAGENTS = (
 
 
 def my_request_classifier(environ):
-    """ Returns one of the classifiers 'dav', 'xmlpost', or 'browser',
+    """Returns one of the classifiers 'dav', 'xmlpost', or 'browser',
     depending on the imperative logic below"""
     request_method = REQUEST_METHOD(environ)
     if request_method in _DAV_METHODS:
@@ -65,7 +65,7 @@ class MyChallengeDecider:
         if status.startswith("401 "):
             return True
         else:
-            if environ.has_key("samlsp.pending"):
+            if "samlsp.pending" in environ:
                 return True
 
             uri = environ.get("REQUEST_URI", None)
@@ -80,7 +80,7 @@ class MyChallengeDecider:
 
             # If the user is already authent, whatever happens(except logout),
             #   don't make a challenge
-            if environ.has_key("repoze.who.identity"):
+            if "repoze.who.identity" in environ:
                 return False
 
             # require a challenge for login

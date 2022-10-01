@@ -1,21 +1,25 @@
-import cookielib
+import logging
 import sys
 import traceback
-import logging
-from urlparse import parse_qs
+
+import cookielib
 import six
+from urlparse import parse_qs
 
-from saml2test.opfunc import Operation
-from saml2test import CheckError, FatalError
-from saml2test.check import ExpectedError, ERROR
-from saml2test.interaction import Interaction
-from saml2test.interaction import Action
-from saml2test.interaction import InteractionNeeded
-from saml2test.status import STATUSCODE
-from saml2test.status import INTERACTION
+from saml2test import CheckError
+from saml2test import FatalError
 from saml2test import OperationError
+from saml2test.check import ERROR
+from saml2test.check import ExpectedError
+from saml2test.interaction import Action
+from saml2test.interaction import Interaction
+from saml2test.interaction import InteractionNeeded
+from saml2test.opfunc import Operation
+from saml2test.status import INTERACTION
+from saml2test.status import STATUSCODE
 
-__author__ = 'rolandh'
+
+__author__ = "rolandh"
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +30,17 @@ class Conversation(object):
     :ivar protocol_response: List of the received protocol messages
     """
 
-    def __init__(self, client, config, interaction,
-                 check_factory=None, msg_factory=None,
-                 features=None, verbose=False, expect_exception=None):
+    def __init__(
+        self,
+        client,
+        config,
+        interaction,
+        check_factory=None,
+        msg_factory=None,
+        features=None,
+        verbose=False,
+        expect_exception=None,
+    ):
         self.client = client
         self.client_config = config
         self.test_output = []
@@ -38,9 +50,7 @@ class Conversation(object):
         self.msg_factory = msg_factory
         self.expect_exception = expect_exception
 
-        self.cjar = {"browser": cookielib.CookieJar(),
-                     "rp": cookielib.CookieJar(),
-                     "service": cookielib.CookieJar()}
+        self.cjar = {"browser": cookielib.CookieJar(), "rp": cookielib.CookieJar(), "service": cookielib.CookieJar()}
 
         self.protocol_response = []
         self.last_response = None
@@ -116,8 +126,7 @@ class Conversation(object):
                 else:
                     rdseq.append(url)
                     if len(rdseq) > 8:
-                        raise FatalError(
-                            "Too long sequence of redirects: %s" % rdseq)
+                        raise FatalError("Too long sequence of redirects: %s" % rdseq)
 
                 logger.info("HTTP %d Location: %s", _response.status_code, url)
                 # If back to me
@@ -166,15 +175,13 @@ class Conversation(object):
                 _spec = self.interaction.pick_interaction(_base, content)
             except InteractionNeeded:
                 self.position = url
-                cnt = content.replace("\n", '').replace("\t", '').replace("\r",
-                                                                          '')
+                cnt = content.replace("\n", "").replace("\t", "").replace("\r", "")
                 logger.error("URL: %s", url)
                 logger.error("Page Content: %s", cnt)
                 raise
             except KeyError:
                 self.position = url
-                cnt = content.replace("\n", '').replace("\t", '').replace("\r",
-                                                                          '')
+                cnt = content.replace("\n", "").replace("\t", "").replace("\r", "")
                 logger.error("URL: %s", url)
                 logger.error("Page Content: %s", cnt)
                 self.err_check("interaction-needed")
@@ -183,11 +190,14 @@ class Conversation(object):
                 _same_actions += 1
                 if _same_actions >= 3:
                     self.test_output.append(
-                        {"status": ERROR,
-                         "message": "Interaction loop detection",
-                         #"id": "exception",
-                         #"name": "interaction needed",
-                         "url": self.position})
+                        {
+                            "status": ERROR,
+                            "message": "Interaction loop detection",
+                            # "id": "exception",
+                            # "name": "interaction needed",
+                            "url": self.position,
+                        }
+                    )
                     raise OperationError()
             else:
                 _last_action = _spec
@@ -200,8 +210,7 @@ class Conversation(object):
             _op = Action(_spec["control"])
 
             try:
-                _response = _op(self.client, self, url, _response, content,
-                                self.features)
+                _response = _op(self.client, self, url, _response, content, self.features)
                 if isinstance(_response, dict):
                     self.last_response = _response
                     self.last_content = _response
@@ -215,11 +224,14 @@ class Conversation(object):
                     txt = "Got status code '%s', error: %s"
                     logger.error(txt, _response.status_code, content)
                     self.test_output.append(
-                        {"status": ERROR,
-                         "message": txt % (_response.status_code, content),
-                         #"id": "exception",
-                         #"name": "interaction needed",
-                         "url": self.position})
+                        {
+                            "status": ERROR,
+                            "message": txt % (_response.status_code, content),
+                            # "id": "exception",
+                            # "name": "interaction needed",
+                            "url": self.position,
+                        }
+                    )
                     raise OperationError()
             except (FatalError, InteractionNeeded, OperationError):
                 raise
@@ -289,19 +301,22 @@ class Conversation(object):
             try:
                 self.do_query()
             except InteractionNeeded:
-                cnt = self.last_content.replace("\n", '').replace(
-                    "\t", '').replace("\r", '')
-                self.test_output.append({"status": INTERACTION,
-                                         "message": cnt,
-                                         "id": "exception",
-                                         "name": "interaction needed",
-                                         "url": self.position})
+                cnt = self.last_content.replace("\n", "").replace("\t", "").replace("\r", "")
+                self.test_output.append(
+                    {
+                        "status": INTERACTION,
+                        "message": cnt,
+                        "id": "exception",
+                        "name": "interaction needed",
+                        "url": self.position,
+                    }
+                )
                 break
-            except (FatalError, OperationError):
-                raise
-            except Exception as err:
-                #self.err_check("exception", err)
-                raise
+            # except (FatalError, OperationError):
+            #     raise
+            # except Exception as err:
+            #     self.err_check("exception", err)
+            #     raise
 
         try:
             self.test_sequence(oper["tests"]["post"])

@@ -3,7 +3,7 @@
 
 """Test data for saml2"""
 
-__author__ = 'tmatsuo@example.com (Takashi MATSUO)'
+__author__ = "tmatsuo@example.com (Takashi MATSUO)"
 
 TEST_STATUS_CODE = """<?xml version="1.0" encoding="utf-8"?>
 <StatusCode xmlns="urn:oasis:names:tc:SAML:2.0:protocol"

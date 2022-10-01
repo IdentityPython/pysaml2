@@ -3,7 +3,8 @@ from six.moves.urllib import parse
 from saml2.entity import Entity
 from saml2.response import VerificationError
 
-__author__ = 'rolandh'
+
+__author__ = "rolandh"
 
 IDPDISC_POLICY = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:single"
 
@@ -24,7 +25,7 @@ class DiscoveryServer(Entity):
 
         # verify
 
-        for key in ["isPassive", "return", "returnIDParam", "policy", 'entityID']:
+        for key in ["isPassive", "return", "returnIDParam", "policy", "entityID"]:
             try:
                 if len(dsr[key]) != 1:
                     raise Exception("Invalid DS request keys: {k}".format(k=key))
@@ -38,9 +39,7 @@ class DiscoveryServer(Entity):
                 qp = parse.parse_qs(part.query)
                 if "returnIDParam" in dsr:
                     if dsr["returnIDParam"] in qp.keys():
-                        raise Exception(
-                            "returnIDParam value should not be in the query params"
-                        )
+                        raise Exception("returnIDParam value should not be in the query params")
                 else:
                     if "entityID" in qp.keys():
                         raise Exception("entityID should not be in the query params")
@@ -53,11 +52,7 @@ class DiscoveryServer(Entity):
 
         is_passive = dsr.get("isPassive")
         if is_passive not in ["true", "false"]:
-            raise ValueError(
-                "Invalid value '{v}' for attribute '{attr}'".format(
-                    v=is_passive, attr="isPassive"
-                )
-            )
+            raise ValueError("Invalid value '{v}' for attribute '{attr}'".format(v=is_passive, attr="isPassive"))
 
         if "isPassive" in dsr and dsr["isPassive"] == "true":
             dsr["isPassive"] = True
@@ -72,9 +67,7 @@ class DiscoveryServer(Entity):
     # -------------------------------------------------------------------------
 
     @staticmethod
-    def create_discovery_service_response(return_url=None,
-                                          returnIDParam="entityID",
-                                          entity_id=None, **kwargs):
+    def create_discovery_service_response(return_url=None, returnIDParam="entityID", entity_id=None, **kwargs):
         if return_url is None:
             return_url = kwargs["return"]
 

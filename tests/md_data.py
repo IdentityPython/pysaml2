@@ -3,7 +3,7 @@
 
 """Test data for md"""
 
-__author__ = 'tmatsuo@example.com (Takashi MATSUO)'
+__author__ = "tmatsuo@example.com (Takashi MATSUO)"
 
 TEST_ENDPOINT = """<?xml version="1.0" encoding="utf-8"?>
 <EndpointType xmlns="urn:oasis:names:tc:SAML:2.0:metadata"

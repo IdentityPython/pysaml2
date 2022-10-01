@@ -1,6 +1,8 @@
-from saml2.eptid import Eptid, EptidShelve
+from saml2.eptid import Eptid
+from saml2.eptid import EptidShelve
 
-__author__ = 'rolandh'
+
+__author__ = "rolandh"
 
 
 def test_eptid():

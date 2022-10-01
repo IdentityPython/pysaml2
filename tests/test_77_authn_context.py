@@ -1,5 +1,4 @@
-
-__author__ = 'rolandh'
+__author__ = "rolandh"
 
 ex1 = """<AuthenticationContextDeclaration
   xmlns="urn:oasis:names:tc:SAML:2.0:ac:classes:Password">
@@ -12,22 +11,23 @@ ex1 = """<AuthenticationContextDeclaration
   </AuthnMethod>
 </AuthenticationContextDeclaration>"""
 
-from saml2.saml import AuthnContext
-from saml2.saml import authn_context_from_string
-from saml2.saml import AuthnContextClassRef
-from saml2.samlp import RequestedAuthnContext
-from saml2.authn_context import pword
-from saml2.authn_context import ppt
-from saml2.authn_context import authn_context_class_ref
-from saml2.authn_context import requested_authn_context
-from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT
 from saml2.authn_context import AL1
 from saml2.authn_context import AL2
 from saml2.authn_context import AL3
 from saml2.authn_context import AL4
+from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT
 from saml2.authn_context import AuthnBroker
+from saml2.authn_context import authn_context_class_ref
 from saml2.authn_context import authn_context_decl_from_extension_elements
 from saml2.authn_context import authn_context_factory
+from saml2.authn_context import ppt
+from saml2.authn_context import pword
+from saml2.authn_context import requested_authn_context
+from saml2.saml import AuthnContext
+from saml2.saml import AuthnContextClassRef
+from saml2.saml import authn_context_from_string
+from saml2.samlp import RequestedAuthnContext
+
 
 length = pword.Length(min="4")
 restricted_password = pword.RestrictedPassword(length=length)
@@ -37,6 +37,7 @@ ACD = pword.AuthenticationContextDeclaration(authn_method=authn_method)
 
 AUTHNCTXT = AuthnContext(authn_context_decl=ACD)
 REQAUTHNCTXT = RequestedAuthnContext(authn_context_decl_ref=ACD.c_namespace)
+
 
 def test_passwd():
     inst = ACD
@@ -57,8 +58,7 @@ def test_authn_decl_in_authn_context():
 
     acs = authn_context_from_string("%s" % authnctxt)
     if acs.extension_elements:
-        cacd = authn_context_decl_from_extension_elements(
-            acs.extension_elements)
+        cacd = authn_context_decl_from_extension_elements(acs.extension_elements)
         if cacd:
             acs.authn_context_decl = cacd
 
@@ -93,7 +93,7 @@ REF2METHOD = {
     AL1: "https://example.com/authn/pin",
     AL2: "https://example.com/authn/passwd",
     AL3: "https://example.com/authn/multifact",
-    AL4: "https://example.com/authn/cert"
+    AL4: "https://example.com/authn/cert",
 }
 
 
@@ -104,8 +104,7 @@ def test_authn_3():
         level += 4
         ac = authn_context_class_ref(ref)
 
-        authn.add(ac, REF2METHOD[ref], level,
-                  "https://www.example.com/%s" % "al%d" % level)
+        authn.add(ac, REF2METHOD[ref], level, "https://www.example.com/%s" % "al%d" % level)
 
     rac = requested_authn_context(AL1, "minimum")
 

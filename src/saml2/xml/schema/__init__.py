@@ -1,5 +1,6 @@
 import sys
 
+
 # importlib.resources was introduced in python 3.7
 # files API from importlib.resources introduced in python 3.9
 if sys.version_info[:2] >= (3, 9):
@@ -23,27 +24,15 @@ def _create_xml_schema_validator(source=None, **kwargs):
     path_schema_envelope = str(schema_resources.joinpath("envelope.xsd"))
     path_schema_xenc = str(schema_resources.joinpath("xenc-schema.xsd"))
     path_schema_xmldsig_core = str(schema_resources.joinpath("xmldsig-core-schema.xsd"))
-    path_schema_saml_assertion = str(
-        schema_resources.joinpath("saml-schema-assertion-2.0.xsd")
-    )
-    path_schema_saml_metadata = str(
-        schema_resources.joinpath("saml-schema-metadata-2.0.xsd")
-    )
-    path_schema_saml_protocol = str(
-        schema_resources.joinpath("saml-schema-protocol-2.0.xsd")
-    )
-    path_schema_eidas_metadata_servicelist= str(
-        schema_resources.joinpath("eidas-schema-metadata-servicelist.xsd")
-    )
-    path_schema_eidas_saml_extensions = str(
-        schema_resources.joinpath("eidas-schema-saml-extensions.xsd")
-    )
+    path_schema_saml_assertion = str(schema_resources.joinpath("saml-schema-assertion-2.0.xsd"))
+    path_schema_saml_metadata = str(schema_resources.joinpath("saml-schema-metadata-2.0.xsd"))
+    path_schema_saml_protocol = str(schema_resources.joinpath("saml-schema-protocol-2.0.xsd"))
+    path_schema_eidas_metadata_servicelist = str(schema_resources.joinpath("eidas-schema-metadata-servicelist.xsd"))
+    path_schema_eidas_saml_extensions = str(schema_resources.joinpath("eidas-schema-saml-extensions.xsd"))
     path_schema_eidas_attribute_naturalperson = str(
         schema_resources.joinpath("eidas-schema-attribute-naturalperson.xsd")
     )
-    path_schema_eidas_attribute_legalperson = str(
-        schema_resources.joinpath("eidas-schema-attribute-legalperson.xsd")
-    )
+    path_schema_eidas_attribute_legalperson = str(schema_resources.joinpath("eidas-schema-attribute-legalperson.xsd"))
 
     source = source if source else path_schema_saml_protocol
     locations = {

@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 from importlib import import_module
-import sys
 import os
+import sys
 
-__author__ = 'roland'
+
+__author__ = "roland"
 
 
 def load(head, tail):
@@ -61,8 +62,7 @@ class AMap(object):
                 print("# Added %s=%s" % (self.mod.MAP["to"][val], key))
                 self.mod.MAP["to"][val] = key
             except AssertionError:
-                raise Exception("Mismatch key:%s '%s' != '%s'" % (
-                    key, val, self.mod.MAP["to"][val]))
+                raise Exception("Mismatch key:%s '%s' != '%s'" % (key, val, self.mod.MAP["to"][val]))
 
         for val in self.mod.MAP["to"].values():
             if val not in self.mod.MAP["fro"]:
@@ -74,12 +74,11 @@ class AMap(object):
         _fro = self.mod.MAP["fro"]
         for var in self.vars:
             _v = self.variable[var]
-            li = [k[len(_v):] for k in _fro.keys() if k.startswith(_v)]
+            li = [k[len(_v) :] for k in _fro.keys() if k.startswith(_v)]
             li.sort(intcmp)
             for item in li:
-                txt.append("%s%s+'%s': '%s'," % (i2, var, item,
-                                                 _fro[_v + item]))
-        txt.append('%s},' % self.indent)
+                txt.append("%s%s+'%s': '%s'," % (i2, var, item, _fro[_v + item]))
+        txt.append("%s}," % self.indent)
         return txt
 
     def do_to(self):
@@ -94,10 +93,9 @@ class AMap(object):
             val = _to[key]
             for _urn, _name in invmap.items():
                 if val.startswith(_urn):
-                    txt.append("%s'%s': %s+'%s'," % (i2, key, _name,
-                                                     val[len(_urn):]))
+                    txt.append("%s'%s': %s+'%s'," % (i2, key, _name, val[len(_urn) :]))
 
-        txt.append('%s}' % self.indent)
+        txt.append("%s}" % self.indent)
         return txt
 
     def __str__(self):
@@ -109,8 +107,7 @@ class AMap(object):
         text.extend(["", ""])
 
         text.append("MAP = {")
-        text.append("%s'identifier': '%s'," % (self.indent,
-                                               self.mod.MAP["identifier"]))
+        text.append("%s'identifier': '%s'," % (self.indent, self.mod.MAP["identifier"]))
         text.extend(self.do_fro())
         text.extend(self.do_to())
 
