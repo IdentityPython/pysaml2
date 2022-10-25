@@ -142,7 +142,7 @@ class Saml2Client(Base):
                 binding_destinations.append((binding, destination))
 
         for binding, destination in binding_destinations:
-            logger.info("destination to provider: %s", destination)
+            logger.debug("destination to provider: %s", destination)
 
             # XXX - sign_post will embed the signature to the xml doc
             # XXX   ^through self.create_authn_request(...)
@@ -166,7 +166,7 @@ class Saml2Client(Base):
             )
 
             _req_str = str(request)
-            logger.info("AuthNReq: %s", _req_str)
+            logger.debug("AuthNReq: %s", _req_str)
 
             http_info = self.apply_binding(
                 binding,
@@ -215,7 +215,7 @@ class Saml2Client(Base):
         if isinstance(name_id, six.string_types):
             name_id = decode(name_id)
 
-        logger.info("logout request for: %s", name_id)
+        logger.debug("logout request for: %s", name_id)
 
         # find out which IdPs/AAs I should notify
         entity_ids = self.users.issuers_of_info(name_id)
@@ -407,11 +407,11 @@ class Saml2Client(Base):
             response message, response headers and message)
         """
 
-        logger.info("state: %s", self.state)
+        logger.debug("state: %s", self.state)
         status = self.state[response.in_response_to]
-        logger.info("status: %s", status)
+        logger.debug("status: %s", status)
         issuer = response.issuer()
-        logger.info("issuer: %s", issuer)
+        logger.debug("issuer: %s", issuer)
         del self.state[response.in_response_to]
         if status["entity_ids"] == [issuer]:  # done
             self.local_logout(decode(status["name_id"]))
@@ -449,7 +449,7 @@ class Saml2Client(Base):
             else:
                 response_args["binding"] = BINDING_SOAP
 
-            logger.info("Verifying response")
+            logger.debug("Verifying response")
             if response_args:
                 response = _response_func(response.content, **response_args)
             else:
@@ -459,10 +459,10 @@ class Saml2Client(Base):
 
         if response:
             # not_done.remove(entity_id)
-            logger.info("OK response from %s", destination)
+            logger.debug("OK response from %s", destination)
             return response
         else:
-            logger.info("NOT OK response from %s", destination)
+            logger.debug("NOT OK response from %s", destination)
 
         return None
 
@@ -675,7 +675,7 @@ class Saml2Client(Base):
                     'method': "POST
                 }
         """
-        logger.info("logout request: %s", request)
+        logger.debug("logout request: %s", request)
 
         _req = self.parse_logout_request(
             xmlstr=request,

@@ -277,12 +277,12 @@ class Entity(HTTPBase):
             typ = "SAMLRequest"
 
         if binding == BINDING_HTTP_POST:
-            logger.info("HTTP POST")
+            logger.debug("HTTP POST")
             info = http_form_post_message(msg_str, destination, relay_state, typ)
             info["url"] = destination
             info["method"] = "POST"
         elif binding == BINDING_HTTP_REDIRECT:
-            logger.info("HTTP REDIRECT")
+            logger.debug("HTTP REDIRECT")
             info = http_redirect_message(
                 message=msg_str,
                 location=destination,
@@ -517,7 +517,7 @@ class Entity(HTTPBase):
         except (AttributeError, TypeError):
             to_sign = [(class_name(msg), mid)]
 
-        logger.info("REQUEST: %s", msg)
+        logger.debug("REQUEST: %s", msg)
         return signed_instance_factory(msg, self.sec, to_sign)
 
     # XXX DONE will actually use sign the POST-Binding
@@ -590,7 +590,7 @@ class Entity(HTTPBase):
             )
             req = signed_req
 
-        logger.info("REQUEST: %s", req)
+        logger.debug("REQUEST: %s", req)
         return reqid, req
 
     @staticmethod
@@ -1195,7 +1195,7 @@ class Entity(HTTPBase):
             **rinfo,
         )
 
-        logger.info("Response: %s", response)
+        logger.debug("Response: %s", response)
 
         return response
 
@@ -1268,7 +1268,7 @@ class Entity(HTTPBase):
         msg = element_to_extension_element(self.artifact[artifact])
         response.extension_elements = [msg]
 
-        logger.info("Response: %s", response)
+        logger.debug("Response: %s", response)
 
         return response
 
@@ -1368,7 +1368,7 @@ class Entity(HTTPBase):
             **rinfo,
         )
 
-        logger.info("Response: %s", response)
+        logger.debug("Response: %s", response)
 
         return response
 
@@ -1430,7 +1430,7 @@ class Entity(HTTPBase):
         try:
             response = response_cls(self.sec, **kwargs)
         except Exception as exc:
-            logger.info(str(exc))
+            logger.error(str(exc))
             raise
 
         xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)

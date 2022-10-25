@@ -146,7 +146,7 @@ class UsernamePasswordMako(UserAuthnMethod):
             "logo_url": logo_url,
             "query": query,
         }
-        logger.info("do_authentication argv: %s" % argv)
+        logger.debug("do_authentication argv: %s" % argv)
         mte = self.template_lookup.get_template(self.mako_template)
         resp.message = mte.render(**argv)
         return resp

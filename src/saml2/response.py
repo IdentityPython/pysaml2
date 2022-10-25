@@ -310,9 +310,9 @@ class StatusResponse(object):
 
     def _postamble(self):
         if not self.response:
-            logger.error("Response was not correctly signed")
+            logger.warning("Response was not correctly signed")
             if self.xmlstr:
-                logger.info("Response: %s", self.xmlstr)
+                logger.debug("Response: %s", self.xmlstr)
             raise IncorrectlySigned()
 
         logger.debug("response: %s", self.response)
@@ -320,7 +320,7 @@ class StatusResponse(object):
         try:
             valid_instance(self.response)
         except NotValid as exc:
-            logger.error("Not valid response: %s", exc.args[0])
+            logger.warning("Not valid response: %s", exc.args[0])
             self._clear()
             return self
 
@@ -380,7 +380,7 @@ class StatusResponse(object):
 
     def status_ok(self):
         status = self.response.status
-        logger.info("status: %s", status)
+        logger.debug("status: %s", status)
 
         if not status or status.status_code.value == samlp.STATUS_SUCCESS:
             return True
@@ -390,7 +390,7 @@ class StatusResponse(object):
         err_cls = STATUSCODE2EXCEPTION.get(err_code, StatusError)
 
         msg = "Unsuccessful operation: {status}\n{msg} from {code}".format(status=status, msg=err_msg, code=err_code)
-        logger.info(msg)
+        logger.debug(msg)
         raise err_cls(msg)
 
     def issue_instant_ok(self):
@@ -1406,9 +1406,9 @@ class AssertionIDResponse(object):
 
     def _postamble(self):
         if not self.response:
-            logger.error("Response was not correctly signed")
+            logger.warning("Response was not correctly signed")
             if self.xmlstr:
-                logger.info("Response: %s", self.xmlstr)
+                logger.debug("Response: %s", self.xmlstr)
             raise IncorrectlySigned()
 
         logger.debug("response: %s", self.response)

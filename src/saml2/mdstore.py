@@ -858,7 +858,7 @@ class MetaDataExtern(InMemoryMetaData):
             _txt = response.content
             return self.parse_and_check_signature(_txt)
         else:
-            logger.info("Response status: %s", response.status_code)
+            logger.error("Response status: %s", response.status_code)
             raise SourceNotFound(self.url)
 
 
@@ -952,13 +952,13 @@ class MetaDataMDX(InMemoryMetaData):
         )
         if response.status_code != 200:
             error_msg = "Fething {item}: Got response status {status}".format(item=item, status=response.status_code)
-            logger.info(error_msg)
+            logger.warning(error_msg)
             raise KeyError(error_msg)
 
         _txt = response.content
         if not self.parse_and_check_signature(_txt):
             error_msg = "Fething {item}: invalid signature".format(item=item)
-            logger.info(error_msg)
+            logger.error(error_msg)
             raise KeyError(error_msg)
 
         curr_time = str_to_time(instant())

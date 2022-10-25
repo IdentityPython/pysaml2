@@ -986,7 +986,7 @@ class Server(Entity):
         if sign_response:
             return self.sign(_resp, sign_alg=sign_alg, digest_alg=digest_alg)
         else:
-            logger.info("Message: %s", _resp)
+            logger.debug("Message: %s", _resp)
             return _resp
 
     # XXX DONE idp create > _response
