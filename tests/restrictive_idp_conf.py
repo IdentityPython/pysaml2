@@ -14,8 +14,8 @@ CONFIG = {
     "service": {
         "idp": {
             "endpoints": {
-                "single_sign_on_service": [(BASE + "sso", BINDING_HTTP_REDIRECT)],
-                "attribute_service": [(BASE + "aa", BINDING_SOAP)],
+                "single_sign_on_service": [(f"{BASE}sso", BINDING_HTTP_REDIRECT)],
+                "attribute_service": [(f"{BASE}aa", BINDING_SOAP)],
             },
             "policy": {
                 "default": {"lifetime": {"minutes": 15}, "name_form": NAME_FORMAT_URI},

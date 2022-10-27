@@ -200,21 +200,21 @@ def geturl(environ, query=True, path=True, use_server_name=False):
     :param use_server_name: If SERVER_NAME/_HOST should be used instead of
         HTTP_HOST
     """
-    url = [environ["wsgi.url_scheme"] + "://"]
+    url = [f"{environ['wsgi.url_scheme']}://"]
     if use_server_name:
         url.append(environ["SERVER_NAME"])
         if environ["wsgi.url_scheme"] == "https":
             if environ["SERVER_PORT"] != "443":
-                url.append(":" + environ["SERVER_PORT"])
+                url.append(f":{environ['SERVER_PORT']}")
         else:
             if environ["SERVER_PORT"] != "80":
-                url.append(":" + environ["SERVER_PORT"])
+                url.append(f":{environ['SERVER_PORT']}")
     else:
         url.append(environ["HTTP_HOST"])
     if path:
         url.append(getpath(environ))
     if query and environ.get("QUERY_STRING"):
-        url.append("?" + environ["QUERY_STRING"])
+        url.append(f"?{environ['QUERY_STRING']}")
     return "".join(url)
 
 

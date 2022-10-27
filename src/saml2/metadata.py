@@ -393,7 +393,7 @@ def do_endpoints(conf, endpoints):
 
                 if indexed:
                     if "index" not in args:
-                        args["index"] = "%d" % i
+                        args["index"] = f"{int(i)}"
                         i += 1
                     else:
                         try:
@@ -764,10 +764,10 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc, sign_alg=None, 
             ident = sid()
 
         if not secc.key_file:
-            raise SAMLError("If you want to do signing you should define " + "a key to sign with")
+            raise SAMLError(f"If you want to do signing you should define a key to sign with")
 
         if not secc.my_cert:
-            raise SAMLError("If you want to do signing you should define " + "where your public key are")
+            raise SAMLError(f"If you want to do signing you should define where your public key are")
 
         entities.signature = pre_signature_part(ident, secc.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg)
         entities.id = ident

@@ -797,7 +797,7 @@ def metadata(environ, start_response):
         if path[-1] != "/":
             path += "/"
         metadata = create_metadata_string(
-            path + "sp_conf.py",
+            f"{path}sp_conf.py",
             None,
             _args.valid,
             _args.cert,

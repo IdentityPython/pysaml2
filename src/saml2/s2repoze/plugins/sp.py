@@ -59,7 +59,7 @@ def construct_came_from(environ):
     came_from = environ.get("PATH_INFO")
     qstr = environ.get("QUERY_STRING", "")
     if qstr:
-        came_from += "?" + qstr
+        came_from += f"?{qstr}"
     return came_from
 
 

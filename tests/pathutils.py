@@ -10,7 +10,7 @@ def full_path(local_file):
 
 def dotname(module):
     if not BASEDIR.endswith("tests"):
-        return "tests." + module
+        return f"tests.{module}"
     else:
         return module
 

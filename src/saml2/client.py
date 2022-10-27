@@ -451,7 +451,7 @@ class Saml2Client(Base):
             else:
                 response = _response_func(response.content)
         else:
-            raise HTTPError("%d:%s" % (response.status_code, response.error))
+            raise HTTPError(f"{int(response.status_code)}:{response.error}")
 
         if response:
             # not_done.remove(entity_id)

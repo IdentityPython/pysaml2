@@ -202,7 +202,7 @@ class TestPKCS11:
             logging.debug(out)
         rv = proc.wait()
         if rv:
-            raise RuntimeError("command exited with code != 0: %d" % rv)
+            raise RuntimeError(f"command exited with code != 0: {int(rv)}")
 
     def test_SAML_sign_with_pkcs11(self):
         """

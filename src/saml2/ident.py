@@ -40,7 +40,7 @@ def code(item):
     for attr in ATTR:
         val = getattr(item, attr)
         if val:
-            _res.append("%d=%s" % (i, quote(val)))
+            _res.append(f"{int(i)}={quote(val)}")
         i += 1
     return ",".join(_res)
 

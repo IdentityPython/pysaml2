@@ -5,6 +5,6 @@ from subprocess import call
 
 
 for line in fileinput.input():
-    cmd = "./run_oper.sh " + line.rstrip()
-    print("executing " + cmd)
+    cmd = f"./run_oper.sh {line.rstrip()}"
+    print(f"executing {cmd}")
     call(cmd, shell=True)

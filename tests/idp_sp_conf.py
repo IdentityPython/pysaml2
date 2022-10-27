@@ -18,8 +18,8 @@ CONFIG = {
     "service": {
         "idp": {
             "endpoints": {
-                "single_sign_on_service": [(BASE + "sso", BINDING_HTTP_REDIRECT)],
-                "single_logout_service": [(BASE + "slo", BINDING_SOAP), (BASE + "slop", BINDING_HTTP_POST)],
+                "single_sign_on_service": [(f"{BASE}sso", BINDING_HTTP_REDIRECT)],
+                "single_logout_service": [(f"{BASE}slo", BINDING_SOAP), (f"{BASE}slop", BINDING_HTTP_POST)],
             },
             "policy": {
                 "default": {
