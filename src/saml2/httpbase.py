@@ -134,7 +134,7 @@ class HTTPBase:
                     # print(cookie)
                     if cookie.expires and cookie.expires <= now:
                         continue
-                    if not re.search("%s$" % cookie.domain, _domain):
+                    if not re.search(f"{cookie.domain}$", _domain):
                         continue
                     if not re.match(cookie.path, part.path):
                         continue
@@ -233,7 +233,7 @@ class HTTPBase:
             r = requests.request(method, url, **_kwargs)
             logger.debug("Response status: %s", r.status_code)
         except requests.ConnectionError as exc:
-            raise ConnectionError("%s" % exc)
+            raise ConnectionError(f"{exc}")
 
         try:
             self.set_cookie(SimpleCookie(r.headers["set-cookie"]), r)

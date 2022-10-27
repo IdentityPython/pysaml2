@@ -70,7 +70,7 @@ def ac_factory(path=""):
         from saml2 import attributemaps
 
         for typ in attributemaps.__all__:
-            mod = import_module(".%s" % typ, "saml2.attributemaps")
+            mod = import_module(f".{typ}", "saml2.attributemaps")
             acs.extend(_attribute_map_module_to_acs(mod))
 
     return acs
@@ -223,7 +223,7 @@ def d_to_local_name(acs, attr):
     try:
         return attr["friendly_name"]
     except KeyError:
-        raise ConverterError("Could not find local name for %s" % attr)
+        raise ConverterError(f"Could not find local name for {attr}")
 
 
 class AttributeConverter:

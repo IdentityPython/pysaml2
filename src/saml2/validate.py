@@ -359,7 +359,7 @@ def valid_instance(instance):
     for (name, typ, required) in instclass.c_attributes.values():
         value = getattr(instance, name, "")
         if required and not value:
-            txt = "Required value on property '%s' missing" % name
+            txt = f"Required value on property '{name}' missing"
             raise MustValueError(f"Class '{class_name}' instance: {txt}")
 
         if value:
@@ -404,13 +404,9 @@ def valid_instance(instance):
 
             if _card:
                 if _cmin is not None and _cmin > vlen:
-                    raise NotValid(
-                        "Class '%s' instance cardinality error: %s" % (class_name, f"less then min ({vlen}<{_cmin})")
-                    )
+                    raise NotValid(f"Class '{class_name}' instance cardinality error: less then min ({vlen}<{_cmin})")
                 if _cmax is not None and vlen > _cmax:
-                    raise NotValid(
-                        "Class '%s' instance cardinality error: %s" % (class_name, f"more then max ({vlen}>{_cmax})")
-                    )
+                    raise NotValid(f"Class '{class_name}' instance cardinality error: more then max ({vlen}>{_cmax})")
 
             if _list:
                 for val in value:
@@ -420,9 +416,7 @@ def valid_instance(instance):
                 _valid_instance(instance, value)
         else:
             if _cmin:
-                raise NotValid(
-                    "Class '{}' instance cardinality error: {}".format(class_name, "too few values on %s" % name)
-                )
+                raise NotValid(f"Class '{class_name}' instance cardinality error: too few values on {name}")
 
     return True
 

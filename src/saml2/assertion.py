@@ -117,7 +117,7 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None, fail_on_un
         if _fn:
             _apply_attr_value_restrictions(attr, res, True)
         elif fail_on_unfulfilled_requirements:
-            desc = "Required attribute missing: '%s'" % (attr["name"])
+            desc = f"Required attribute missing: '{attr['name']}'"
             raise MissingValue(desc)
 
     if optional is None:
@@ -284,7 +284,7 @@ def compile(restrictions):
             try:
                 _mod = importlib.import_module(cat)
             except ImportError:
-                _mod = importlib.import_module("saml2.entity_category.%s" % cat)
+                _mod = importlib.import_module(f"saml2.entity_category.{cat}")
 
             _ec = {}
             for key, items in _mod.RELEASE.items():
@@ -788,7 +788,7 @@ class Assertion(dict):
 
         if encrypt == "attributes":
             for attr in attr_statement.attribute:
-                enc = sec_context.encrypt(text="%s" % attr)
+                enc = sec_context.encrypt(text=f"{attr}")
 
                 encd = xmlenc.encrypted_data_from_string(enc)
                 encattr = saml.EncryptedAttribute(encrypted_data=encd)

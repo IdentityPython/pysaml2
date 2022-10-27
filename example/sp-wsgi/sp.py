@@ -72,18 +72,18 @@ POLICY = None
 
 
 def dict_to_table(ava, lev=0, width=1):
-    txt = ['<table border=%s bordercolor="black">\n' % width]
+    txt = [f'<table border={width} bordercolor="black">\n']
     for prop, valarr in ava.items():
         txt.append("<tr>\n")
         if isinstance(valarr, str):
-            txt.append("<th>%s</th>\n" % str(prop))
-            txt.append("<td>%s</td>\n" % valarr)
+            txt.append(f"<th>{str(prop)}</th>\n")
+            txt.append(f"<td>{valarr}</td>\n")
         elif isinstance(valarr, list):
             i = 0
             n = len(valarr)
             for val in valarr:
                 if not i:
-                    txt.append("<th rowspan=%d>%s</td>\n" % (len(valarr), prop))
+                    txt.append(f"<th rowspan={len(valarr)}>{prop}</td>\n")
                 else:
                     txt.append("<tr>\n")
                 if isinstance(val, dict):
@@ -91,13 +91,13 @@ def dict_to_table(ava, lev=0, width=1):
                     txt.extend(dict_to_table(val, lev + 1, width - 1))
                     txt.append("</td>\n")
                 else:
-                    txt.append("<td>%s</td>\n" % val)
+                    txt.append(f"<td>{val}</td>\n")
                 if n > 1:
                     txt.append("</tr>\n")
                 n -= 1
                 i += 1
         elif isinstance(valarr, dict):
-            txt.append("<th>%s</th>\n" % prop)
+            txt.append(f"<th>{prop}</th>\n")
             txt.append("<td>\n")
             txt.extend(dict_to_table(valarr, lev + 1, width - 1))
             txt.append("</td>\n")
@@ -555,7 +555,7 @@ class SSO:
                     logger.debug("Redirect to Discovery Service function")
                     eid = _cli.config.entityid
                     ret = _cli.config.getattr("endpoints", "sp")["discovery_response"][0][0]
-                    ret += "?sid=%s" % sid_
+                    ret += f"?sid={sid_}"
                     loc = _cli.create_discovery_service_request(self.discosrv, eid, **{"return": ret})
                     return -1, SeeOther(loc)
             elif len(idps) == 1:
@@ -598,7 +598,7 @@ class SSO:
             )
             _rstate = rndstr()
             self.cache.relay_state[_rstate] = came_from
-            ht_args = _cli.apply_binding(_binding, "%s" % req, destination, relay_state=_rstate, sigalg=sigalg)
+            ht_args = _cli.apply_binding(_binding, f"{req}", destination, relay_state=_rstate, sigalg=sigalg)
             _sid = req_id
 
             if cert is not None:
@@ -606,7 +606,7 @@ class SSO:
 
         except Exception as exc:
             logger.exception(exc)
-            resp = ServiceError("Failed to construct the AuthnRequest: %s" % exc)
+            resp = ServiceError(f"Failed to construct the AuthnRequest: {exc}")
             return resp
 
         # remember the request
@@ -773,17 +773,17 @@ urls = [
 def add_urls():
     base = "acs"
 
-    urls.append(("%s/post$" % base, (ACS, "post", SP)))
-    urls.append(("%s/post/(.*)$" % base, (ACS, "post", SP)))
-    urls.append(("%s/redirect$" % base, (ACS, "redirect", SP)))
-    urls.append(("%s/redirect/(.*)$" % base, (ACS, "redirect", SP)))
+    urls.append((f"{base}/post$", (ACS, "post", SP)))
+    urls.append((f"{base}/post/(.*)$", (ACS, "post", SP)))
+    urls.append((f"{base}/redirect$", (ACS, "redirect", SP)))
+    urls.append((f"{base}/redirect/(.*)$", (ACS, "redirect", SP)))
 
     base = "slo"
 
-    urls.append(("%s/post$" % base, (SLO, "post", SP)))
-    urls.append(("%s/post/(.*)$" % base, (SLO, "post", SP)))
-    urls.append(("%s/redirect$" % base, (SLO, "redirect", SP)))
-    urls.append(("%s/redirect/(.*)$" % base, (SLO, "redirect", SP)))
+    urls.append((f"{base}/post$", (SLO, "post", SP)))
+    urls.append((f"{base}/post/(.*)$", (SLO, "post", SP)))
+    urls.append((f"{base}/redirect$", (SLO, "redirect", SP)))
+    urls.append((f"{base}/redirect/(.*)$", (SLO, "redirect", SP)))
 
 
 # ----------------------------------------------------------------------------
@@ -847,14 +847,14 @@ def application(environ, start_response):
             return handle_static(environ, start_response, path)
         return not_found(environ, start_response)
     except StatusError as err:
-        logging.error("StatusError: %s" % err)
-        resp = BadRequest("%s" % err)
+        logging.error(f"StatusError: {err}")
+        resp = BadRequest(f"{err}")
         return resp(environ, start_response)
     except Exception as err:
         # _err = exception_trace("RUN", err)
         # logging.error(exception_trace("RUN", _err))
         print(err, file=sys.stderr)
-        resp = ServiceError("%s" % err)
+        resp = ServiceError(f"{err}")
         return resp(environ, start_response)
 
 
@@ -932,7 +932,7 @@ if __name__ == "__main__":
     # your cert and all the way up to the top
     CERT_CHAIN = service_conf.CERT_CHAIN
 
-    SP = Saml2Client(config_file="%s" % CNFBASE)
+    SP = Saml2Client(config_file=f"{CNFBASE}")
 
     POLICY = service_conf.POLICY
 

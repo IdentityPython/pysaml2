@@ -137,7 +137,7 @@ def handle_ecp_authn_response(cls, soap_message, outstanding=None):
 
     response = authn_response(cls.config, cls.service_urls(), outstanding, allow_unsolicited=True)
 
-    response.loads("%s" % rdict["body"], False, soap_message)
+    response.loads(f"{rdict['body']}", False, soap_message)
     response.verify()
     cls.users.add_information_about_person(response.session_info())
 
@@ -163,7 +163,7 @@ def ecp_response(target_url, response):
 
     soap_envelope = soapenv.Envelope(header=header, body=body)
 
-    return "%s" % soap_envelope
+    return f"{soap_envelope}"
 
 
 class ECPServer(Server):

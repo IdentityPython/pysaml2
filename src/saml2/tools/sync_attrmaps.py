@@ -59,14 +59,14 @@ class AMap:
             try:
                 assert self.mod.MAP["to"][val] == key
             except KeyError:  # missing value
-                print("# Added {}={}".format(self.mod.MAP["to"][val], key))
+                print(f"# Added {self.mod.MAP['to'][val]}={key}")
                 self.mod.MAP["to"][val] = key
             except AssertionError:
-                raise Exception("Mismatch key:{} '{}' != '{}'".format(key, val, self.mod.MAP["to"][val]))
+                raise Exception(f"Mismatch key:{key} '{val}' != '{self.mod.MAP['to'][val]}'")
 
         for val in self.mod.MAP["to"].values():
             if val not in self.mod.MAP["fro"]:
-                print("# Missing URN '%s'" % val)
+                print(f"# Missing URN '{val}'")
 
     def do_fro(self):
         txt = ["%s'fro': {" % self.indent]
@@ -107,7 +107,7 @@ class AMap:
         text.extend(["", ""])
 
         text.append("MAP = {")
-        text.append("{}'identifier': '{}',".format(self.indent, self.mod.MAP["identifier"]))
+        text.append(f"{self.indent}'identifier': '{self.mod.MAP['identifier']}',")
         text.extend(self.do_fro())
         text.extend(self.do_to())
 
@@ -122,7 +122,7 @@ if __name__ == "__main__":
         directory, fname = os.path.split(_name)
         amap = AMap(directory, fname, 4 * " ")
         f = open(_name, "w")
-        f.write("%s" % amap)
+        f.write(f"{amap}")
         f.close()
     elif os.path.isdir(_name):
         for fname in os.listdir(_name):
@@ -133,5 +133,5 @@ if __name__ == "__main__":
             print(10 * "=" + fname + 10 * "=")
             amap = AMap(_name, fname, 4 * " ")
             f = open(fname, "w")
-            f.write("%s" % amap)
+            f.write(f"{amap}")
             f.close()

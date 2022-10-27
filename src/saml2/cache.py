@@ -104,7 +104,7 @@ class Cache:
         (timestamp, info) = self._db[cni][entity_id]
         info = info.copy()
         if check_not_on_or_after and time_util.after(timestamp):
-            raise TooOld("past %s" % str(timestamp))
+            raise TooOld(f"past {str(timestamp)}")
 
         if "name_id" in info and isinstance(info["name_id"], str):
             info["name_id"] = decode(info["name_id"])

@@ -535,14 +535,14 @@ class AuthnResponse(StatusResponse):
                 # del self.outstanding_queries[self.in_response_to]
                 try:
                     if not self.check_subject_confirmation_in_response_to(self.in_response_to):
-                        raise UnsolicitedResponse("Unsolicited response: %s" % self.in_response_to)
+                        raise UnsolicitedResponse(f"Unsolicited response: {self.in_response_to}")
                 except AttributeError:
                     pass
             elif self.allow_unsolicited:
                 # Should check that I haven't seen this before
                 pass
             else:
-                raise UnsolicitedResponse("Unsolicited response: %s" % self.in_response_to)
+                raise UnsolicitedResponse(f"Unsolicited response: {self.in_response_to}")
 
         return self
 
@@ -609,7 +609,7 @@ class AuthnResponse(StatusResponse):
 
         if not for_me(conditions, self.entity_id):
             if not lax:
-                raise Exception("AudienceRestrictions conditions not satisfied! (Local entity_id=%s)" % self.entity_id)
+                raise Exception(f"AudienceRestrictions conditions not satisfied! (Local entity_id={self.entity_id})")
 
         if conditions.condition:  # extra conditions
             for cond in conditions.condition:
@@ -1000,7 +1000,7 @@ class AuthnResponse(StatusResponse):
 
         if self.context == "AuthnReq" or self.context == "AttrQuery":
             self.ava = self.get_identity()
-            logger.debug("--- AVA: %s" % self.ava)
+            logger.debug(f"--- AVA: {self.ava}")
 
         return True
 

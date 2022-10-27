@@ -92,7 +92,7 @@ class FormHiddenPlugin(FormPlugin):
         query = parse_dict_querystring(environ)
         hidden = []
         for key, val in query.items():
-            hidden.append(HIDDEN_PRE_LINE % ("_%s_" % key, val))
+            hidden.append(HIDDEN_PRE_LINE % (f"_{key}_", val))
 
         logger.info("hidden: %s", hidden)
         form = self.formbody or _DEFAULT_FORM

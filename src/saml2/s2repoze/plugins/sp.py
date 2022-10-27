@@ -65,7 +65,7 @@ def construct_came_from(environ):
 
 def exception_trace(tag, exc, log):
     message = traceback.format_exception(*sys.exc_info())
-    log.error("[{}] ExcList: {}".format(tag, "".join(message)))
+    log.error(f"[{tag}] ExcList: {''.join(message)}")
     log.error(f"[{tag}] Exception: {exc}")
 
 
@@ -247,7 +247,7 @@ class SAML2Plugin:
                         logger.debug("Redirect to Discovery Service function")
                         eid = _cli.config.entityid
                         ret = _cli.config.getattr("endpoints", "sp")["discovery_response"][0][0]
-                        ret += "?sid=%s" % sid_
+                        ret += f"?sid={sid_}"
                         loc = _cli.create_discovery_service_request(self.discosrv, eid, **{"return": ret})
                         return -1, SeeOther(loc)
 
@@ -343,7 +343,7 @@ class SAML2Plugin:
                         sign=False,
                         extensions=extensions,
                     )
-                    msg_str = "%s" % req
+                    msg_str = f"{req}"
                     _sid = req_id
 
                 if cert is not None:
@@ -359,8 +359,8 @@ class SAML2Plugin:
 
                 logger.debug("ht_args: %s", ht_args)
             except Exception as exc:
-                logger.exception("Failed to construct the AuthnRequest: %s" % str(exc))
-                raise Exception("Failed to construct the AuthnRequest: %s" % exc)
+                logger.exception(f"Failed to construct the AuthnRequest: {str(exc)}")
+                raise Exception(f"Failed to construct the AuthnRequest: {exc}")
 
             try:
                 path_info = environ.get("PATH_INFO")

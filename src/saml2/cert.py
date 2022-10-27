@@ -117,8 +117,8 @@ class OpenSSLWrapper:
         k_f = None
 
         if write_to_file:
-            cert_file = "%s.crt" % cn
-            key_file = "%s.key" % cn
+            cert_file = f"{cn}.crt"
+            key_file = f"{cn}.key"
             try:
                 remove(cert_file)
             except Exception:
@@ -331,9 +331,9 @@ class OpenSSLWrapper:
                 crypto.verify(ca_cert, cert_crypto.signature, cert_crypto.tbs_certificate_bytes, cert_algorithm)
                 return True, "Signed certificate is valid and correctly signed by CA certificate."
             except crypto.Error as e:
-                return False, "Certificate is incorrectly signed: %s" % str(e)
+                return False, f"Certificate is incorrectly signed: {str(e)}"
         except Exception as e:
-            return False, "Certificate is not valid for an unknown reason. %s" % str(e)
+            return False, f"Certificate is not valid for an unknown reason. {str(e)}"
 
 
 def read_cert_from_file(cert_file, cert_type="pem"):

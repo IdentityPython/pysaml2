@@ -54,7 +54,7 @@ PROTECTED_KEYWORDS = ["import", "def", "if", "else", "return", "for", "while", "
 def def_init(imports, attributes):
     indent = INDENT + INDENT
     indent3 = INDENT + INDENT + INDENT
-    line = ["%sdef __init__(self," % INDENT]
+    line = [f"{INDENT}def __init__(self,"]
 
     for elem in attributes:
         if elem[0] in PROTECTED_KEYWORDS:
@@ -75,10 +75,10 @@ def def_init(imports, attributes):
                 _name = elem
             line.append(f"{indent3}{_name}=None,")
 
-    line.append("%stext=None," % indent3)
-    line.append("%sextension_elements=None," % indent3)
-    line.append("%sextension_attributes=None," % indent3)
-    line.append("%s):" % indent)
+    line.append(f"{indent3}text=None,")
+    line.append(f"{indent3}extension_elements=None,")
+    line.append(f"{indent3}extension_attributes=None,")
+    line.append(f"{indent}):")
     return line
 
 
@@ -86,14 +86,14 @@ def base_init(imports):
     line = []
     indent4 = INDENT + INDENT + INDENT + INDENT
     if not imports:
-        line.append("%sSamlBase.__init__(self, " % (INDENT + INDENT))
+        line.append(f"{INDENT + INDENT}SamlBase.__init__(self, ")
         for attr in BASE_ELEMENT:
             if attr in PROTECTED_KEYWORDS:
                 _name = attr + "_"
             else:
                 _name = attr
             line.append(f"{indent4}{_name}={_name},")
-        line.append("%s)" % indent4)
+        line.append(f"{indent4})")
     else:
         # TODO have to keep apart which properties come from which superior
         for sup, elems in imports.items():
@@ -106,7 +106,7 @@ def base_init(imports):
                 else:
                     _name = attr
                 line.append(f"{indent4}{_name}={_name},")
-            line.append("%s)" % indent4)
+            line.append(f"{indent4})")
     return line
 
 
@@ -341,7 +341,7 @@ class PyObj:
         if not superior:
             line.append(f"class {c_name}(SamlBase):")
         else:
-            line.append("class {}({}):".format(c_name, ",".join(sups)))
+            line.append(f"class {c_name}({','.join(sups)}):")
 
         if hasattr(self, "scoped"):
             pass
@@ -383,7 +383,7 @@ class PyObj:
 
         line.append("")
         if not self.abstract or not self.class_name.endswith("_"):
-            line.append("def %s_from_string(xml_string):" % pyify(self.class_name))
+            line.append(f"def {pyify(self.class_name)}_from_string(xml_string):")
             line.append(f"{INDENT}return saml2.create_class_from_xml_string({self.class_name}, xml_string)")
             line.append("")
 
@@ -800,12 +800,12 @@ def _spec(elem):
         name = elem.name
     except AttributeError:
         name = "anonymous"
-    txt = "%s" % name
+    txt = f"{name}"
     try:
-        txt += " ref: %s" % elem.ref
+        txt += f" ref: {elem.ref}"
     except AttributeError:
         try:
-            txt += " type: %s" % elem.type
+            txt += f" type: {elem.type}"
         except AttributeError:
             pass
 
@@ -825,7 +825,7 @@ def _spec(elem):
 
 def _do_from_string(name):
     print
-    print("def %s_from_string(xml_string):" % pyify(name))
+    print(f"def {pyify(name)}_from_string(xml_string):")
     print(f"{INDENT}return saml2.create_class_from_xml_string({name}, xml_string)")
 
 
@@ -917,7 +917,7 @@ class Attribute(Simple):
                 name = self.ref
                 pyname = pyify(name)
             else:  # referering to what
-                raise Exception("Strange reference: %s" % self.ref)
+                raise Exception(f"Strange reference: {self.ref}")
 
         objekt = PyAttribute(name, pyname, external=external, root=top)
 
@@ -1085,7 +1085,7 @@ class Complex:
 
         if DEBUG:
             print(self.__dict__)
-            print("#-- %d parts" % len(self.parts))
+            print(f"#-- {len(self.parts)} parts")
 
         self._extend(top, sup, argv, parent)
 
@@ -1307,7 +1307,7 @@ class Sequence(Complex):
                 argv_copy[key] = val
 
         if DEBUG:
-            print("#Sequence: %s" % argv)
+            print(f"#Sequence: {argv}")
         return Complex.collect(self, top, sup, argv_copy, parent)
 
 
@@ -1371,7 +1371,7 @@ class Choice(Complex):
         argv_copy["minOccurs"] = 0
 
         if DEBUG:
-            print("#Choice: %s" % argv)
+            print(f"#Choice: {argv}")
         return Complex.collect(self, top, sup, argv_copy, parent=parent)
 
 
@@ -1664,16 +1664,15 @@ def output(elem, target_namespace, eldict, ignore=None):
 
 def intro():
     print(
-        """#!/usr/bin/env python
+        f"""#!/usr/bin/env python
 
 #
-# Generated %s by parse_xsd.py version %s.
+# Generated {time.ctime()} by parse_xsd.py version {__version__}.
 #
 
 import saml2
 from saml2 import SamlBase
 """
-        % (time.ctime(), __version__)
     )
 
 
@@ -1887,12 +1886,12 @@ class Schema(Complex):
 
         intro()
         for modul in self.add:
-            print("from %s import *" % modul)
+            print(f"from {modul} import *")
         for _namespace, (mod, namn) in self.impo.items():
             if namn:
                 print(f"import {mod} as {namn}")
         print()
-        print("NAMESPACE = '%s'" % self.target_namespace)
+        print(f"NAMESPACE = '{self.target_namespace}'")
         print
 
         for defs in self.defs:
@@ -1923,7 +1922,7 @@ class Schema(Complex):
             print
 
         for attrgrp in self.attrgrp:
-            print("AG_%s = [" % attrgrp.name)
+            print(f"AG_{attrgrp.name} = [")
             for prop in attrgrp.properties[0]:
                 if isinstance(prop.type, PyObj):
                     print(f"{INDENT}('{prop.name}', {prop.type.name}_, {prop.required}),")
@@ -2110,7 +2109,7 @@ def read_schema(doc, add, defs, impo, modul, ignore, sdir):
                 elif namespace in ignore:
                     continue
                 else:
-                    raise Exception("Undefined namespace: %s" % namespace)
+                    raise Exception(f"Undefined namespace: {namespace}")
 
     _schema = Schema(tree._root, impo, add, modul, defs)
     _included_parts = []
@@ -2175,7 +2174,7 @@ def main():
         elif opt in ("-I", "--ignore"):
             ignore.append(arg)
         else:
-            raise Exception("unhandled option %s" % opt)
+            raise Exception(f"unhandled option {opt}")
 
     if not args:
         print("No XSD-file specified")

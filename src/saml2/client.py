@@ -427,8 +427,8 @@ class Saml2Client(Base):
             )
 
     def _use_soap(self, destination, query_type, **kwargs):
-        _create_func = getattr(self, "create_%s" % query_type)
-        _response_func = getattr(self, "parse_%s_response" % query_type)
+        _create_func = getattr(self, f"create_{query_type}")
+        _response_func = getattr(self, f"parse_{query_type}_response")
         try:
             response_args = kwargs["response_args"]
             del kwargs["response_args"]
@@ -501,7 +501,7 @@ class Saml2Client(Base):
 
         srvs = self.metadata.assertion_id_request_service(entity_id, BINDING_SOAP)
         if not srvs:
-            raise NoServiceDefined("{}: {}".format(entity_id, "assertion_id_request_service"))
+            raise NoServiceDefined(f"{entity_id}: assertion_id_request_service")
 
         if isinstance(assertion_ids, str):
             assertion_ids = [assertion_ids]

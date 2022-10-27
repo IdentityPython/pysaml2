@@ -77,7 +77,7 @@ def test_inflate_then_deflate():
 
 def test_status_success():
     status = utils.success_status_factory()
-    status_text = "%s" % status
+    status_text = f"{status}"
     assert status_text in (SUCCESS_STATUS_NO_HEADER, SUCCESS_STATUS)
     assert status.status_code.value == samlp.STATUS_SUCCESS
 
@@ -87,7 +87,7 @@ def test_error_status():
         "Error resolving principal", samlp.STATUS_UNKNOWN_PRINCIPAL, samlp.STATUS_RESPONDER
     )
 
-    status_text = "%s" % status
+    status_text = f"{status}"
     print(status_text)
     assert status_text in (ERROR_STATUS_NO_HEADER, ERROR_STATUS)
 
@@ -95,20 +95,20 @@ def test_error_status():
 def test_status_from_exception():
     e = utils.UnknownPrincipal("Error resolving principal")
     stat = utils.error_status_factory(e)
-    status_text = "%s" % stat
+    status_text = f"{stat}"
     print(status_text)
     assert status_text in (ERROR_STATUS_NO_HEADER, ERROR_STATUS)
 
 
 def test_status_from_tuple():
     stat = utils.error_status_factory((samlp.STATUS_UNKNOWN_PRINCIPAL, "Error resolving principal"))
-    status_text = "%s" % stat
+    status_text = f"{stat}"
     assert status_text in (ERROR_STATUS_NO_HEADER, ERROR_STATUS)
 
 
 def test_status_from_tuple_empty_message():
     stat = utils.error_status_factory((samlp.STATUS_UNKNOWN_PRINCIPAL, None))
-    status_text = "%s" % stat
+    status_text = f"{stat}"
     assert status_text in (ERROR_STATUS_EMPTY, ERROR_STATUS_NO_HEADER_EMPTY)
 
 

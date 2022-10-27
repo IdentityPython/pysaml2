@@ -188,7 +188,7 @@ def class_instances_from_soap_enveloped_saml_thingies(text, modules):
     try:
         envelope = defusedxml.ElementTree.fromstring(text)
     except Exception as exc:
-        raise XmlParseError("%s" % exc)
+        raise XmlParseError(f"{exc}")
 
     envelope_tag = "{%s}Envelope" % soapenv.NAMESPACE
     if envelope.tag != envelope_tag:
@@ -220,7 +220,7 @@ def open_soap_envelope(text):
     try:
         envelope = defusedxml.ElementTree.fromstring(text)
     except Exception as exc:
-        raise XmlParseError("%s" % exc)
+        raise XmlParseError(f"{exc}")
 
     envelope_tag = "{%s}Envelope" % soapenv.NAMESPACE
     if envelope.tag != envelope_tag:
@@ -261,7 +261,7 @@ def make_soap_enveloped_saml_thingy(thingy, headers=None):
     soap_envelope.body = soapenv.Body()
     soap_envelope.body.add_extension_element(thingy)
 
-    return "%s" % soap_envelope
+    return f"{soap_envelope}"
 
 
 def soap_fault(message=None, actor=None, code=None, detail=None):
@@ -291,4 +291,4 @@ def soap_fault(message=None, actor=None, code=None, detail=None):
         detail=_detail,
     )
 
-    return "%s" % fault
+    return f"{fault}"

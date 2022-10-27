@@ -87,7 +87,7 @@ class Conversation:
         chk = self.check_factory(test)()
         chk(self, self.test_output)
         if bryt:
-            e = FatalError("%s" % err)
+            e = FatalError(f"{err}")
             e.trace = "".join(traceback.format_exception(*sys.exc_info()))
             raise e
 
@@ -125,7 +125,7 @@ class Conversation:
                 else:
                     rdseq.append(url)
                     if len(rdseq) > 8:
-                        raise FatalError("Too long sequence of redirects: %s" % rdseq)
+                        raise FatalError(f"Too long sequence of redirects: {rdseq}")
 
                 logger.info("HTTP %d Location: %s", _response.status_code, url)
                 # If back to me
@@ -153,7 +153,7 @@ class Conversation:
                         logger.info("GET %s", url)
                         _response = self.client.send(url, "GET")
                     except Exception as err:
-                        raise FatalError("%s" % err)
+                        raise FatalError(f"{err}")
 
                     content = _response.text
                     logger.info("<-- CONTENT: %s", content)

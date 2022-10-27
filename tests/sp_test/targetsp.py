@@ -16,7 +16,7 @@ AUTHN = {"class_ref": AUTHN_PASSWORD, "authn_auth": "http://lingon.catalogix.se/
 
 info = {
     "start_page": BASE,
-    "entity_id": "%s/sp.xml" % BASE,
+    "entity_id": f"{BASE}/sp.xml",
     "result": {
         "matches": {"content": "<h2>Your identity are"},
     },

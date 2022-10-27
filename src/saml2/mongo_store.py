@@ -422,7 +422,7 @@ class MetadataMDB(InMemoryMetaData):
         elif len(res) == 1:
             return unprotect(res[0]["entity_description"])
         else:
-            raise CorruptDatabase("More then one document with key %s" % item)
+            raise CorruptDatabase(f"More then one document with key {item}")
 
     def bindings(self, entity_id, typ, service):
         pass

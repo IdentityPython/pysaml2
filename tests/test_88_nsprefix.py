@@ -13,13 +13,13 @@ def test_nsprefix():
     status_message = samlp.StatusMessage()
     status_message.text = "OK"
 
-    txt = "%s" % status_message
+    txt = f"{status_message}"
 
     assert "ns0:StatusMessage" in txt
 
     status_message.register_prefix({"saml2": saml.NAMESPACE, "saml2p": samlp.NAMESPACE})
 
-    txt = "%s" % status_message
+    txt = f"{status_message}"
 
     assert "saml2p:StatusMessage" in txt
 
@@ -39,7 +39,7 @@ def test_nsprefix2():
         nsprefix={"saml2": saml.NAMESPACE, "saml2p": samlp.NAMESPACE},
     )
 
-    txt = "%s" % req
+    txt = f"{req}"
 
     assert "saml2p:AuthnRequest" in txt
     assert "saml2:Issuer" in txt

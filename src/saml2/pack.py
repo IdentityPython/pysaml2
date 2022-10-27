@@ -177,7 +177,7 @@ def http_redirect_message(
     elif typ == "SAMLart":
         args = {typ: message}
     else:
-        raise Exception("Unknown message type: %s" % typ)
+        raise Exception(f"Unknown message type: {typ}")
 
     if relay_state:
         args["RelayState"] = relay_state
@@ -297,7 +297,7 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
                 try:
                     body = saml2.create_class_from_element_tree(body_class, sub)
                 except Exception:
-                    raise Exception("Wrong body type (%s) in SOAP envelope" % sub.tag)
+                    raise Exception(f"Wrong body type ({sub.tag}) in SOAP envelope")
         elif part.tag == "{%s}Header" % NAMESPACE:
             if not header_class:
                 raise Exception("Header where I didn't expect one")
@@ -325,7 +325,7 @@ def packager(identifier):
     try:
         return PACKING[identifier]
     except KeyError:
-        raise Exception("Unknown binding type: %s" % identifier)
+        raise Exception(f"Unknown binding type: {identifier}")
 
 
 def factory(binding, message, location, relay_state="", typ="SAMLRequest", **kwargs):

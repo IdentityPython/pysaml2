@@ -70,7 +70,7 @@ from saml2.xmlenc import EncryptionMethod
 
 logger = logging.getLogger(__name__)
 
-SIG = "{{{ns}#}}{attribute}".format(ns=ds.NAMESPACE, attribute="Signature")
+SIG = f"{{{ds.NAMESPACE}#}}Signature"
 
 # RSA_1_5 is considered deprecated
 RSA_1_5 = "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
@@ -568,7 +568,7 @@ def verify_redirect_signature(saml_msg, crypto, cert=None, sigkey=None):
     try:
         signer = crypto.get_signer(saml_msg["SigAlg"], sigkey)
     except KeyError:
-        raise Unsupported("Signature algorithm: {alg}".format(alg=saml_msg["SigAlg"]))
+        raise Unsupported(f"Signature algorithm: {saml_msg['SigAlg']}")
     else:
         if saml_msg["SigAlg"] in SIGNER_ALGS:
             if "SAMLRequest" in saml_msg:
@@ -846,9 +846,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             p_err = p_err.decode()
 
             if pof.returncode != 0:
-                errmsg = "returncode={code}\nerror={err}\noutput={out}".format(
-                    code=pof.returncode, err=p_err, out=p_out
-                )
+                errmsg = f"returncode={pof.returncode}\nerror={p_err}\noutput={p_out}"
                 logger.error(errmsg)
                 raise XmlsecError(errmsg)
 
