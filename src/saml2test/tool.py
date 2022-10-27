@@ -24,7 +24,7 @@ __author__ = "rolandh"
 logger = logging.getLogger(__name__)
 
 
-class Conversation(object):
+class Conversation:
     """
     :ivar response: The received HTTP messages
     :ivar protocol_response: List of the received protocol messages
@@ -75,7 +75,7 @@ class Conversation(object):
             raise CheckError
 
     def do_check(self, test, **kwargs):
-        if isinstance(test, six.string_types):
+        if isinstance(test, str):
             chk = self.check_factory(test)(**kwargs)
         else:
             chk = test(**kwargs)

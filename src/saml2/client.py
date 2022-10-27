@@ -1,5 +1,4 @@
 # !/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 import six
 
@@ -88,9 +87,7 @@ class Saml2Client(Base):
         )
 
         if negotiated_binding != binding:
-            raise ValueError(
-                "Negotiated binding '{}' does not match binding to use '{}'".format(negotiated_binding, binding)
-            )
+            raise ValueError(f"Negotiated binding '{negotiated_binding}' does not match binding to use '{binding}'")
 
         return reqid, info
 
@@ -212,7 +209,7 @@ class Saml2Client(Base):
             conversation.
         """
 
-        if isinstance(name_id, six.string_types):
+        if isinstance(name_id, str):
             name_id = decode(name_id)
 
         logger.debug("logout request for: %s", name_id)
@@ -379,7 +376,7 @@ class Saml2Client(Base):
 
         if not_done:
             # upstream should try later
-            raise LogoutError("%s" % (entity_ids,))
+            raise LogoutError(f"{entity_ids}")
 
         return responses
 
@@ -505,9 +502,9 @@ class Saml2Client(Base):
 
         srvs = self.metadata.assertion_id_request_service(entity_id, BINDING_SOAP)
         if not srvs:
-            raise NoServiceDefined("%s: %s" % (entity_id, "assertion_id_request_service"))
+            raise NoServiceDefined("{}: {}".format(entity_id, "assertion_id_request_service"))
 
-        if isinstance(assertion_ids, six.string_types):
+        if isinstance(assertion_ids, str):
             assertion_ids = [assertion_ids]
 
         _id_refs = [AssertionIDRef(_id) for _id in assertion_ids]

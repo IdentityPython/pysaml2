@@ -1,15 +1,14 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import base64
 from contextlib import closing
 import copy
 import os
 import re
+from urllib.parse import parse_qs
 import uuid
 
 from pathutils import full_path
 from pytest import raises
-from six.moves.urllib.parse import parse_qs
 
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT

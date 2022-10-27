@@ -99,7 +99,7 @@ class TestPKCS11:
                 ["softhsm", "--slot", "0", "--label", "test", "--init-token", "--pin", "secret1", "--so-pin", "secret2"]
             )
 
-            logging.debug("Importing test key {!r} into SoftHSM".format(PRIV_KEY))
+            logging.debug(f"Importing test key {PRIV_KEY!r} into SoftHSM")
             self._p(
                 [
                     "softhsm",
@@ -192,8 +192,8 @@ class TestPKCS11:
         if self.softhsm_conf is not None:
             env["SOFTHSM_CONF"] = self.softhsm_conf
             # print("env SOFTHSM_CONF=%s " % softhsm_conf +" ".join(args))
-        logging.debug("Environment {!r}".format(env))
-        logging.debug("Executing {!r}".format(args))
+        logging.debug(f"Environment {env!r}")
+        logging.debug(f"Executing {args!r}")
         args = ["ls"]
         proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         out, err = proc.communicate()

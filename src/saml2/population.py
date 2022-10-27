@@ -8,10 +8,10 @@ from saml2.cache import Cache
 logger = logging.getLogger(__name__)
 
 
-class Population(object):
+class Population:
     def __init__(self, cache=None):
         if cache:
-            if isinstance(cache, six.string_types):
+            if isinstance(cache, str):
                 self.cache = Cache(cache)
             else:
                 self.cache = cache

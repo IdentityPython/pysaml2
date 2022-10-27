@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 """
 Implements some usefull functions when dealing with validity of
 different types of information.
 """
-from __future__ import print_function
 
 import calendar
 from datetime import datetime
@@ -71,7 +69,7 @@ def parse_duration(duration):
         raise ValueError("Parse Duration is not valid.")
     index += 1
 
-    dic = dict([(typ, 0) for (code, typ) in D_FORMAT if typ])
+    dic = {typ: 0 for (code, typ) in D_FORMAT if typ}
     dlen = len(duration)
 
     for code, typ in D_FORMAT:
@@ -239,7 +237,7 @@ def str_to_time(timestr, format=TIME_FORMAT):
         try:
             elem = TIME_FORMAT_WITH_FRAGMENT.match(timestr)
         except Exception as exc:
-            print("Exception: %s on %s" % (exc, timestr), file=sys.stderr)
+            print(f"Exception: {exc} on {timestr}", file=sys.stderr)
             raise
         then = time.strptime(elem.groups()[0] + "Z", TIME_FORMAT)
 
@@ -272,7 +270,7 @@ def before(point):
     if not point:
         return True
 
-    if isinstance(point, six.string_types):
+    if isinstance(point, str):
         point = str_to_time(point)
     elif isinstance(point, int):
         point = time.gmtime(point)
@@ -304,12 +302,12 @@ def utc_time_sans_frac():
 
 def later_than(after, before):
     """True if then is later or equal to that"""
-    if isinstance(after, six.string_types):
+    if isinstance(after, str):
         after = str_to_time(after)
     elif isinstance(after, int):
         after = time.gmtime(after)
 
-    if isinstance(before, six.string_types):
+    if isinstance(before, str):
         before = str_to_time(before)
     elif isinstance(before, int):
         before = time.gmtime(before)

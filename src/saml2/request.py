@@ -18,7 +18,7 @@ def _dummy(data, **_arg):
     return ""
 
 
-class Request(object):
+class Request:
     def __init__(self, sec_context, receiver_addrs, attribute_converters=None, timeslack=0):
         self.sec = sec_context
         self.receiver_addrs = receiver_addrs
@@ -126,9 +126,7 @@ class Request(object):
     def _verify(self):
         valid_version = "2.0"
         if self.message.version != valid_version:
-            raise VersionMismatch(
-                "Invalid version {invalid} should be {valid}".format(invalid=self.message.version, valid=valid_version)
-            )
+            raise VersionMismatch(f"Invalid version {self.message.version} should be {valid_version}")
 
         if self.message.destination and self.receiver_addrs and self.message.destination not in self.receiver_addrs:
             logger.error("%s not in %s", self.message.destination, self.receiver_addrs)

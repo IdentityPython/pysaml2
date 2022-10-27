@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 
 """
@@ -17,7 +16,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_BINDING = BINDING_SOAP
 
 
-class AttributeResolver(object):
+class AttributeResolver:
     def __init__(self, saml2client, metadata=None, config=None):
         self.metadata = metadata
         self.saml2client = saml2client

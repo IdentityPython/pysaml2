@@ -13,7 +13,7 @@ def _eq(l1, l2):
 
 
 def _class(cls):
-    return "%s&%s" % (cls.c_namespace, cls.c_tag)
+    return f"{cls.c_namespace}&{cls.c_tag}"
 
 
 def test_construct_contact():

@@ -1,13 +1,13 @@
 import cgi
 import hashlib
 import hmac
+from http.cookies import SimpleCookie
 import logging
 import time
+from urllib.parse import parse_qs
+from urllib.parse import quote
 
 import six
-from six.moves.http_cookies import SimpleCookie
-from six.moves.urllib.parse import parse_qs
-from six.moves.urllib.parse import quote
 
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_POST
@@ -23,7 +23,7 @@ __author__ = "rohe0002"
 logger = logging.getLogger(__name__)
 
 
-class Response(object):
+class Response:
     _template = None
     _status = "200 OK"
     _content_type = "text/html"
@@ -63,9 +63,9 @@ class Response(object):
             mte = self.mako_lookup.get_template(self.mako_template)
             message = mte.render(**argv)
 
-        if isinstance(message, six.string_types):
+        if isinstance(message, str):
             return [message.encode("utf-8")]
-        elif isinstance(message, six.binary_type):
+        elif isinstance(message, bytes):
             return [message]
         else:
             return message
@@ -159,7 +159,7 @@ class BadGateway(Response):
     _status = "502 Bad Gateway"
 
 
-class HttpParameters(object):
+class HttpParameters:
     """GET or POST signature parameters for Redirect or POST-SimpleSign bindings
     because they are not contained in XML unlike the POST binding
     """
@@ -253,13 +253,13 @@ def get_response(environ, start_response):
 def unpack_redirect(environ):
     if "QUERY_STRING" in environ:
         _qs = environ["QUERY_STRING"]
-        return dict([(k, v[0]) for k, v in parse_qs(_qs).items()])
+        return {k: v[0] for k, v in parse_qs(_qs).items()}
     else:
         return None
 
 
 def unpack_post(environ):
-    return dict([(k, v[0]) for k, v in parse_qs(get_post(environ))])
+    return {k: v[0] for k, v in parse_qs(get_post(environ))}
 
 
 def unpack_soap(environ):

@@ -26,7 +26,7 @@ def _eval(val, onts, mdb_safe):
     :param onts: Schemas to be used in the conversion
     :return: The basic dictionary
     """
-    if isinstance(val, six.string_types):
+    if isinstance(val, str):
         val = val.strip()
         if not val:
             return None
@@ -57,7 +57,7 @@ def to_dict(_dict, onts, mdb_safe=False):
     """
     res = {}
     if isinstance(_dict, SamlBase):
-        res["__class__"] = "%s&%s" % (_dict.c_namespace, _dict.c_tag)
+        res["__class__"] = f"{_dict.c_namespace}&{_dict.c_tag}"
         for key in _dict.keyswv():
             if key in IMP_SKIP:
                 continue
@@ -67,7 +67,7 @@ def to_dict(_dict, onts, mdb_safe=False):
                 _val = [_eval(_v, onts, mdb_safe) for _v in _eel]
             elif key == "extension_attributes":
                 if mdb_safe:
-                    _val = dict([(k.replace(".", "__"), v) for k, v in val.items()])
+                    _val = {k.replace(".", "__"): v for k, v in val.items()}
                     # _val = {k.replace(".", "__"): v for k, v in val.items()}
                 else:
                     _val = val
@@ -86,7 +86,7 @@ def to_dict(_dict, onts, mdb_safe=False):
             for _val in [_eval(val, onts, mdb_safe)]
             if _val
         }
-        res["__class__"] = "%s&%s" % (_dict.namespace, _dict.tag)
+        res["__class__"] = f"{_dict.namespace}&{_dict.tag}"
     else:
         for key, val in _dict.items():
             _val = _eval(val, onts, mdb_safe)
@@ -110,11 +110,11 @@ def _kwa(val, onts, mdb_safe=False):
     :return: A converted dictionary
     """
     if not mdb_safe:
-        return dict([(k, from_dict(v, onts)) for k, v in val.items() if k not in EXP_SKIP])
+        return {k: from_dict(v, onts) for k, v in val.items() if k not in EXP_SKIP}
     else:
         _skip = ["_id"]
         _skip.extend(EXP_SKIP)
-        return dict([(k.replace("__", "."), from_dict(v, onts)) for k, v in val.items() if k not in _skip])
+        return {k.replace("__", "."): from_dict(v, onts) for k, v in val.items() if k not in _skip}
 
 
 def from_dict(val, onts, mdb_safe=False):
@@ -151,7 +151,7 @@ def from_dict(val, onts, mdb_safe=False):
                     key = key.replace("__", ".")
                 res[key] = from_dict(v, onts)
             return res
-    elif isinstance(val, six.string_types):
+    elif isinstance(val, str):
         return val
     elif isinstance(val, list):
         return [from_dict(v, onts) for v in val]

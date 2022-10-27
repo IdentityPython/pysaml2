@@ -1,4 +1,3 @@
-# -*- encoding:utf-8 -*-
 from mako import runtime, filters, cache
 
 UNDEFINED = runtime.UNDEFINED

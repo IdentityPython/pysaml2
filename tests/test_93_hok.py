@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 from pathutils import dotname
 from pathutils import full_path
 from pytest import raises
@@ -79,7 +78,7 @@ class TestHolderOfKeyResponse:
             asynchop=False,
             allow_unsolicited=True,
         )
-        with open(path, "r") as fp:
+        with open(path) as fp:
             authn_response_xml = fp.read()
         resp.loads(authn_response_xml, False)
         return resp

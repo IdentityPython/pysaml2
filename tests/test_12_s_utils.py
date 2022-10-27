@@ -1,5 +1,4 @@
 # !/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import base64
 
@@ -23,7 +22,7 @@ SUCCESS_STATUS_NO_HEADER = (
     ":StatusCode "
     'Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></ns0:Status>'
 )
-SUCCESS_STATUS = "%s%s" % (XML_HEADER, SUCCESS_STATUS_NO_HEADER)
+SUCCESS_STATUS = f"{XML_HEADER}{SUCCESS_STATUS_NO_HEADER}"
 
 ERROR_STATUS_NO_HEADER = (
     '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0'
@@ -42,8 +41,8 @@ ERROR_STATUS_NO_HEADER_EMPTY = (
     "/></ns0:StatusCode></ns0:Status>"
 )
 
-ERROR_STATUS = "%s%s" % (XML_HEADER, ERROR_STATUS_NO_HEADER)
-ERROR_STATUS_EMPTY = "%s%s" % (XML_HEADER, ERROR_STATUS_NO_HEADER_EMPTY)
+ERROR_STATUS = f"{XML_HEADER}{ERROR_STATUS_NO_HEADER}"
+ERROR_STATUS_EMPTY = f"{XML_HEADER}{ERROR_STATUS_NO_HEADER_EMPTY}"
 
 
 def _eq(l1, l2):
@@ -56,9 +55,9 @@ def _oeq(l1, l2):
         return False
     for item in l1:
         if item not in l2:
-            print("%s not in l2" % (item,))
+            print(f"{item} not in l2")
             for ite in l2:
-                print("\t%s" % (ite,))
+                print(f"\t{ite}")
             return False
     return True
 
@@ -67,12 +66,12 @@ def test_inflate_then_deflate():
     txt = """Selma Lagerlöf (1858-1940) was born in Östra Emterwik, Värmland,
     Sweden. She was brought up on Mårbacka, the family estate, which she did
     not leave until 1881, when she went to a teachers' college at Stockholm"""
-    if not isinstance(txt, six.binary_type):
+    if not isinstance(txt, bytes):
         txt = txt.encode("utf-8")
 
     interm = utils.deflate_and_base64_encode(txt)
     bis = utils.decode_base64_and_inflate(interm)
-    if not isinstance(bis, six.binary_type):
+    if not isinstance(bis, bytes):
         bis = bis.encode("utf-8")
     assert bis == txt
 
@@ -153,7 +152,7 @@ def test_attribute_onoff():
 
 def test_attribute_base64():
     txt = "Selma Lagerlöf"
-    if not isinstance(txt, six.binary_type):
+    if not isinstance(txt, bytes):
         txt = txt.encode("utf-8")
     b64sl = base64.b64encode(txt).decode("ascii")
     attr = utils.do_attributes({"name": (b64sl, "xs:base64Binary")})

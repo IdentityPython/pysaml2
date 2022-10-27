@@ -297,5 +297,5 @@ if __name__ == "__main__":
     from wsgiref.simple_server import make_server
 
     srv = make_server(HOST, PORT, app_with_auth)
-    print("SP listening on %s:%s" % (HOST, PORT))
+    print(f"SP listening on {HOST}:{PORT}")
     srv.serve_forever()

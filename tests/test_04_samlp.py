@@ -1,5 +1,4 @@
 #!/usr/bin/env pythony
-# -*- coding: utf-8 -*-
 #
 
 """Tests for saml2.samlp"""

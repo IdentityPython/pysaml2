@@ -37,7 +37,7 @@ def intcmp(s1, s2):
         return 0
 
 
-class AMap(object):
+class AMap:
     def __init__(self, head, tail, indent=4 * " "):
         self.mod = load(head, tail)
         self.variable = {}
@@ -59,10 +59,10 @@ class AMap(object):
             try:
                 assert self.mod.MAP["to"][val] == key
             except KeyError:  # missing value
-                print("# Added %s=%s" % (self.mod.MAP["to"][val], key))
+                print("# Added {}={}".format(self.mod.MAP["to"][val], key))
                 self.mod.MAP["to"][val] = key
             except AssertionError:
-                raise Exception("Mismatch key:%s '%s' != '%s'" % (key, val, self.mod.MAP["to"][val]))
+                raise Exception("Mismatch key:{} '{}' != '{}'".format(key, val, self.mod.MAP["to"][val]))
 
         for val in self.mod.MAP["to"].values():
             if val not in self.mod.MAP["fro"]:
@@ -77,7 +77,7 @@ class AMap(object):
             li = [k[len(_v) :] for k in _fro.keys() if k.startswith(_v)]
             li.sort(intcmp)
             for item in li:
-                txt.append("%s%s+'%s': '%s'," % (i2, var, item, _fro[_v + item]))
+                txt.append(f"{i2}{var}+'{item}': '{_fro[_v + item]}',")
         txt.append("%s}," % self.indent)
         return txt
 
@@ -87,13 +87,13 @@ class AMap(object):
         _to = self.mod.MAP["to"]
         _keys = _to.keys()
         _keys.sort()
-        invmap = dict([(v, k) for k, v in self.variable.items()])
+        invmap = {v: k for k, v in self.variable.items()}
 
         for key in _keys:
             val = _to[key]
             for _urn, _name in invmap.items():
                 if val.startswith(_urn):
-                    txt.append("%s'%s': %s+'%s'," % (i2, key, _name, val[len(_urn) :]))
+                    txt.append(f"{i2}'{key}': {_name}+'{val[len(_urn) :]}',")
 
         txt.append("%s}" % self.indent)
         return txt
@@ -102,12 +102,12 @@ class AMap(object):
         self.sync()
         text = []
         for key in self.vars:
-            text.append("%s = '%s'" % (key, self.variable[key]))
+            text.append(f"{key} = '{self.variable[key]}'")
 
         text.extend(["", ""])
 
         text.append("MAP = {")
-        text.append("%s'identifier': '%s'," % (self.indent, self.mod.MAP["identifier"]))
+        text.append("{}'identifier': '{}',".format(self.indent, self.mod.MAP["identifier"]))
         text.extend(self.do_fro())
         text.extend(self.do_to())
 

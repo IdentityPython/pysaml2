@@ -16,10 +16,10 @@ except Exception:
     import cgi as html
 
 import logging
+from urllib.parse import urlencode
+from urllib.parse import urlparse
 
 import six
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.parse import urlparse
 
 import saml2
 from saml2.s_utils import deflate_and_base64_encode
@@ -29,7 +29,7 @@ from saml2.xmldsig import SIG_ALLOWED_ALG
 
 
 try:
-    from xml.etree import cElementTree as ElementTree
+    from xml.etree import ElementTree as ElementTree
 
     if ElementTree.VERSION < "1.3.0":
         # cElementTree has no support for register_namespace
@@ -89,9 +89,9 @@ def http_form_post_message(message, location, relay_state="", typ="SAMLRequest",
     :param relay_state: for preserving and conveying state information
     :return: A tuple containing header information and a HTML message.
     """
-    if not isinstance(message, six.string_types):
+    if not isinstance(message, str):
         message = str(message)
-    if not isinstance(message, six.binary_type):
+    if not isinstance(message, bytes):
         message = message.encode("utf-8")
 
     if typ == "SAMLRequest" or typ == "SAMLResponse":
@@ -122,9 +122,9 @@ def http_post_message(message, relay_state="", typ="SAMLRequest", **kwargs):
     :param relay_state: for preserving and conveying state information
     :return: A tuple containing header information and a HTML message.
     """
-    if not isinstance(message, six.string_types):
+    if not isinstance(message, str):
         message = str(message)
-    if not isinstance(message, six.binary_type):
+    if not isinstance(message, bytes):
         message = message.encode("utf-8")
 
     if typ == "SAMLRequest" or typ == "SAMLResponse":
@@ -166,8 +166,8 @@ def http_redirect_message(
     :return: A tuple containing header information and a HTML message.
     """
 
-    if not isinstance(message, six.string_types):
-        message = "%s" % (message,)
+    if not isinstance(message, str):
+        message = f"{message}"
 
     _order = None
     if typ in ["SAMLRequest", "SAMLResponse"]:
@@ -187,10 +187,10 @@ def http_redirect_message(
     if sign:
         # sigalgs, should be one defined in xmldsig
         if sigalg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
-            raise Exception("Signature algo not in allowed list: {algo}".format(algo=sigalg))
+            raise Exception(f"Signature algo not in allowed list: {sigalg}")
         signer = backend.get_signer(sigalg) if sign and sigalg else None
         if not signer:
-            raise Exception("Could not init signer fro algo {algo}".format(algo=sigalg))
+            raise Exception(f"Could not init signer fro algo {sigalg}")
 
         args["SigAlg"] = sigalg
         string = "&".join(urlencode({k: args[k]}) for k in _order if k in args)
@@ -232,7 +232,7 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
     body.tag = "{%s}Body" % NAMESPACE
     envelope.append(body)
 
-    if isinstance(thingy, six.string_types):
+    if isinstance(thingy, str):
         # remove the first XML version/encoding line
         if thingy[0:5].lower() == "<?xml":
             logger.debug("thingy0: %s", thingy)
@@ -244,7 +244,7 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
         _child.tag = "{%s}FuddleMuddle" % DUMMY_NAMESPACE
         body.append(_child)
         _str = ElementTree.tostring(envelope, encoding="UTF-8")
-        if isinstance(_str, six.binary_type):
+        if isinstance(_str, bytes):
             _str = _str.decode("utf-8")
         logger.debug("SOAP precursor: %s", _str)
         # find an remove the namespace definition
@@ -252,7 +252,7 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
         j = _str.rfind("xmlns:", 0, i)
         cut1 = _str[j : i + len(DUMMY_NAMESPACE) + 1]
         _str = _str.replace(cut1, "")
-        first = _str.find("<%s:FuddleMuddle" % (cut1[6:9],))
+        first = _str.find(f"<{cut1[6:9]}:FuddleMuddle")
         last = _str.find(">", first + 14)
         cut2 = _str[first : last + 1]
         return _str.replace(cut2, thingy)
@@ -287,9 +287,7 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
 
     envelope_tag = "{%s}Envelope" % NAMESPACE
     if envelope.tag != envelope_tag:
-        raise ValueError(
-            "Invalid envelope tag '{invalid}' should be '{valid}'".format(invalid=envelope.tag, valid=envelope_tag)
-        )
+        raise ValueError(f"Invalid envelope tag '{envelope.tag}' should be '{envelope_tag}'")
 
     # print(len(envelope))
     body = None
@@ -310,7 +308,7 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
                 # print(">>",sub.tag)
                 for klass in header_class:
                     # print("?{%s}%s" % (klass.c_namespace,klass.c_tag))
-                    if sub.tag == "{%s}%s" % (klass.c_namespace, klass.c_tag):
+                    if sub.tag == f"{{{klass.c_namespace}}}{klass.c_tag}":
                         header[sub.tag] = saml2.create_class_from_element_tree(klass, sub)
                         break
 

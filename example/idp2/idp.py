@@ -2,18 +2,18 @@
 import argparse
 import base64
 from hashlib import sha1
+from http.cookies import SimpleCookie
 import importlib
 import logging
 import os
 import re
 import time
+from urllib.parse import parse_qs
 
 from idp_user import EXTRA
 from idp_user import USERS
 from mako.lookup import TemplateLookup
 import six
-from six.moves.http_cookies import SimpleCookie
-from six.moves.urllib.parse import parse_qs
 
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_POST
@@ -61,7 +61,7 @@ logger = logging.getLogger("saml2.idp")
 logger.setLevel(logging.WARNING)
 
 
-class Cache(object):
+class Cache:
     def __init__(self):
         self.user2uid = {}
         self.uid2user = {}
@@ -93,7 +93,7 @@ def dict2list_of_tuples(d):
 # -----------------------------------------------------------------------------
 
 
-class Service(object):
+class Service:
     def __init__(self, environ, start_response, user=None):
         self.environ = environ
         logger.debug("ENVIRON: %s", environ)
@@ -103,7 +103,7 @@ class Service(object):
     def unpack_redirect(self):
         if "QUERY_STRING" in self.environ:
             _qs = self.environ["QUERY_STRING"]
-            return dict([(k, v[0]) for k, v in parse_qs(_qs).items()])
+            return {k: v[0] for k, v in parse_qs(_qs).items()}
         else:
             return None
 
@@ -112,7 +112,7 @@ class Service(object):
         _dict = parse_qs(post_data if isinstance(post_data, str) else post_data.decode("utf-8"))
         logger.debug("unpack_post:: %s", _dict)
         try:
-            return dict([(k, v[0]) for k, v in _dict.items()])
+            return {k: v[0] for k, v in _dict.items()}
         except Exception:
             return None
 
@@ -323,11 +323,11 @@ class SSO(Service):
             resp_args, _resp = self.verify_request(query, binding_in)
         except UnknownPrincipal as excp:
             logger.error("UnknownPrincipal: %s", excp)
-            resp = ServiceError("UnknownPrincipal: %s" % (excp,))
+            resp = ServiceError(f"UnknownPrincipal: {excp}")
             return resp(self.environ, self.start_response)
         except UnsupportedBinding as excp:
             logger.error("UnsupportedBinding: %s", excp)
-            resp = ServiceError("UnsupportedBinding: %s" % (excp,))
+            resp = ServiceError(f"UnsupportedBinding: {excp}")
             return resp(self.environ, self.start_response)
 
         if not _resp:
@@ -350,7 +350,7 @@ class SSO(Service):
                 )
             except Exception as excp:
                 logging.error(exception_trace(excp))
-                resp = ServiceError("Exception: %s" % (excp,))
+                resp = ServiceError(f"Exception: {excp}")
                 return resp(self.environ, self.start_response)
 
         logger.info("AuthNResponse: %s", _resp)
@@ -566,7 +566,7 @@ def verify_username_and_password(dic):
 
 def do_verify(environ, start_response, _):
     query_str = get_post(environ)
-    if not isinstance(query_str, six.string_types):
+    if not isinstance(query_str, str):
         query_str = query_str.decode("ascii")
     query = parse_qs(query_str)
 
@@ -588,7 +588,7 @@ def do_verify(environ, start_response, _):
 
         kaka = set_cookie("idpauthn", "/", uid, query["authn_reference"][0])
 
-        lox = "%s?id=%s&key=%s" % (query["redirect_uri"][0], uid, query["key"][0])
+        lox = "{}?id={}&key={}".format(query["redirect_uri"][0], uid, query["key"][0])
         logger.debug("Redirect => %s", lox)
         resp = Redirect(lox, headers=[kaka], content="text/html")
 
@@ -849,7 +849,7 @@ def info_from_cookie(kaka):
         if morsel:
             try:
                 data = base64.b64decode(morsel.value)
-                if not isinstance(data, six.string_types):
+                if not isinstance(data, str):
                     data = data.decode("ascii")
                 key, ref = data.split(":", 1)
                 return IDP.cache.uid2user[key], ref
@@ -879,11 +879,11 @@ def set_cookie(name, _, *args):
     cookie = SimpleCookie()
 
     data = ":".join(args)
-    if not isinstance(data, six.binary_type):
+    if not isinstance(data, bytes):
         data = data.encode("ascii")
 
     data64 = base64.b64encode(data)
-    if not isinstance(data64, six.string_types):
+    if not isinstance(data64, str):
         data64 = data64.decode("ascii")
 
     cookie[name] = data64
@@ -979,7 +979,7 @@ def staticfile(environ, start_response):
             resp = Unauthorized()
             return resp(environ, start_response)
         start_response("200 OK", [("Content-Type", "text/xml")])
-        return open(path, "r").read()
+        return open(path).read()
     except Exception as ex:
         logger.error("An error occured while creating metadata: %s", ex.message)
         return not_found(environ, start_response)
@@ -1110,7 +1110,7 @@ if __name__ == "__main__":
         SRV.ssl_adapter = BuiltinSSLAdapter(CONFIG.SERVER_CERT, CONFIG.SERVER_KEY, CONFIG.CERT_CHAIN)
 
     logger.info("Server starting")
-    print("IDP listening on %s:%s%s" % (HOST, PORT, _https))
+    print(f"IDP listening on {HOST}:{PORT}{_https}")
     try:
         SRV.start()
     except KeyboardInterrupt:

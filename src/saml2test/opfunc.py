@@ -164,7 +164,7 @@ def pick_form(response, content, url=None, **kwargs):
                         _default = _ava["value"]
                         try:
                             orig_val = form[prop]
-                            if isinstance(orig_val, six.string_types):
+                            if isinstance(orig_val, str):
                                 if orig_val == _default:
                                     _form = form
                             elif _default in orig_val:
@@ -295,7 +295,7 @@ def chose(client, orig_response, content, path, **kwargs):
             _url = kwargs["location"]
 
         part = urlparse(_url)
-        url = "%s://%s%s" % (part[0], part[1], path)
+        url = f"{part[0]}://{part[1]}{path}"
     else:
         url = path
 
@@ -339,7 +339,7 @@ def interaction(args):
 # ========================================================================
 
 
-class Operation(object):
+class Operation:
     def __init__(self, conv, args=None, features=None):
         if args:
             self.function = interaction(args)

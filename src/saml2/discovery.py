@@ -1,4 +1,4 @@
-from six.moves.urllib import parse
+from urllib import parse
 
 from saml2.entity import Entity
 from saml2.response import VerificationError
@@ -28,7 +28,7 @@ class DiscoveryServer(Entity):
         for key in ["isPassive", "return", "returnIDParam", "policy", "entityID"]:
             try:
                 if len(dsr[key]) != 1:
-                    raise Exception("Invalid DS request keys: {k}".format(k=key))
+                    raise Exception(f"Invalid DS request keys: {key}")
                 dsr[key] = dsr[key][0]
             except KeyError:
                 pass
@@ -77,9 +77,9 @@ class DiscoveryServer(Entity):
             part = parse.urlparse(return_url)
             if part.query:
                 # Iff there is a query part add the new info at the end
-                return_url = "%s&%s" % (return_url, qp)
+                return_url = f"{return_url}&{qp}"
             else:
-                return_url = "%s?%s" % (return_url, qp)
+                return_url = f"{return_url}?{qp}"
 
         return return_url
 

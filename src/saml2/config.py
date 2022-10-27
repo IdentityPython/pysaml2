@@ -163,7 +163,7 @@ class ConfigurationError(SAMLError):
     pass
 
 
-class Config(object):
+class Config:
     def_context = ""
 
     def __init__(self, homedir="."):
@@ -234,7 +234,7 @@ class Config(object):
         if context == "":
             setattr(self, attr, val)
         else:
-            setattr(self, "_%s_%s" % (context, attr), val)
+            setattr(self, f"_{context}_{attr}", val)
 
     def getattr(self, attr, context=None):
         if context is None:
@@ -243,7 +243,7 @@ class Config(object):
         if context == "":
             return getattr(self, attr, None)
         else:
-            return getattr(self, "_%s_%s" % (context, attr), None)
+            return getattr(self, f"_{context}_{attr}", None)
 
     def load_special(self, cnf, typ):
         for arg in SPEC[typ]:

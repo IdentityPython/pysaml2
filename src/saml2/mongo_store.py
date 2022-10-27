@@ -38,7 +38,7 @@ def context_match(cfilter, cntx):
     return True
 
 
-class SessionStorageMDB(object):
+class SessionStorageMDB:
     """Session information is stored in a MongoDB database"""
 
     def __init__(self, database="", collection="assertion", **kwargs):
@@ -193,7 +193,7 @@ class IdentMDB(IdentDB):
         return self.construct_nameid(_id, name_id_policy=name_id_policy)
 
 
-class MDB(object):
+class MDB:
     primary_key = "mdb"
 
     def __init__(self, database, collection, **kwargs):
@@ -322,14 +322,14 @@ def protect(dic):
     res = {}
     for key, val in dic.items():
         key = key.replace(".", "__")
-        if isinstance(val, six.string_types):
+        if isinstance(val, str):
             pass
         elif isinstance(val, dict):
             val = protect(val)
         elif isinstance(val, list):
             li = []
             for va in val:
-                if isinstance(va, six.string_types):
+                if isinstance(va, str):
                     pass
                 elif isinstance(va, dict):
                     va = protect(va)
@@ -347,14 +347,14 @@ def unprotect(dic):
             pass
         else:
             key = key.replace("__", ".")
-        if isinstance(val, six.string_types):
+        if isinstance(val, str):
             pass
         elif isinstance(val, dict):
             val = unprotect(val)
         elif isinstance(val, list):
             li = []
             for va in val:
-                if isinstance(va, six.string_types):
+                if isinstance(va, str):
                     pass
                 elif isinstance(val, dict):
                     va = unprotect(va)
@@ -377,7 +377,7 @@ def export_mdstore_to_mongo_db(mds, database, collection, sub_collection=""):
 
 class MetadataMDB(InMemoryMetaData):
     def __init__(self, attrc, database="", collection=""):
-        super(MetadataMDB, self).__init__(attrc)
+        super().__init__(attrc)
         self.mdb = MDB(database, collection)
         self.mdb.primary_key = "entity_id"
 

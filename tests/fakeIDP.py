@@ -1,4 +1,4 @@
-from six.moves.urllib.parse import parse_qs
+from urllib.parse import parse_qs
 
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
@@ -40,7 +40,7 @@ def unpack_form(_str, ver="SAMLRequest"):
     return {ver: sr, "RelayState": rs}
 
 
-class DummyResponse(object):
+class DummyResponse:
     def __init__(self, status, data, headers=None):
         self.status_code = status
         self.text = data

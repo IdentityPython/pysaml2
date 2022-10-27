@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 
 from importlib import import_module
@@ -131,7 +130,7 @@ def list_to_local(acs, attrlist, allow_unknown_attributes=False):
         acs = [AttributeConverter()]
         acsd = {"": acs}
     else:
-        acsd = dict([(a.name_format, a) for a in acs])
+        acsd = {a.name_format: a for a in acs}
 
     ava = {}
     for attr in attrlist:
@@ -227,7 +226,7 @@ def d_to_local_name(acs, attr):
         raise ConverterError("Could not find local name for %s" % attr)
 
 
-class AttributeConverter(object):
+class AttributeConverter:
     """Converts from an attribute statement to a key,value dictionary and
     vice-versa"""
 
@@ -242,9 +241,9 @@ class AttributeConverter(object):
         """
 
         if self._fro is None and self._to is not None:
-            self._fro = dict([(value.lower(), key) for key, value in self._to.items()])
+            self._fro = {value.lower(): key for key, value in self._to.items()}
         if self._to is None and self._fro is not None:
-            self._to = dict([(value.lower(), key) for key, value in self._fro.items()])
+            self._to = {value.lower(): key for key, value in self._fro.items()}
 
     def from_dict(self, mapdict):
         """Import the attribute map from  a dictionary
@@ -254,11 +253,11 @@ class AttributeConverter(object):
 
         self.name_format = mapdict["identifier"]
         try:
-            self._fro = dict([(k.lower(), v) for k, v in mapdict["fro"].items()])
+            self._fro = {k.lower(): v for k, v in mapdict["fro"].items()}
         except KeyError:
             pass
         try:
-            self._to = dict([(k.lower(), v) for k, v in mapdict["to"].items()])
+            self._to = {k.lower(): v for k, v in mapdict["to"].items()}
         except KeyError:
             pass
 

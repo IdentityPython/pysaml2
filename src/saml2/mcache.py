@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 def _key(prefix, name):
-    return "%s_%s" % (prefix, name)
+    return f"{prefix}_{name}"
 
 
-class Cache(object):
+class Cache:
     def __init__(self, servers, debug=0):
         self._cache = memcache.Client(servers, debug)
 

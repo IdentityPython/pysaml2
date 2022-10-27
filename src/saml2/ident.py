@@ -2,10 +2,10 @@ import copy
 from hashlib import sha256
 import logging
 import shelve
+from urllib.parse import quote
+from urllib.parse import unquote
 
 import six
-from six.moves.urllib.parse import quote
-from six.moves.urllib.parse import unquote
 
 from saml2 import SAMLError
 from saml2.s_utils import PolicyError
@@ -52,7 +52,7 @@ def code_binary(item):
     Return a binary 'code' suitable for hashing.
     """
     code_str = code(item)
-    if isinstance(code_str, six.string_types):
+    if isinstance(code_str, str):
         return code_str.encode("utf-8")
     return code_str
 
@@ -73,13 +73,13 @@ def decode(txt):
     return _nid
 
 
-class IdentDB(object):
+class IdentDB:
     """A class that handles identifiers of entities
     Keeps a list of all nameIDs returned per SP
     """
 
     def __init__(self, db, domain="", name_qualifier=""):
-        if isinstance(db, six.string_types):
+        if isinstance(db, str):
             self.db = shelve.open(db, protocol=2)
         else:
             self.db = db
@@ -88,15 +88,15 @@ class IdentDB(object):
 
     def _create_id(self, nformat, name_qualifier="", sp_name_qualifier=""):
         _id = sha256(rndbytes(32))
-        if not isinstance(nformat, six.binary_type):
+        if not isinstance(nformat, bytes):
             nformat = nformat.encode("utf-8")
         _id.update(nformat)
         if name_qualifier:
-            if not isinstance(name_qualifier, six.binary_type):
+            if not isinstance(name_qualifier, bytes):
                 name_qualifier = name_qualifier.encode("utf-8")
             _id.update(name_qualifier)
         if sp_name_qualifier:
-            if not isinstance(sp_name_qualifier, six.binary_type):
+            if not isinstance(sp_name_qualifier, bytes):
                 sp_name_qualifier = sp_name_qualifier.encode("utf-8")
             _id.update(sp_name_qualifier)
         return _id.hexdigest()
@@ -160,7 +160,7 @@ class IdentDB(object):
         if nformat == NAMEID_FORMAT_PERSISTENT:
             nameid = self.match_local_id(userid, sp_name_qualifier, name_qualifier)
             if nameid:
-                logger.debug("Found existing persistent NameId %s for user %s" % (nameid, userid))
+                logger.debug(f"Found existing persistent NameId {nameid} for user {userid}")
                 return nameid
 
         _id = self.create_id(nformat, name_qualifier, sp_name_qualifier)
@@ -169,7 +169,7 @@ class IdentDB(object):
             if not self.domain:
                 raise SAMLError("Can't issue email nameids, unknown domain")
 
-            _id = "%s@%s" % (_id, self.domain)
+            _id = f"{_id}@{self.domain}"
 
         nameid = NameID(
             format=nformat,

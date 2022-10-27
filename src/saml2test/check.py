@@ -23,7 +23,7 @@ CONT_JSON = "application/json"
 CONT_JWT = "application/jwt"
 
 
-class Check(object):
+class Check:
     """General test"""
 
     cid = "check"
@@ -88,7 +88,7 @@ class ResponseInfo(Information):
         self._status = self.status
         _msg = conv.last_content
 
-        if isinstance(_msg, six.string_types):
+        if isinstance(_msg, str):
             self._message = _msg
         else:
             self._message = _msg.to_dict()
@@ -259,7 +259,7 @@ class Parse(CriticalError):
         if conv.exception:
             self._status = self.status
             err = conv.exception
-            self._message = "%s: %s" % (err.__class__.__name__, err)
+            self._message = f"{err.__class__.__name__}: {err}"
         else:
             _rmsg = conv.response_message
             cname = _rmsg.type()
@@ -267,7 +267,7 @@ class Parse(CriticalError):
                 self._status = self.status
                 self._message = (
                     "Didn't get a response of the type I expected:",
-                    " '%s' instead of '%s', content:'%s'" % (cname, conv.response_type, _rmsg),
+                    f" '{cname}' instead of '{conv.response_type}', content:'{_rmsg}'",
                 )
                 return {"response_type": conv.response_type, "url": conv.position}
 

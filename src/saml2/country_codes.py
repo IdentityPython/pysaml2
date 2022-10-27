@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# This Python file uses the following encoding: utf-8
 # ISO 3166-1 country names and codes from http://opencountrycodes.appspot.com/python
 
 COUNTRIES = (

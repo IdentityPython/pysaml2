@@ -18,7 +18,7 @@ from .errors import SymmetricCryptographyError
 logger = logging.getLogger(__name__)
 
 
-class Fernet(object):
+class Fernet:
     """The default symmetric cryptography method."""
 
     @staticmethod
@@ -97,7 +97,7 @@ class Fernet(object):
         _warn(_deprecation_msg, DeprecationWarning)
 
 
-class AESCipher(object):
+class AESCipher:
     """[deprecated] Symmetric cryptography method using AES.
 
     The default parameter set is AES 128bit in CBC mode.
@@ -142,18 +142,18 @@ class AESCipher(object):
         iv = _os.urandom(self.AES_BLOCK_SIZE)
 
         if len(iv) != self.AES_BLOCK_SIZE:
-            raise Exception("Wrong iv size: {}".format(len(iv)))
+            raise Exception(f"Wrong iv size: {len(iv)}")
 
         if bits not in _ciphers.algorithms.AES.key_sizes:
-            raise Exception("Unsupported key length: {}".format(bits))
+            raise Exception(f"Unsupported key length: {bits}")
 
         if len(self.key) != bits / 8:
-            raise Exception("Wrong Key length: {}".format(len(self.key)))
+            raise Exception(f"Wrong Key length: {len(self.key)}")
 
         try:
             mode = self.POSTFIX_MODE[cmode]
         except KeyError:
-            raise Exception("Unsupported chaining mode: {}".format(cmode))
+            raise Exception(f"Unsupported chaining mode: {cmode}")
 
         cipher = _ciphers.Cipher(_ciphers.algorithms.AES(self.key), mode(iv))
 

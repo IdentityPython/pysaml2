@@ -26,7 +26,7 @@ AL4 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel4"
 CMP_TYPE = ["exact", "minimum", "maximum", "better"]
 
 
-class AuthnBroker(object):
+class AuthnBroker:
     def __init__(self):
         self.db = {"info": {}, "key": {}}
         self.next = 0

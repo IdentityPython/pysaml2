@@ -16,12 +16,12 @@ SHIB_SP_RELAY_STATE = """\
 ss:mem:ab1e6a31f3bd040ffd1d64a2d0e15d61ce517f5e1a94a41ea4fae32cc8d70a04"""
 
 
-class RelayStateHTMLParser(HTMLParser, object):
+class RelayStateHTMLParser(HTMLParser):
     """Class used to parse HTML from a HTTP-POST binding response
     and determine if the HTML includes the expected relay state."""
 
     def __init__(self, expected_relay_state):
-        super(RelayStateHTMLParser, self).__init__()
+        super().__init__()
 
         self.expected_relay_state = expected_relay_state
         self.expected_relay_state_found = False
