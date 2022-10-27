@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 from collections import OrderedDict
 import datetime
 import os
@@ -7,11 +6,11 @@ import re
 from re import compile as regex_compile
 from unittest.mock import Mock
 from unittest.mock import patch
+from urllib import parse
 
 from pathutils import full_path
 from pytest import raises
 import responses
-from six.moves.urllib import parse
 
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_POST
@@ -345,7 +344,7 @@ def test_metadata_file():
 def test_mdx_service():
     entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
 
-    url = "http://mdx.example.com/entities/{}".format(parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
+    url = f"http://mdx.example.com/entities/{parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id))}"
     responses.add(responses.GET, url, body=TEST_METADATA_STRING, status=200, content_type=SAML_METADATA_CONTENT_TYPE)
 
     mdx = MetaDataMDX("http://mdx.example.com")
@@ -361,7 +360,7 @@ def test_mdx_service():
 @patch("saml2.httpbase.requests.get")
 def test_mdx_service_request_timeout(mock_request):
     entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
-    url = "http://mdx.example.com/entities/{}".format(MetaDataMDX.sha1_entity_transform(entity_id))
+    url = f"http://mdx.example.com/entities/{MetaDataMDX.sha1_entity_transform(entity_id)}"
 
     mdx = MetaDataMDX("http://mdx.example.com", http_client_timeout=10)
     mdx.service(entity_id, "idpsso_descriptor", "single_sign_on_service")
@@ -372,7 +371,7 @@ def test_mdx_service_request_timeout(mock_request):
 def test_mdx_single_sign_on_service():
     entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
 
-    url = "http://mdx.example.com/entities/{}".format(parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
+    url = f"http://mdx.example.com/entities/{parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id))}"
     responses.add(responses.GET, url, body=TEST_METADATA_STRING, status=200, content_type=SAML_METADATA_CONTENT_TYPE)
 
     mdx = MetaDataMDX("http://mdx.example.com")
@@ -385,7 +384,7 @@ def test_mdx_metadata_freshness_period_not_expired():
     """Ensure that metadata is not refreshed if not expired."""
 
     entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
-    url = "http://mdx.example.com/entities/{}".format(parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
+    url = f"http://mdx.example.com/entities/{parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id))}"
 
     responses.add(
         responses.GET,
@@ -410,7 +409,7 @@ def test_mdx_metadata_freshness_period_expired():
     """Ensure that metadata is not refreshed if not expired."""
 
     entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
-    url = "http://mdx.example.com/entities/{}".format(parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
+    url = f"http://mdx.example.com/entities/{parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id))}"
 
     responses.add(
         responses.GET,

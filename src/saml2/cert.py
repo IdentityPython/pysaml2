@@ -25,7 +25,7 @@ class PayloadError(Exception):
     pass
 
 
-class OpenSSLWrapper(object):
+class OpenSSLWrapper:
     def __init__(self):
         pass
 
@@ -165,15 +165,15 @@ class OpenSSLWrapper(object):
             tmp_key = None
             if cipher_passphrase is not None:
                 passphrase = cipher_passphrase["passphrase"]
-                if isinstance(cipher_passphrase["passphrase"], six.string_types):
+                if isinstance(cipher_passphrase["passphrase"], str):
                     passphrase = passphrase.encode("utf-8")
                 tmp_key = crypto.dump_privatekey(crypto.FILETYPE_PEM, k, cipher_passphrase["cipher"], passphrase)
             else:
                 tmp_key = crypto.dump_privatekey(crypto.FILETYPE_PEM, k)
             if write_to_file:
-                with open(c_f, "wt") as fc:
+                with open(c_f, "w") as fc:
                     fc.write(tmp_cert.decode("utf-8"))
-                with open(k_f, "wt") as fk:
+                with open(k_f, "w") as fk:
                     fk.write(tmp_key.decode("utf-8"))
                 return c_f, k_f
             return tmp_cert, tmp_key
@@ -181,7 +181,7 @@ class OpenSSLWrapper(object):
             raise CertificateError("Certificate cannot be generated.", ex)
 
     def write_str_to_file(self, file, str_data):
-        with open(file, "wt") as f:
+        with open(file, "w") as f:
             f.write(str_data)
 
     def read_str_from_file(self, file, type="pem"):
@@ -256,7 +256,7 @@ class OpenSSLWrapper(object):
         cert.sign(ca_key, hash_alg)
 
         cert_dump = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
-        if isinstance(cert_dump, six.string_types):
+        if isinstance(cert_dump, str):
             return cert_dump
         return cert_dump.decode("utf-8")
 
@@ -323,9 +323,8 @@ class OpenSSLWrapper(object):
                 return False, ("CN may not be equal for CA certificate and the " "signed certificate.")
 
             cert_algorithm = cert.get_signature_algorithm()
-            if six.PY3:
-                cert_algorithm = cert_algorithm.decode("ascii")
-                cert_str = cert_str.encode("ascii")
+            cert_algorithm = cert_algorithm.decode("ascii")
+            cert_str = cert_str.encode("ascii")
 
             cert_crypto = saml2.cryptography.pki.load_pem_x509_certificate(cert_str)
 

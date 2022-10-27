@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 
 """
@@ -14,7 +13,7 @@ from saml2.schema import soapenv
 
 
 try:
-    from xml.etree import cElementTree as ElementTree
+    from xml.etree import ElementTree as ElementTree
 except ImportError:
     try:
         import cElementTree as ElementTree
@@ -138,9 +137,7 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
 
     envelope_tag = "{%s}Envelope" % soapenv.NAMESPACE
     if envelope.tag != envelope_tag:
-        raise ValueError(
-            "Invalid envelope tag '{invalid}' should be '{valid}'".format(invalid=envelope.tag, valid=envelope_tag)
-        )
+        raise ValueError(f"Invalid envelope tag '{envelope.tag}' should be '{envelope_tag}'")
 
     if len(envelope) < 1:
         raise Exception("No items in envelope.")
@@ -150,7 +147,7 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
         if part.tag == "{%s}Body" % soapenv.NAMESPACE:
             n_children = len(part)
             if n_children != 1:
-                raise Exception("Expected a single child element, found {n}".format(n=n_children))
+                raise Exception(f"Expected a single child element, found {n_children}")
             body = part
             break
 
@@ -161,7 +158,7 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
     if saml_part.tag in expected_tags:
         return ElementTree.tostring(saml_part, encoding="UTF-8")
     else:
-        raise WrongMessageType("Was '%s' expected one of %s" % (saml_part.tag, expected_tags))
+        raise WrongMessageType(f"Was '{saml_part.tag}' expected one of {expected_tags}")
 
 
 NS_AND_TAG = re.compile(r"\{([^}]+)\}(.*)")
@@ -177,7 +174,7 @@ def instanciate_class(item, modules):
                 return create_class_from_element_tree(target, item)
             except KeyError:
                 continue
-    raise Exception("Unknown class: ns='%s', tag='%s'" % (ns, tag))
+    raise Exception(f"Unknown class: ns='{ns}', tag='{tag}'")
 
 
 def class_instances_from_soap_enveloped_saml_thingies(text, modules):
@@ -195,9 +192,7 @@ def class_instances_from_soap_enveloped_saml_thingies(text, modules):
 
     envelope_tag = "{%s}Envelope" % soapenv.NAMESPACE
     if envelope.tag != envelope_tag:
-        raise ValueError(
-            "Invalid envelope tag '{invalid}' should be '{valid}'".format(invalid=envelope.tag, valid=envelope_tag)
-        )
+        raise ValueError(f"Invalid envelope tag '{envelope.tag}' should be '{envelope_tag}'")
 
     if len(envelope) < 1:
         raise Exception("No items in envelope.")
@@ -229,9 +224,7 @@ def open_soap_envelope(text):
 
     envelope_tag = "{%s}Envelope" % soapenv.NAMESPACE
     if envelope.tag != envelope_tag:
-        raise ValueError(
-            "Invalid envelope tag '{invalid}' should be '{valid}'".format(invalid=envelope.tag, valid=envelope_tag)
-        )
+        raise ValueError(f"Invalid envelope tag '{envelope.tag}' should be '{envelope_tag}'")
 
     if len(envelope) < 1:
         raise Exception("No items in envelope.")

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 
 """
@@ -7,9 +6,8 @@ Contains a class that can do SAML ECP Authentication for other python
 programs.
 """
 
+from http import cookiejar as cookielib
 import logging
-
-from six.moves import http_cookiejar as cookielib
 
 from saml2 import BINDING_SOAP
 from saml2 import SAMLError
@@ -28,7 +26,7 @@ from saml2.s_utils import BadRequest
 
 
 SERVICE = "urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp"
-PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, SERVICE)
+PAOS_HEADER_INFO = f'ver="{paos.NAMESPACE}";"{SERVICE}"'
 
 logger = logging.getLogger(__name__)
 
@@ -139,9 +137,7 @@ class Client(Entity):
         logger.debug("[P2] Got IdP response: %s", response)
 
         if response.status_code != 200:
-            raise SAMLError(
-                "Request to IdP failed ({status}): {text}".format(status=response.status_code, text=response.text)
-            )
+            raise SAMLError(f"Request to IdP failed ({response.status_code}): {response.text}")
 
         # SAMLP response in a SOAP envelope body, ecp response in headers
         respdict = self.parse_soap_message(response.text)
@@ -322,7 +318,7 @@ class Client(Entity):
             raise
 
         if response.status_code >= 400:
-            raise SAMLError("Error performing operation: %s" % (response.text,))
+            raise SAMLError(f"Error performing operation: {response.text}")
 
         return response
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 
 """
@@ -31,7 +30,7 @@ logger = logging.getLogger(__name__)
 def ecp_capable(headers):
     if MIME_PAOS in headers["Accept"]:
         if "PAOS" in headers:
-            if 'ver="%s";"%s"' % (paos.NAMESPACE, SERVICE) in headers["PAOS"]:
+            if f'ver="{paos.NAMESPACE}";"{SERVICE}"' in headers["PAOS"]:
                 return True
 
     return False
@@ -70,7 +69,7 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=None, sign_alg=Non
     # <samlp:AuthnRequest>
     # ----------------------------------------
 
-    logger.info("entityid: %s, binding: %s" % (entityid, BINDING_SOAP))
+    logger.info(f"entityid: {entityid}, binding: {BINDING_SOAP}")
 
     location = cls._sso_location(entityid, binding=BINDING_SOAP)
     req_id, authn_req = cls.create_authn_request(

@@ -231,7 +231,7 @@ class AttributeValueBase(SamlBase):
             raise ValueError(msg)
 
         # only work with six.string_types
-        if isinstance(value, six.binary_type):
+        if isinstance(value, bytes):
             value = value.decode("utf-8")
 
         type_to_xsd = {
@@ -344,7 +344,7 @@ class AttributeValueBase(SamlBase):
             _wrong_type_value(xsd=xsd_type, value=value)
 
         text = to_text(value)
-        self.set_type("{ns}:{type}".format(ns=xsd_ns, type=xsd_type) if xsd_ns else xsd_type if xsd_type else "")
+        self.set_type(f"{xsd_ns}:{xsd_type}" if xsd_ns else xsd_type if xsd_type else "")
         SamlBase.__setattr__(self, "text", text)
         return self
 

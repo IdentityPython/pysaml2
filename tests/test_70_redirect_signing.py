@@ -1,7 +1,7 @@
 from contextlib import closing
+from urllib.parse import parse_qs
 
 from pathutils import dotname
-from six.moves.urllib.parse import parse_qs
 
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
@@ -17,7 +17,7 @@ __author__ = "rolandh"
 
 
 def list_values2simpletons(_dict):
-    return dict([(k, v[0]) for k, v in _dict.items()])
+    return {k: v[0] for k, v in _dict.items()}
 
 
 def test():

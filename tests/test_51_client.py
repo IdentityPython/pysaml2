@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 from base64 import decodebytes as b64decode
 from base64 import encodebytes as b64encode
+from urllib import parse
 import uuid
 
 from defusedxml.common import EntitiesForbidden
@@ -11,7 +11,6 @@ from fakeIDP import unpack_form
 from pathutils import full_path
 from pytest import raises
 import six
-from six.moves.urllib import parse
 
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
@@ -90,10 +89,7 @@ def generate_cert():
 
 
 def add_subelement(xmldoc, node_name, subelem):
-    if six.PY2:
-        _str = unicode
-    else:
-        _str = str
+    _str = str
 
     s = xmldoc.find(node_name)
     if s > 0:
@@ -109,8 +105,8 @@ def add_subelement(xmldoc, node_name, subelem):
         if subelem_str[0:5].lower() == "<?xml":
             subelem_str = subelem_str.split("\n", 1)[1]
         xmldoc = xmldoc.replace(
-            "<%s:%s%s/>" % (tag, node_name, spaces),
-            "<%s:%s%s>%s</%s:%s>" % (tag, node_name, spaces, subelem_str, tag, node_name),
+            f"<{tag}:{node_name}{spaces}/>",
+            f"<{tag}:{node_name}{spaces}>{subelem_str}</{tag}:{node_name}>",
         )
 
     return xmldoc
@@ -164,7 +160,7 @@ nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT, text="123456"
 
 
 def list_values2simpletons(_dict):
-    return dict([(k, v[0]) for k, v in _dict.items()])
+    return {k: v[0] for k, v in _dict.items()}
 
 
 class TestClient:
@@ -2419,10 +2415,7 @@ class TestClientNonAsciiAva:
         """Test that the SP client can parse an authentication response
         from an IdP that does not contain a <NameID> element."""
 
-        if six.PY2:
-            _bytes = str
-        else:
-            _bytes = bytes
+        _bytes = bytes
 
         conf = config.SPConfig()
         conf.load_file("server_conf")
@@ -2461,10 +2454,7 @@ class TestClientNonAsciiAva:
 
         # Cast the response to a string and encode it to mock up the payload
         # the SP client is expected to receive via HTTP POST binding.
-        if six.PY2:
-            resp_str = b64encode(str(resp))
-        else:
-            resp_str = b64encode(bytes(str(resp), "utf-8"))
+        resp_str = b64encode(bytes(str(resp), "utf-8"))
 
         # We do not need the client to verify a signature for this test.
         client.want_assertions_signed = False
@@ -2494,10 +2484,7 @@ class TestClientNonAsciiAva:
 
         # Cast the response to a string and encode it to mock up the payload
         # the SP client is expected to receive via HTTP POST binding.
-        if six.PY2:
-            resp_str = b64encode(str(resp))
-        else:
-            resp_str = b64encode(bytes(str(resp), "utf-8"))
+        resp_str = b64encode(bytes(str(resp), "utf-8"))
 
         # We do not need the client to verify a signature for this test.
         client.want_assertions_signed = False
@@ -2523,10 +2510,7 @@ class TestClientNonAsciiAva:
 
         # Cast the response to a string and encode it to mock up the payload
         # the SP client is expected to receive via HTTP POST binding.
-        if six.PY2:
-            resp_str = b64encode(str(resp))
-        else:
-            resp_str = b64encode(bytes(str(resp), "utf-8"))
+        resp_str = b64encode(bytes(str(resp), "utf-8"))
 
         # We do not need the client to verify a signature for this test.
         client.want_assertions_signed = False
@@ -2781,10 +2765,7 @@ class TestClientNonAsciiAva:
 
         # seresp = samlp.response_from_string(enctext)
 
-        if six.PY2:
-            resp_str = b64encode(enctext.encode("utf-8"))
-        else:
-            resp_str = b64encode(bytes(enctext, "utf-8"))
+        resp_str = b64encode(bytes(enctext, "utf-8"))
 
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
@@ -3209,7 +3190,7 @@ class TestClientWithDummy:
             IDP, "http://www.example.com/relay_state", binding=binding, response_binding=response_binding
         )
 
-        assert isinstance(sid, six.string_types)
+        assert isinstance(sid, str)
         assert len(http_args) == 5
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
@@ -3229,7 +3210,7 @@ class TestClientWithDummy:
         )
 
         assert binding == auth_binding
-        assert isinstance(sid, six.string_types)
+        assert isinstance(sid, str)
         assert len(http_args) == 5
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []

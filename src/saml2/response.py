@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 import calendar
 import logging
@@ -220,7 +219,7 @@ def for_me(conditions, myself):
             if audience.text and audience.text.strip() == myself:
                 return True
             else:
-                logger.debug("AudienceRestriction - One condition not satisfied: %s != %s" % (audience.text, myself))
+                logger.debug(f"AudienceRestriction - One condition not satisfied: {audience.text} != {myself}")
     logger.debug("AudienceRestrictions not satisfied!")
     return False
 
@@ -277,7 +276,7 @@ def attribute_response(conf, return_addrs, timeslack=0, asynchop=False, test=Fal
     )
 
 
-class StatusResponse(object):
+class StatusResponse:
     msgtype = "status_response"
 
     def __init__(self, sec_context, return_addrs=None, timeslack=0, request_id=0, asynchop=True, conv_info=None):
@@ -344,7 +343,7 @@ class StatusResponse(object):
     def _loads(self, xmldata, decode=True, origxml=None):
 
         # own copy
-        if isinstance(xmldata, six.binary_type):
+        if isinstance(xmldata, bytes):
             self.xmlstr = xmldata[:].decode("utf-8")
         else:
             self.xmlstr = xmldata[:]
@@ -365,7 +364,7 @@ class StatusResponse(object):
                 origdoc=origxml,
                 must=self.require_signature,
                 require_response_signature=self.require_response_signature,
-                **args
+                **args,
             )
 
         except TypeError:
@@ -389,7 +388,7 @@ class StatusResponse(object):
         err_msg = status.status_message.text if status.status_message else err_code or "Unknown error"
         err_cls = STATUSCODE2EXCEPTION.get(err_code, StatusError)
 
-        msg = "Unsuccessful operation: {status}\n{msg} from {code}".format(status=status, msg=err_msg, code=err_code)
+        msg = f"Unsuccessful operation: {status}\n{err_msg} from {err_code}"
         logger.debug(msg)
         raise err_cls(msg)
 
@@ -493,7 +492,7 @@ class AuthnResponse(StatusResponse):
         want_assertions_or_response_signed=False,
         want_response_signed=False,
         conv_info=None,
-        **kwargs
+        **kwargs,
     ):
 
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack, asynchop=asynchop, conv_info=conv_info)
@@ -561,7 +560,7 @@ class AuthnResponse(StatusResponse):
             if optional:
                 return True
             else:
-                msg = "Invalid number of AuthnStatement found in Response: {n}".format(n=n_authn_statements)
+                msg = f"Invalid number of AuthnStatement found in Response: {n_authn_statements}"
                 raise ValueError(msg)
 
         authn_statement = self.assertion.authn_statement[0]
@@ -675,7 +674,7 @@ class AuthnResponse(StatusResponse):
             if _assertion.attribute_statement:
                 logger.debug("Assertion contains %s attribute statement(s)", (len(self.assertion.attribute_statement)))
                 for _attr_statem in _assertion.attribute_statement:
-                    logger.debug("Attribute Statement: %s" % (_attr_statem,))
+                    logger.debug(f"Attribute Statement: {_attr_statem}")
                     ava.update(self.read_attribute_statement(_attr_statem))
             if not ava:
                 logger.debug("Assertion contains no attribute statements")
@@ -732,7 +731,7 @@ class AuthnResponse(StatusResponse):
             raise ValueError("Missing assertion")
 
         if not self.assertion.subject:
-            raise ValueError("Invalid assertion subject: {subject}".format(subject=self.assertion.subject))
+            raise ValueError(f"Invalid assertion subject: {self.assertion.subject}")
         subject = self.assertion.subject
         subjconf = []
 
@@ -751,7 +750,7 @@ class AuthnResponse(StatusResponse):
             elif subject_confirmation.method == SCM_SENDER_VOUCHES:
                 pass
             else:
-                raise ValueError("Unknown subject confirmation method: %s" % (subject_confirmation.method,))
+                raise ValueError(f"Unknown subject confirmation method: {subject_confirmation.method}")
 
             _recip = _data.recipient
             if not _recip or not self.verify_recipient(_recip):
@@ -914,9 +913,7 @@ class AuthnResponse(StatusResponse):
             n_assertions = len(self.response.assertion)
             n_assertions_enc = len(self.response.encrypted_assertion)
             if n_assertions != 1 and n_assertions_enc != 1 and self.assertion is None:
-                raise InvalidAssertion(
-                    "Invalid number of assertions in Response: {n}".format(n=n_assertions + n_assertions_enc)
-                )
+                raise InvalidAssertion(f"Invalid number of assertions in Response: {n_assertions + n_assertions_enc}")
 
         if self.response.assertion:
             logger.debug("***Unencrypted assertion***")
@@ -941,7 +938,7 @@ class AuthnResponse(StatusResponse):
                     resp = samlp.response_from_string(decr_text)
                     # check and prepare for comparison between str and unicode
                     if type(decr_text_old) != type(decr_text):
-                        if isinstance(decr_text_old, six.binary_type):
+                        if isinstance(decr_text_old, bytes):
                             decr_text_old = decr_text_old.decode("utf-8")
                         else:
                             decr_text_old = decr_text_old.encode("utf-8")
@@ -962,7 +959,7 @@ class AuthnResponse(StatusResponse):
                     _enc_assertions = self.decrypt_assertions(resp.encrypted_assertion, decr_text, verified=True)
                     # check and prepare for comparison between str and unicode
                     if type(decr_text_old) != type(decr_text):
-                        if isinstance(decr_text_old, six.binary_type):
+                        if isinstance(decr_text_old, bytes):
                             decr_text_old = decr_text_old.decode("utf-8")
                         else:
                             decr_text_old = decr_text_old.encode("utf-8")
@@ -1350,7 +1347,7 @@ def response_factory(
 # A class of it's own
 
 
-class AssertionIDResponse(object):
+class AssertionIDResponse:
     msgtype = "assertion_id_response"
 
     def __init__(self, sec_context, attribute_converters, timeslack=0, **kwargs):

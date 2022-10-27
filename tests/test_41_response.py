@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 from contextlib import closing
 import datetime
@@ -83,7 +82,7 @@ class TestResponse:
             self.conf = conf
 
     def test_1(self):
-        xml_response = "%s" % (self._resp_,)
+        xml_response = f"{self._resp_}"
         resp = response_factory(
             xml_response,
             self.conf,
@@ -111,7 +110,7 @@ class TestResponse:
         assert isinstance(resp, AuthnResponse)
 
     def test_issuer_none(self):
-        xml_response = "%s" % (self._resp_issuer_none,)
+        xml_response = f"{self._resp_issuer_none}"
         resp = response_factory(
             xml_response,
             self.conf,

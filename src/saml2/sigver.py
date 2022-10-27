@@ -27,9 +27,10 @@ if sys.version_info[:2] >= (3, 9):
 else:
     from importlib_resources import files as _resource_files
 
+from urllib import parse
+
 from OpenSSL import crypto
 import pytz
-from six.moves.urllib import parse
 
 from saml2 import ExtensionElement
 from saml2 import SamlBase
@@ -204,7 +205,7 @@ def get_xmlsec_binary(paths=None):
             except OSError:
                 pass
 
-    raise SigverError("Cannot find {binary}".format(binary=bin_name))
+    raise SigverError(f"Cannot find {bin_name}")
 
 
 def _get_xmlsec_cryptobackend(path=None, search_paths=None, delete_tmpfiles=True):
@@ -326,7 +327,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
         return instance
 
     signed_xml = instance
-    if not isinstance(instance, six.string_types):
+    if not isinstance(instance, str):
         signed_xml = instance.to_string()
 
     for (node_name, nodeid) in elements_to_sign:
@@ -353,7 +354,7 @@ def make_temp(content, suffix="", decode=True, delete_tmpfiles=True):
         close the file) and filename (which is for instance needed by the
         xmlsec function).
     """
-    content_encoded = content.encode("utf-8") if not isinstance(content, six.binary_type) else content
+    content_encoded = content.encode("utf-8") if not isinstance(content, bytes) else content
     content_raw = base64.b64decode(content_encoded) if decode else content_encoded
     ntf = NamedTemporaryFile(suffix=suffix, delete=delete_tmpfiles)
     ntf.write(content_raw)
@@ -492,7 +493,7 @@ def sha1_digest(msg):
     return hashlib.sha1(msg).digest()
 
 
-class Signer(object):
+class Signer:
     """Abstract base class for signing algorithms."""
 
     def __init__(self, key):
@@ -540,7 +541,7 @@ RESP_ORDER = [
 ]
 
 
-class RSACrypto(object):
+class RSACrypto:
     def __init__(self, key):
         self.key = key
 
@@ -594,7 +595,7 @@ def verify_redirect_signature(saml_msg, crypto, cert=None, sigkey=None):
             return bool(signer.verify(string, _sign, _key))
 
 
-class CryptoBackend(object):
+class CryptoBackend:
     def version(self):
         raise NotImplementedError()
 
@@ -614,9 +615,7 @@ class CryptoBackend(object):
         raise NotImplementedError()
 
 
-ASSERT_XPATH = "".join(
-    ["/*[local-name()='{name}']".format(name=n) for n in ["Response", "EncryptedAssertion", "Assertion"]]
-)
+ASSERT_XPATH = "".join([f"/*[local-name()='{n}']" for n in ["Response", "EncryptedAssertion", "Assertion"]])
 
 
 class CryptoBackendXmlSec1(CryptoBackend):
@@ -629,7 +628,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
     def __init__(self, xmlsec_binary, delete_tmpfiles=True, **kwargs):
         CryptoBackend.__init__(self, **kwargs)
-        if not isinstance(xmlsec_binary, six.string_types):
+        if not isinstance(xmlsec_binary, str):
             raise ValueError("xmlsec_binary should be of type string")
         self.xmlsec = xmlsec_binary
         self.delete_tmpfiles = delete_tmpfiles
@@ -678,7 +677,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         try:
             (_stdout, _stderr, output) = self._run_xmlsec(com_list, [template])
         except XmlsecError as e:
-            six.raise_from(EncryptError(com_list), e)
+            raise EncryptError(com_list) from e
 
         return output
 
@@ -721,7 +720,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         try:
             (_stdout, _stderr, output) = self._run_xmlsec(com_list, [tmp2.name])
         except XmlsecError as e:
-            six.raise_from(EncryptError(com_list), e)
+            raise EncryptError(com_list) from e
 
         return output.decode("utf-8")
 
@@ -748,7 +747,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         try:
             (_stdout, _stderr, output) = self._run_xmlsec(com_list, [tmp.name])
         except XmlsecError as e:
-            six.raise_from(DecryptError(com_list), e)
+            raise DecryptError(com_list) from e
 
         return output.decode("utf-8")
 
@@ -802,7 +801,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param node_id: The identifier of the node
         :return: Boolean True if the signature was correct otherwise False.
         """
-        if not isinstance(signedtext, six.binary_type):
+        if not isinstance(signedtext, bytes):
             signedtext = signedtext.encode("utf-8")
 
         tmp = make_temp(signedtext, suffix=".xml", decode=False, delete_tmpfiles=self.delete_tmpfiles)
@@ -814,7 +813,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             "empty,same-doc",
             "--enabled-key-data",
             "raw-x509-cert",
-            "--pubkey-cert-{type}".format(type=cert_type),
+            f"--pubkey-cert-{cert_type}",
             cert_file,
             "--id-attr:ID",
             node_name,
@@ -826,7 +825,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         try:
             (_stdout, stderr, _output) = self._run_xmlsec(com_list, [tmp.name])
         except XmlsecError as e:
-            six.raise_from(SignatureError(com_list), e)
+            raise SignatureError(com_list) from e
 
         return parse_xmlsec_output(stderr)
 
@@ -900,7 +899,7 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         xml = xmlsec.parse_xml(statement)
         signed = xmlsec.sign(xml, key_file)
         signed_str = lxml.etree.tostring(signed, xml_declaration=False, encoding="UTF-8")
-        if not isinstance(signed_str, six.string_types):
+        if not isinstance(signed_str, str):
             signed_str = signed_str.decode("utf-8")
         return signed_str
 
@@ -970,7 +969,7 @@ def security_context(conf):
             try:
                 rsa_key = import_rsa_key_from_file(_file_name)
             except Exception as err:
-                logger.error("Cannot import key from {file}: {err_msg}".format(file=_file_name, err_msg=err))
+                logger.error(f"Cannot import key from {_file_name}: {err}")
                 raise
             else:
                 sec_backend = RSACrypto(rsa_key)
@@ -1029,7 +1028,7 @@ def encrypt_cert_from_item(item):
     return _encrypt_cert
 
 
-class CertHandlerExtra(object):
+class CertHandlerExtra:
     def __init__(self):
         pass
 
@@ -1048,7 +1047,7 @@ class CertHandlerExtra(object):
         # Excepts to return True/False
 
 
-class CertHandler(object):
+class CertHandler:
     def __init__(
         self,
         security_context,
@@ -1164,7 +1163,7 @@ class CertHandler(object):
 # How to get a rsa pub key fingerprint from a certificate
 # openssl x509 -inform pem -noout -in server.crt -pubkey > publickey.pem
 # openssl rsa -inform pem -noout -in publickey.pem -pubin -modulus
-class SecurityContext(object):
+class SecurityContext:
     my_cert = None
 
     def __init__(
@@ -1292,7 +1291,7 @@ class SecurityContext(object):
             keys = [keys]
 
         keys_filtered = (key for key in keys if key)
-        keys_encoded = (key.encode("ascii") if not isinstance(key, six.binary_type) else key for key in keys_filtered)
+        keys_encoded = (key.encode("ascii") if not isinstance(key, bytes) else key for key in keys_filtered)
         key_files = list(make_temp(key, decode=False, delete_tmpfiles=self.delete_tmpfiles) for key in keys_encoded)
         key_file_names = list(tmp.name for tmp in key_files)
 
@@ -1369,7 +1368,7 @@ class SecurityContext(object):
             certs = []
 
             for cert_name, cert in _certs:
-                if isinstance(cert, six.string_types):
+                if isinstance(cert, str):
                     content = pem_format(cert)
                     tmp = make_temp(content, suffix=".pem", decode=False, delete_tmpfiles=self.delete_tmpfiles)
                     certs.append(tmp)
@@ -1422,9 +1421,9 @@ class SecurityContext(object):
             and references[0].uri.startswith("#")
             and len(references[0].uri) > 1
         )
-        the_anchor_points_to_the_enclosing_element_ID_attribute = the_URI_attribute_contains_an_anchor and references[
-            0
-        ].uri == "#{id}".format(id=item.id)
+        the_anchor_points_to_the_enclosing_element_ID_attribute = (
+            the_URI_attribute_contains_an_anchor and references[0].uri == f"#{item.id}"
+        )
 
         # SAML implementations SHOULD use Exclusive Canonicalization,
         # with or without comments
@@ -1541,13 +1540,13 @@ class SecurityContext(object):
         :return:
         """
 
-        attr = "{type}_from_string".format(type=msgtype)
+        attr = f"{msgtype}_from_string"
         _func = getattr(saml, attr, None)
         _func = getattr(samlp, attr, _func)
 
         msg = _func(decoded_xml)
         if not msg:
-            raise TypeError("Not a {type}".format(type=msgtype))
+            raise TypeError(f"Not a {msgtype}")
 
         if not msg.signature:
             if must:
@@ -1778,7 +1777,7 @@ def pre_signature_part(
     digest_method = ds.DigestMethod(algorithm=digest_alg)
 
     reference = ds.Reference(
-        uri="#{id}".format(id=ident), digest_value=ds.DigestValue(), transforms=transforms, digest_method=digest_method
+        uri=f"#{ident}", digest_value=ds.DigestValue(), transforms=transforms, digest_method=digest_method
     )
 
     signed_info = ds.SignedInfo(
@@ -1788,7 +1787,7 @@ def pre_signature_part(
     signature = ds.Signature(signed_info=signed_info, signature_value=ds.SignatureValue())
 
     if identifier:
-        signature.id = "Signature{n}".format(n=identifier)
+        signature.id = f"Signature{identifier}"
 
     # XXX remove - do not embed the cert
     if public_key:
@@ -1836,8 +1835,8 @@ def pre_encryption_part(
     encrypted_data_id=None,
     encrypt_cert=None,
 ):
-    ek_id = encrypted_key_id or "EK_{id}".format(id=gen_random_key())
-    ed_id = encrypted_data_id or "ED_{id}".format(id=gen_random_key())
+    ek_id = encrypted_key_id or f"EK_{gen_random_key()}"
+    ed_id = encrypted_data_id or f"ED_{gen_random_key()}"
     msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
     key_encryption_method = EncryptionMethod(algorithm=key_enc)
 

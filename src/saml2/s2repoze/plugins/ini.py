@@ -5,7 +5,7 @@ from repoze.who.interfaces import IMetadataProvider
 from zope.interface import implements
 
 
-class INIMetadataProvider(object):
+class INIMetadataProvider:
 
     implements(IMetadataProvider)
 

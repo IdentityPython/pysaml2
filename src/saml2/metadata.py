@@ -153,7 +153,7 @@ def do_organization_info(ava):
     for dkey, (ckey, klass) in ORG_ATTR_TRANSL.items():
         if ckey not in ava:
             continue
-        if isinstance(ava[ckey], six.string_types):
+        if isinstance(ava[ckey], str):
             setattr(org, dkey, [_localized_name(ava[ckey], klass)])
         elif isinstance(ava[ckey], list):
             setattr(org, dkey, [_localized_name(n, klass) for n in ava[ckey]])
@@ -210,7 +210,7 @@ def do_requested_attribute(attributes, acs, is_required="false", name_format=NAM
     for attr in attributes:
         attr = from_local_name(acs, attr, name_format)
         args = {}
-        if isinstance(attr, six.string_types):
+        if isinstance(attr, str):
             args["name"] = attr
         else:
             for key in attr.keyswv():
@@ -231,7 +231,7 @@ def do_uiinfo(_uiinfo):
 
         aclass = uii.child_class(attr)
         inst = getattr(uii, attr)
-        if isinstance(val, six.string_types):
+        if isinstance(val, str):
             ainst = aclass(text=val)
             inst.append(ainst)
         elif isinstance(val, dict):
@@ -241,7 +241,7 @@ def do_uiinfo(_uiinfo):
             inst.append(ainst)
         else:
             for value in val:
-                if isinstance(value, six.string_types):
+                if isinstance(value, str):
                     ainst = aclass(text=value)
                     inst.append(ainst)
                 elif isinstance(value, dict):
@@ -281,7 +281,7 @@ def do_uiinfo(_uiinfo):
         if isinstance(val, list):
             for value in val:
                 keyw = mdui.Keywords()
-                if isinstance(value, six.string_types):
+                if isinstance(value, str):
                     keyw.text = value
                 elif isinstance(value, dict):
                     keyw.text = " ".join(value["text"])
@@ -369,7 +369,7 @@ def _do_nameid_format(cls, conf, typ):
     if not name_id_format:
         return
 
-    if isinstance(name_id_format, six.string_types):
+    if isinstance(name_id_format, str):
         name_id_format = [name_id_format]
 
     formats = [md.NameIDFormat(text=format) for format in name_id_format]
@@ -384,7 +384,7 @@ def do_endpoints(conf, endpoints):
             servs = []
             i = 1
             for args in conf[endpoint]:
-                if isinstance(args, six.string_types):  # Assume it's the location
+                if isinstance(args, str):  # Assume it's the location
                     args = {"location": args, "binding": DEFAULT_BINDING[endpoint]}
                 elif isinstance(args, tuple) or isinstance(args, list):
                     if len(args) == 2:  # (location, binding)
@@ -520,7 +520,7 @@ def do_spsso_descriptor(conf, cert=None, enc_cert=None):
             if val is None:
                 setattr(spsso, key, DEFAULT[key])  # default ?!
             else:
-                strval = "{0:>s}".format(str(val))
+                strval = f"{str(val):>s}"
                 setattr(spsso, key, strval.lower())
         except KeyError:
             setattr(spsso, key, DEFAULTS[key])

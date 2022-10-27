@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import hashlib
 from hashlib import sha1
 import importlib
@@ -69,21 +67,21 @@ from saml2.validate import valid_instance
 logger = logging.getLogger(__name__)
 
 classnames = {
-    "mdattr_entityattributes": "{ns}&{tag}".format(ns=NS_MDATTR, tag=EntityAttributes.c_tag),
-    "algsupport_signing_method": "{ns}&{tag}".format(ns=NS_ALGSUPPORT, tag=SigningMethod.c_tag),
-    "algsupport_digest_method": "{ns}&{tag}".format(ns=NS_ALGSUPPORT, tag=DigestMethod.c_tag),
-    "mdui_uiinfo": "{ns}&{tag}".format(ns=NS_MDUI, tag=UIInfo.c_tag),
-    "mdui_uiinfo_display_name": "{ns}&{tag}".format(ns=NS_MDUI, tag=DisplayName.c_tag),
-    "mdui_uiinfo_description": "{ns}&{tag}".format(ns=NS_MDUI, tag=Description.c_tag),
-    "mdui_uiinfo_information_url": "{ns}&{tag}".format(ns=NS_MDUI, tag=InformationURL.c_tag),
-    "mdui_uiinfo_privacy_statement_url": "{ns}&{tag}".format(ns=NS_MDUI, tag=PrivacyStatementURL.c_tag),
-    "mdui_uiinfo_logo": "{ns}&{tag}".format(ns=NS_MDUI, tag=Logo.c_tag),
-    "service_artifact_resolution": "{ns}&{tag}".format(ns=NS_MD, tag=ArtifactResolutionService.c_tag),
-    "service_single_sign_on": "{ns}&{tag}".format(ns=NS_MD, tag=SingleSignOnService.c_tag),
-    "service_nameid_mapping": "{ns}&{tag}".format(ns=NS_MD, tag=NameIDMappingService.c_tag),
-    "mdrpi_registration_info": "{ns}&{tag}".format(ns=NS_MDRPI, tag=RegistrationInfo.c_tag),
-    "mdrpi_registration_policy": "{ns}&{tag}".format(ns=NS_MDRPI, tag=RegistrationPolicy.c_tag),
-    "shibmd_scope": "{ns}&{tag}".format(ns=NS_SHIBMD, tag=Scope.c_tag),
+    "mdattr_entityattributes": f"{NS_MDATTR}&{EntityAttributes.c_tag}",
+    "algsupport_signing_method": f"{NS_ALGSUPPORT}&{SigningMethod.c_tag}",
+    "algsupport_digest_method": f"{NS_ALGSUPPORT}&{DigestMethod.c_tag}",
+    "mdui_uiinfo": f"{NS_MDUI}&{UIInfo.c_tag}",
+    "mdui_uiinfo_display_name": f"{NS_MDUI}&{DisplayName.c_tag}",
+    "mdui_uiinfo_description": f"{NS_MDUI}&{Description.c_tag}",
+    "mdui_uiinfo_information_url": f"{NS_MDUI}&{InformationURL.c_tag}",
+    "mdui_uiinfo_privacy_statement_url": f"{NS_MDUI}&{PrivacyStatementURL.c_tag}",
+    "mdui_uiinfo_logo": f"{NS_MDUI}&{Logo.c_tag}",
+    "service_artifact_resolution": f"{NS_MD}&{ArtifactResolutionService.c_tag}",
+    "service_single_sign_on": f"{NS_MD}&{SingleSignOnService.c_tag}",
+    "service_nameid_mapping": f"{NS_MD}&{NameIDMappingService.c_tag}",
+    "mdrpi_registration_info": f"{NS_MDRPI}&{RegistrationInfo.c_tag}",
+    "mdrpi_registration_policy": f"{NS_MDRPI}&{RegistrationPolicy.c_tag}",
+    "shibmd_scope": f"{NS_SHIBMD}&{Scope.c_tag}",
 }
 
 ENTITY_CATEGORY = "http://macedir.org/entity-category"
@@ -242,7 +240,7 @@ def repack_cert(cert):
         return "\n".join([s.strip() for s in part])
 
 
-class MetaData(object):
+class MetaData:
     def __init__(self, attrc, metadata="", node_name=None, check_validity=True, security=None, **kwargs):
         self.attrc = attrc
         self.metadata = metadata
@@ -380,7 +378,7 @@ class MetaData(object):
         for entid, item in self.items():
             hit = False
             try:
-                descr = item["{}sso_descriptor".format(typ)]
+                descr = item[f"{typ}sso_descriptor"]
             except KeyError:
                 continue
             else:
@@ -507,7 +505,7 @@ class MetaData(object):
 
 class InMemoryMetaData(MetaData):
     def __init__(self, attrc, metadata="", node_name=None, check_validity=True, security=None, **kwargs):
-        super(InMemoryMetaData, self).__init__(attrc, metadata=metadata)
+        super().__init__(attrc, metadata=metadata)
         self.entity = {}
         self.security = security
         self.node_name = node_name
@@ -696,7 +694,7 @@ class InMemoryMetaData(MetaData):
                 try:
                     for srv in ent[desc]:
                         if "artifact_resolution_service" in srv:
-                            if isinstance(eid, six.string_types):
+                            if isinstance(eid, str):
                                 eid = eid.encode("utf-8")
                             s = sha1(eid)
                             res[s.digest()] = ent
@@ -769,7 +767,7 @@ class MetaDataFile(InMemoryMetaData):
     """
 
     def __init__(self, attrc, filename=None, cert=None, **kwargs):
-        super(MetaDataFile, self).__init__(attrc, **kwargs)
+        super().__init__(attrc, **kwargs)
         if not filename:
             raise SAMLError("No file specified.")
         self.filename = filename
@@ -791,7 +789,7 @@ class MetaDataLoader(MetaDataFile):
     """
 
     def __init__(self, attrc, loader_callable, cert=None, security=None, **kwargs):
-        super(MetaDataLoader, self).__init__(attrc, **kwargs)
+        super().__init__(attrc, **kwargs)
         self.metadata_provider_callable = self.get_metadata_loader(loader_callable)
         self.cert = cert
         self.security = security
@@ -806,15 +804,15 @@ class MetaDataLoader(MetaDataFile):
         try:
             mod = importlib.import_module(module)
         except Exception as e:
-            raise RuntimeError('Cannot find metadata provider function %s: "%s"' % (func, e))
+            raise RuntimeError(f'Cannot find metadata provider function {func}: "{e}"')
 
         try:
             metadata_loader = getattr(mod, attr)
         except AttributeError:
-            raise RuntimeError('Module "%s" does not define a "%s" metadata loader' % (module, attr))
+            raise RuntimeError(f'Module "{module}" does not define a "{attr}" metadata loader')
 
         if not callable(metadata_loader):
-            raise RuntimeError("Metadata loader %s.%s must be callable" % (module, attr))
+            raise RuntimeError(f"Metadata loader {module}.{attr} must be callable")
 
         return metadata_loader
 
@@ -836,7 +834,7 @@ class MetaDataExtern(InMemoryMetaData):
         :params cert: CertificMDloaderate used to sign the metadata
         :params http:
         """
-        super(MetaDataExtern, self).__init__(attrc, **kwargs)
+        super().__init__(attrc, **kwargs)
         if not url:
             raise SAMLError("URL not specified.")
         else:
@@ -869,7 +867,7 @@ class MetaDataMD(InMemoryMetaData):
     """
 
     def __init__(self, attrc, filename, **kwargs):
-        super(MetaDataMD, self).__init__(attrc, **kwargs)
+        super().__init__(attrc, **kwargs)
         self.filename = filename
 
     def load(self, *args, **kwargs):
@@ -889,7 +887,7 @@ class MetaDataMDX(InMemoryMetaData):
     @staticmethod
     def sha1_entity_transform(entity_id):
         entity_id_sha1 = hashlib.sha1(entity_id.encode("utf-8")).hexdigest()
-        transform = "{{sha1}}{digest}".format(digest=entity_id_sha1)
+        transform = f"{{sha1}}{entity_id_sha1}"
         return transform
 
     def __init__(
@@ -915,7 +913,7 @@ class MetaDataMDX(InMemoryMetaData):
         https://www.w3.org/TR/xmlschema-2/#duration
         :params http_client_timeout: timeout of http requests
         """
-        super(MetaDataMDX, self).__init__(None, **kwargs)
+        super().__init__(None, **kwargs)
         if not url:
             raise SAMLError("URL for MDQ server not specified.")
 
@@ -938,26 +936,26 @@ class MetaDataMDX(InMemoryMetaData):
         # <EntitiesDescriptor> element but we will not currently support
         # that use case since it is unlikely to be leveraged for most
         # flows.
-        self.node_name = "{ns}:{tag}".format(ns=EntityDescriptor.c_namespace, tag=EntityDescriptor.c_tag)
+        self.node_name = f"{EntityDescriptor.c_namespace}:{EntityDescriptor.c_tag}"
 
     def load(self, *args, **kwargs):
         # Do nothing
         pass
 
     def _fetch_metadata(self, item):
-        mdx_url = "{url}/entities/{id}".format(url=self.url, id=self.entity_transform(item))
+        mdx_url = f"{self.url}/entities/{self.entity_transform(item)}"
 
         response = requests.get(
             mdx_url, headers={"Accept": SAML_METADATA_CONTENT_TYPE}, timeout=self.http_client_timeout
         )
         if response.status_code != 200:
-            error_msg = "Fething {item}: Got response status {status}".format(item=item, status=response.status_code)
+            error_msg = f"Fething {item}: Got response status {response.status_code}"
             logger.warning(error_msg)
             raise KeyError(error_msg)
 
         _txt = response.content
         if not self.parse_and_check_signature(_txt):
-            error_msg = "Fething {item}: invalid signature".format(item=item)
+            error_msg = f"Fething {item}: invalid signature"
             logger.error(error_msg)
             raise KeyError(error_msg)
 
@@ -972,7 +970,7 @@ class MetaDataMDX(InMemoryMetaData):
         if item not in self.entity:
             entity = self._fetch_metadata(item)
         elif not self._is_metadata_fresh(item):
-            msg = "Metadata for {} have expired; refreshing metadata".format(item)
+            msg = f"Metadata for {item} have expired; refreshing metadata"
             logger.info(msg)
             _ = self.entity.pop(item)
             entity = self._fetch_metadata(item)
@@ -1282,7 +1280,10 @@ class MetadataStore(MetaData):
         if binding is None:
             binding = BINDING_DISCO
         return self.ext_service(
-            entity_id, "spsso_descriptor", "%s&%s" % (DiscoveryResponse.c_namespace, DiscoveryResponse.c_tag), binding
+            entity_id,
+            "spsso_descriptor",
+            f"{DiscoveryResponse.c_namespace}&{DiscoveryResponse.c_tag}",
+            binding,
         )
 
     def attribute_requirement(self, entity_id, index=None):
@@ -1646,7 +1647,7 @@ class MetadataStore(MetaData):
     def __str__(self):
         _str = ["{"]
         for key, val in self.metadata.items():
-            _str.append("%s: %s" % (key, val))
+            _str.append(f"{key}: {val}")
         _str.append("}")
         return "\n".join(_str)
 

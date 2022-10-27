@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 from contextlib import closing
 from datetime import datetime
 
@@ -70,7 +69,7 @@ class TestAuthnResponse:
             self.ar = authn_response(self.conf, "http://lingon.catalogix.se:8087/")
 
     def test_verify_1(self):
-        xml_response = "%s" % (self._resp_,)
+        xml_response = f"{self._resp_}"
         print(xml_response)
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
         self.ar.timeslack = 10000
@@ -118,7 +117,7 @@ class TestAuthnResponse:
         assert self.ar.name_id
 
     def test_verify_w_authn(self):
-        xml_response = "%s" % (self._resp_authn,)
+        xml_response = f"{self._resp_authn}"
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
         self.ar.return_addr = "http://lingon.catalogix.se:8087/"
         self.ar.entity_id = "urn:mace:example.com:saml:roland:sp"

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 from pathutils import full_path
 
 from saml2 import BINDING_HTTP_ARTIFACT

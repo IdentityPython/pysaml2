@@ -44,7 +44,7 @@ from saml2.sigver import verify_redirect_signature
 logger = logging.getLogger("saml2.idp")
 
 
-class Cache(object):
+class Cache:
     def __init__(self):
         self.user2uid = {}
         self.uid2user = {}
@@ -80,7 +80,7 @@ def dict2list_of_tuples(d):
 # -----------------------------------------------------------------------------
 
 
-class Service(object):
+class Service:
     def __init__(self, environ, start_response, user=None):
         self.environ = environ
         logger.debug("ENVIRON: %s", environ)
@@ -90,7 +90,7 @@ class Service(object):
     def unpack_redirect(self):
         if "QUERY_STRING" in self.environ:
             _qs = self.environ["QUERY_STRING"]
-            return dict([(k, v[0]) for k, v in parse_qs(_qs).items()])
+            return {k: v[0] for k, v in parse_qs(_qs).items()}
         else:
             return None
 
@@ -98,7 +98,7 @@ class Service(object):
         _dict = parse_qs(get_post(self.environ))
         logger.debug("unpack_post:: %s", _dict)
         try:
-            return dict([(k, v[0]) for k, v in _dict.items()])
+            return {k: v[0] for k, v in _dict.items()}
         except Exception:
             return None
 
@@ -277,11 +277,11 @@ class SSO(Service):
             resp_args, _resp = self.verify_request(query, binding_in)
         except UnknownPrincipal as excp:
             logger.error("UnknownPrincipal: %s", excp)
-            resp = ServiceError("UnknownPrincipal: %s" % (excp,))
+            resp = ServiceError(f"UnknownPrincipal: {excp}")
             return resp(self.environ, self.start_response)
         except UnsupportedBinding as excp:
             logger.error("UnsupportedBinding: %s", excp)
-            resp = ServiceError("UnsupportedBinding: %s" % (excp,))
+            resp = ServiceError(f"UnsupportedBinding: {excp}")
             return resp(self.environ, self.start_response)
 
         if not _resp:
@@ -301,11 +301,11 @@ class SSO(Service):
                     authn=AUTHN_BROKER[self.environ["idp.authn_ref"]],
                     sign_assertion=sign_assertion,
                     sign_response=False,
-                    **resp_args
+                    **resp_args,
                 )
             except Exception as excp:
                 logging.error(exception_trace(excp))
-                resp = ServiceError("Exception: %s" % (excp,))
+                resp = ServiceError(f"Exception: {excp}")
                 return resp(self.environ, self.start_response)
 
         logger.info("AuthNResponse: %s", _resp)
@@ -505,7 +505,7 @@ def do_verify(environ, start_response, _):
 
         kaka = set_cookie("idpauthn", "/", uid, query["authn_reference"][0])
 
-        lox = "%s?id=%s&key=%s" % (query["redirect_uri"][0], uid, query["key"][0])
+        lox = "{}?id={}&key={}".format(query["redirect_uri"][0], uid, query["key"][0])
         logger.debug("Redirect => %s", lox)
         resp = Redirect(lox, headers=[kaka], content="text/html")
 
@@ -851,7 +851,7 @@ def staticfile(environ, start_response):
             path += "/"
         path += environ.get("PATH_INFO", "").lstrip("/")
         start_response("200 OK", [("Content-Type", "text/xml")])
-        return open(path, "r").read()
+        return open(path).read()
     except Exception as ex:
         logger.error("An error occured while creating metadata: %s", ex.message)
         return not_found(environ, start_response)
@@ -972,7 +972,7 @@ if __name__ == "__main__":
     PORT = 8088
 
     SRV = make_server(HOST, PORT, application)
-    print("IdP listening on %s:%s" % (HOST, PORT))
+    print(f"IdP listening on {HOST}:{PORT}")
     SRV.serve_forever()
 else:
     _rot = args.mako_root

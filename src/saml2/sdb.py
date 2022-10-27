@@ -15,7 +15,7 @@ def context_match(cfilter, cntx):
 # The key to the stored authn statement is placed encrypted in the cookie
 
 
-class SessionStorage(object):
+class SessionStorage:
     """In memory storage of session information"""
 
     def __init__(self):

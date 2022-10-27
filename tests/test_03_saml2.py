@@ -18,7 +18,7 @@ from saml2.saml import SubjectLocality
 
 
 try:
-    from xml.etree import cElementTree as ElementTree
+    from xml.etree import ElementTree as ElementTree
 except ImportError:
     try:
         import cElementTree as ElementTree

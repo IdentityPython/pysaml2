@@ -64,8 +64,8 @@ class TestIdentifier:
     def setup_class(self):
         for extension in (".db", ".dir", ".dat", ".bak"):
             try:
-                os.remove(full_path("subject.db{}".format(extension)))
-            except (OSError, IOError):
+                os.remove(full_path(f"subject.db{extension}"))
+            except OSError:
                 pass
         self.id = IdentDB(full_path("subject.db"), "example.com", "example")
 

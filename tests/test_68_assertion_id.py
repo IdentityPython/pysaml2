@@ -1,7 +1,6 @@
 from contextlib import closing
-
-from six.moves.urllib.parse import parse_qs
-from six.moves.urllib.parse import urlparse
+from urllib.parse import parse_qs
+from urllib.parse import urlparse
 
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP

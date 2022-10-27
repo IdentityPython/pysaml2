@@ -32,7 +32,7 @@ def _eq(l1, l2):
         return len(l1) == len(l2)
 
 
-class DummyResponse(object):
+class DummyResponse:
     def __init__(self, headers):
         self.headers = headers
 

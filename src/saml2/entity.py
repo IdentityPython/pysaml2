@@ -117,11 +117,11 @@ def create_artifact(entity_id, message_handle, endpoint_index=0):
     :param endpoint_index:
     :return:
     """
-    if not isinstance(entity_id, six.binary_type):
+    if not isinstance(entity_id, bytes):
         entity_id = entity_id.encode("utf-8")
     sourceid = sha1(entity_id)
 
-    if not isinstance(message_handle, six.binary_type):
+    if not isinstance(message_handle, bytes):
         message_handle = message_handle.encode("utf-8")
     ter = b"".join((ARTIFACT_TYPECODE, ("%.2x" % endpoint_index).encode("ascii"), sourceid.digest(), message_handle))
     return base64.b64encode(ter).decode("ascii")
@@ -182,7 +182,7 @@ class Entity(HTTPBase):
         self.sec = security_context(self.config)
 
         if virtual_organization:
-            if isinstance(virtual_organization, six.string_types):
+            if isinstance(virtual_organization, str):
                 self.vorg = self.config.vorg[virtual_organization]
             elif isinstance(virtual_organization, VirtualOrg):
                 self.vorg = virtual_organization
@@ -268,7 +268,7 @@ class Entity(HTTPBase):
         sign = sign if sign is not None else self.should_sign
         sign_alg = sigalg or self.signing_algorithm
         if sign_alg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
-            raise Exception("Signature algo not in allowed list: {algo}".format(algo=sign_alg))
+            raise Exception(f"Signature algo not in allowed list: {sign_alg}")
 
         # unless if BINDING_HTTP_ARTIFACT
         if response:
@@ -499,9 +499,9 @@ class Entity(HTTPBase):
         sign_alg = sign_alg or self.signing_algorithm
         digest_alg = digest_alg or self.digest_algorithm
         if sign_alg not in [long_name for short_name, long_name in SIG_ALLOWED_ALG]:
-            raise Exception("Signature algo not in allowed list: {algo}".format(algo=sign_alg))
+            raise Exception(f"Signature algo not in allowed list: {sign_alg}")
         if digest_alg not in [long_name for short_name, long_name in DIGEST_ALLOWED_ALG]:
-            raise Exception("Digest algo not in allowed list: {algo}".format(algo=digest_alg))
+            raise Exception(f"Digest algo not in allowed list: {digest_alg}")
 
         if msg.signature is None:
             msg.signature = pre_signature_part(msg.id, self.sec.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg)

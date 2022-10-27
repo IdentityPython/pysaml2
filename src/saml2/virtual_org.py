@@ -7,7 +7,7 @@ from saml2.saml import NAMEID_FORMAT_PERSISTENT
 logger = logging.getLogger(__name__)
 
 
-class VirtualOrg(object):
+class VirtualOrg:
     def __init__(self, sp, vorg, cnf):
         self.sp = sp  # The parent SP client instance
         self._name = vorg

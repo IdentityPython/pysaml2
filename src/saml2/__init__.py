@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """Contains base classes representing SAML elements.
 
@@ -26,7 +25,7 @@ from saml2.version import version as __version__
 
 
 try:
-    from xml.etree import cElementTree as ElementTree
+    from xml.etree import ElementTree as ElementTree
 
     if ElementTree.VERSION < "1.3.0":
         # cElementTree has no support for register_namespace
@@ -79,7 +78,7 @@ BINDING_URI = "urn:oasis:names:tc:SAML:2.0:bindings:URI"
 
 
 def class_name(instance):
-    return "%s:%s" % (instance.c_namespace, instance.c_tag)
+    return f"{instance.c_namespace}:{instance.c_tag}"
 
 
 def create_class_from_xml_string(target_class, xml_string):
@@ -96,7 +95,7 @@ def create_class_from_xml_string(target_class, xml_string):
         the contents of the XML - or None if the root XML tag and namespace did
         not match those of the target class.
     """
-    if not isinstance(xml_string, six.binary_type):
+    if not isinstance(xml_string, bytes):
         xml_string = xml_string.encode("utf-8")
     tree = defusedxml.ElementTree.fromstring(xml_string)
     return create_class_from_element_tree(target_class, tree)
@@ -126,7 +125,7 @@ def create_class_from_element_tree(target_class, tree, namespace=None, tag=None)
         namespace = target_class.c_namespace
     if tag is None:
         tag = target_class.c_tag
-    if tree.tag == "{%s}%s" % (namespace, tag):
+    if tree.tag == f"{{{namespace}}}{tag}":
         target = target_class()
         target.harvest_element_tree(tree)
         return target
@@ -144,7 +143,7 @@ class SAMLError(Exception):
     pass
 
 
-class ExtensionElement(object):
+class ExtensionElement:
     """XML which is not part of the SAML specification,
     these are called extension elements. If a classes parser
     encounters an unexpected XML construct, it is translated into an
@@ -184,7 +183,7 @@ class ExtensionElement(object):
         element_tree = ElementTree.Element("")
 
         if self.namespace is not None:
-            element_tree.tag = "{%s}%s" % (self.namespace, self.tag)
+            element_tree.tag = f"{{{self.namespace}}}{self.tag}"
         else:
             element_tree.tag = self.tag
 
@@ -300,7 +299,7 @@ def _extension_element_from_element_tree(element_tree):
     return extension
 
 
-class ExtensionContainer(object):
+class ExtensionContainer:
     c_tag = ""
     c_namespace = ""
 
@@ -464,8 +463,7 @@ class SamlBase(ExtensionContainer):
 
     def _get_all_c_children_with_order(self):
         if len(self.c_child_order) > 0:
-            for child in self.c_child_order:
-                yield child
+            yield from self.c_child_order
         else:
             for _, values in iter(self.__class__.c_children.items()):
                 yield values[0]
@@ -542,7 +540,7 @@ class SamlBase(ExtensionContainer):
         should not be called on in this class.
 
         """
-        new_tree = ElementTree.Element("{%s}%s" % (self.__class__.c_namespace, self.__class__.c_tag))
+        new_tree = ElementTree.Element(f"{{{self.__class__.c_namespace}}}{self.__class__.c_tag}")
         self._add_members_to_element_tree(new_tree)
         return new_tree
 
@@ -689,7 +687,7 @@ class SamlBase(ExtensionContainer):
     def __str__(self):
         # Yes this is confusing. http://bugs.python.org/issue10942
         x = self.to_string()
-        if not isinstance(x, six.string_types):
+        if not isinstance(x, str):
             x = x.decode("utf-8")
         return x
 
@@ -742,7 +740,7 @@ class SamlBase(ExtensionContainer):
             self.text = "true" if val else "false"
         elif isinstance(val, int):
             self.text = str(val)
-        elif isinstance(val, six.string_types):
+        elif isinstance(val, str):
             self.text = val
         elif val is None:
             pass
@@ -817,7 +815,7 @@ class SamlBase(ExtensionContainer):
                 continue
             svals = self.__dict__[key]
             ovals = other.__dict__[key]
-            if isinstance(svals, six.string_types):
+            if isinstance(svals, str):
                 if svals != ovals:
                     return False
             elif isinstance(svals, list):

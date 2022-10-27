@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from pathutils import full_path
 from pymongo.errors import ConnectionFailure
 

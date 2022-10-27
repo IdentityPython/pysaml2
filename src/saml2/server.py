@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 
 """Contains classes and functions that a SAML2.0 Identity provider (IdP)
@@ -110,7 +109,7 @@ class Server(Entity):
         _spec = self.config.getattr("session_storage", "idp")
         if not _spec:
             return SessionStorage()
-        elif isinstance(_spec, six.string_types):
+        elif isinstance(_spec, str):
             if _spec.lower() == "memory":
                 return SessionStorage()
         else:  # Should be tuple
@@ -137,7 +136,7 @@ class Server(Entity):
         typ = ""
         if not dbspec:
             idb = {}
-        elif isinstance(dbspec, six.string_types):
+        elif isinstance(dbspec, str):
             idb = _shelve_compat(dbspec, writeback=True, protocol=2)
         else:  # database spec is a a 2-tuple (type, address)
             # print(>> sys.stderr, "DBSPEC: %s" % (dbspec,))
@@ -164,7 +163,7 @@ class Server(Entity):
         elif idb is not None:
             self.ident = IdentDB(idb)
         elif dbspec:
-            raise Exception("Couldn't open identity database: %s" % (dbspec,))
+            raise Exception(f"Couldn't open identity database: {dbspec}")
 
         try:
             _domain = self.config.getattr("domain", "idp")
@@ -404,7 +403,7 @@ class Server(Entity):
 
         if authn:  # expected to be a dictionary
             # Would like to use dict comprehension but ...
-            authn_args = dict([(AUTHN_DICT_MAP[k], v) for k, v in authn.items() if k in AUTHN_DICT_MAP])
+            authn_args = {AUTHN_DICT_MAP[k]: v for k, v in authn.items() if k in AUTHN_DICT_MAP}
             authn_args.update(kwargs)
 
             assertion = ast.construct(
@@ -848,7 +847,7 @@ class Server(Entity):
                 pefim=pefim,
                 **kwargs,
             )
-        except IOError as exc:
+        except OSError as exc:
             response = self.create_error_response(
                 in_response_to,
                 destination=destination,

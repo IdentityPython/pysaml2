@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
 
 import argparse
 
@@ -9,16 +8,16 @@ try:
 except:
     import cgi as html
 
+from http.cookies import SimpleCookie
 import importlib
 import logging
 import os
 import re
 import sys
+from urllib.parse import parse_qs
 import xml.dom.minidom
 
 import six
-from six.moves.http_cookies import SimpleCookie
-from six.moves.urllib.parse import parse_qs
 
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_POST
@@ -78,7 +77,7 @@ def dict_to_table(ava, lev=0, width=1):
     txt = ['<table border=%s bordercolor="black">\n' % width]
     for prop, valarr in ava.items():
         txt.append("<tr>\n")
-        if isinstance(valarr, six.string_types):
+        if isinstance(valarr, str):
             txt.append("<th>%s</th>\n" % str(prop))
             txt.append("<td>%s</td>\n" % valarr)
         elif isinstance(valarr, list):
@@ -135,12 +134,12 @@ def handle_static(environ, start_response, path):
             resp = Response(data, headers=[("Content-Type", "image/png")])
         else:
             resp = Response(data)
-    except IOError:
+    except OSError:
         resp = NotFound()
     return resp(environ, start_response)
 
 
-class ECPResponse(object):
+class ECPResponse:
     code = 200
     title = "OK"
 
@@ -149,7 +148,7 @@ class ECPResponse(object):
 
     # noinspection PyUnusedLocal
     def __call__(self, environ, start_response):
-        start_response("%s %s" % (self.code, self.title), [("Content-Type", "text/xml")])
+        start_response(f"{self.code} {self.title}", [("Content-Type", "text/xml")])
         return [self.content]
 
 
@@ -165,7 +164,7 @@ def _expiration(timeout, tformat=None):
         return time_util.in_a_while(minutes=timeout, format=tformat)
 
 
-class Cache(object):
+class Cache:
     def __init__(self):
         self.uid2user = {}
         self.cookie_name = "spauthn"
@@ -222,7 +221,7 @@ class Cache(object):
 # -----------------------------------------------------------------------------
 
 
-class Service(object):
+class Service:
     def __init__(self, environ, start_response, user=None):
         self.environ = environ
         logger.debug("ENVIRON: %s", environ)
@@ -233,14 +232,14 @@ class Service(object):
     def unpack_redirect(self):
         if "QUERY_STRING" in self.environ:
             _qs = self.environ["QUERY_STRING"]
-            return dict([(k, v[0]) for k, v in parse_qs(_qs).items()])
+            return {k: v[0] for k, v in parse_qs(_qs).items()}
         else:
             return None
 
     def unpack_post(self):
         _dict = parse_qs(get_post(self.environ).decode("utf8"))
         logger.debug("unpack_post:: %s", _dict)
-        return dict([(k, v[0]) for k, v in _dict.items()])
+        return {k: v[0] for k, v in _dict.items()}
 
     def unpack_soap(self):
         try:
@@ -333,7 +332,7 @@ class Service(object):
 # -----------------------------------------------------------------------------
 
 
-class User(object):
+class User:
     def __init__(self, name_id, data, saml_response):
         self.name_id = name_id
         self.data = data
@@ -382,20 +381,20 @@ class ACS(Service):
             )
         except UnknownPrincipal as excp:
             logger.error("UnknownPrincipal: %s", excp)
-            resp = ServiceError("UnknownPrincipal: %s" % (excp,))
+            resp = ServiceError(f"UnknownPrincipal: {excp}")
             return resp(self.environ, self.start_response)
         except UnsupportedBinding as excp:
             logger.error("UnsupportedBinding: %s", excp)
-            resp = ServiceError("UnsupportedBinding: %s" % (excp,))
+            resp = ServiceError(f"UnsupportedBinding: {excp}")
             return resp(self.environ, self.start_response)
         except VerificationError as err:
-            resp = ServiceError("Verification error: %s" % (err,))
+            resp = ServiceError(f"Verification error: {err}")
             return resp(self.environ, self.start_response)
         except SignatureError as err:
-            resp = ServiceError("Signature error: %s" % (err,))
+            resp = ServiceError(f"Signature error: {err}")
             return resp(self.environ, self.start_response)
         except Exception as err:
-            resp = ServiceError("Other error: %s" % (err,))
+            resp = ServiceError(f"Other error: {err}")
             return resp(self.environ, self.start_response)
 
         logger.info("AVA: %s", self.response.ava)
@@ -431,7 +430,7 @@ class ACS(Service):
 # -----------------------------------------------------------------------------
 
 
-class SSO(object):
+class SSO:
     def __init__(
         self,
         sp,
@@ -481,7 +480,7 @@ class SSO(object):
         sid_ = sid()
         self.cache.outstanding_queries[sid_] = came_from
         logger.debug("Redirect to WAYF function: %s", self.wayf)
-        return -1, SeeOther(headers=[("Location", "%s?%s" % (self.wayf, sid_))])
+        return -1, SeeOther(headers=[("Location", f"{self.wayf}?{sid_}")])
 
     def _pick_idp(self, came_from):
         """
@@ -688,7 +687,7 @@ def main(environ, start_response, sp):
         return sso.do()
 
     body = dict_to_table(user.data)
-    body.append("<br><pre>{authn_stmt}</pre>".format(authn_stmt=_html_escape(user.authn_statement)))
+    body.append(f"<br><pre>{_html_escape(user.authn_statement)}</pre>")
     body.append("<br><a href='/logout'>logout</a>")
 
     resp = Response(body)
@@ -862,7 +861,7 @@ def application(environ, start_response):
         return resp(environ, start_response)
 
 
-class ToBytesMiddleware(object):
+class ToBytesMiddleware:
     """Converts a message to bytes to be sent by WSGI server."""
 
     def __init__(self, app):
@@ -960,7 +959,7 @@ if __name__ == "__main__":
         SRV.ssl_adapter = pyopenssl.pyOpenSSLAdapter(SERVER_CERT, SERVER_KEY, CERT_CHAIN)
         _https = " using SSL/TLS"
     logger.info("Server starting")
-    print("SP listening on %s:%s%s" % (HOST, PORT, _https))
+    print(f"SP listening on {HOST}:{PORT}{_https}")
     try:
         SRV.start()
     except KeyboardInterrupt:

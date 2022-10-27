@@ -6,8 +6,7 @@ from ipaddress import IPv6Address
 import re
 import struct
 import time
-
-from six.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 
 from saml2 import time_util
 
@@ -334,9 +333,9 @@ def _valid_instance(instance, val):
     try:
         val.verify()
     except NotValid as exc:
-        raise NotValid("Class '%s' instance: %s" % (instance.__class__.__name__, exc.args[0]))
+        raise NotValid(f"Class '{instance.__class__.__name__}' instance: {exc.args[0]}")
     except OutsideCardinality as exc:
-        raise NotValid("Class '%s' instance cardinality error: %s" % (instance.__class__.__name__, exc.args[0]))
+        raise NotValid(f"Class '{instance.__class__.__name__}' instance cardinality error: {exc.args[0]}")
 
 
 ERROR_TEXT = "Wrong type of value '%s' on attribute '%s' expected it to be %s"
@@ -355,13 +354,13 @@ def valid_instance(instance):
         try:
             validate_value_type(instance.text.strip(), instclass.c_value_type)
         except NotValid as exc:
-            raise NotValid("Class '%s' instance: %s" % (class_name, exc.args[0]))
+            raise NotValid(f"Class '{class_name}' instance: {exc.args[0]}")
 
     for (name, typ, required) in instclass.c_attributes.values():
         value = getattr(instance, name, "")
         if required and not value:
             txt = "Required value on property '%s' missing" % name
-            raise MustValueError("Class '%s' instance: %s" % (class_name, txt))
+            raise MustValueError(f"Class '{class_name}' instance: {txt}")
 
         if value:
             try:
@@ -376,7 +375,7 @@ def valid_instance(instance):
                     valid(typ, value)
             except (NotValid, ValueError) as exc:
                 txt = ERROR_TEXT % (value, name, exc.args[0])
-                raise NotValid("Class '%s' instance: %s" % (class_name, txt))
+                raise NotValid(f"Class '{class_name}' instance: {txt}")
 
     for (name, _spec) in instclass.c_children.values():
         value = getattr(instance, name, "")
@@ -406,13 +405,11 @@ def valid_instance(instance):
             if _card:
                 if _cmin is not None and _cmin > vlen:
                     raise NotValid(
-                        "Class '%s' instance cardinality error: %s"
-                        % (class_name, "less then min (%s<%s)" % (vlen, _cmin))
+                        "Class '%s' instance cardinality error: %s" % (class_name, f"less then min ({vlen}<{_cmin})")
                     )
                 if _cmax is not None and vlen > _cmax:
                     raise NotValid(
-                        "Class '%s' instance cardinality error: %s"
-                        % (class_name, "more then max (%s>%s)" % (vlen, _cmax))
+                        "Class '%s' instance cardinality error: %s" % (class_name, f"more then max ({vlen}>{_cmax})")
                     )
 
             if _list:
@@ -424,7 +421,7 @@ def valid_instance(instance):
         else:
             if _cmin:
                 raise NotValid(
-                    "Class '%s' instance cardinality error: %s" % (class_name, "too few values on %s" % name)
+                    "Class '{}' instance cardinality error: {}".format(class_name, "too few values on %s" % name)
                 )
 
     return True

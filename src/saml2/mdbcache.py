@@ -17,7 +17,7 @@ from saml2.time_util import TIME_FORMAT
 logger = logging.getLogger(__name__)
 
 
-class Cache(object):
+class Cache:
     def __init__(self, server=None, debug=0, db=None):
         if server:
             connection = MongoClient(server)

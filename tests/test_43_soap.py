@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 try:
-    from xml.etree import cElementTree as ElementTree
+    from xml.etree import ElementTree as ElementTree
 
     if ElementTree.VERSION < "1.3.0":
         # cElementTree has no support for register_namespace

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import copy
 import importlib
 import logging
@@ -40,7 +39,7 @@ def _filter_values(vals, vlist=None, must=False):
     if vals is None:  # cannot iterate over None, return early
         return vals
 
-    if isinstance(vlist, six.string_types):
+    if isinstance(vlist, str):
         vlist = [vlist]
 
     res = []
@@ -148,7 +147,7 @@ def filter_on_demands(ava, required=None, optional=None):
     if required is None:
         required = {}
 
-    lava = dict([(k.lower(), k) for k in ava.keys()])
+    lava = {k.lower(): k for k in ava.keys()}
 
     for attr, vals in required.items():
         attr = attr.lower()
@@ -156,9 +155,9 @@ def filter_on_demands(ava, required=None, optional=None):
             if vals:
                 for val in vals:
                     if val not in ava[lava[attr]]:
-                        raise MissingValue("Required attribute value missing: %s,%s" % (attr, val))
+                        raise MissingValue(f"Required attribute value missing: {attr},{val}")
         else:
-            raise MissingValue("Required attribute missing: %s" % (attr,))
+            raise MissingValue(f"Required attribute missing: {attr}")
 
     if optional is None:
         optional = {}
@@ -184,7 +183,7 @@ def filter_on_wire_representation(ava, acs, required=None, optional=None):
     :param optional: A list of saml.Attributes
     :return: Dictionary of expected/wanted attributes and values
     """
-    acsdic = dict([(ac.name_format, ac) for ac in acs])
+    acsdic = {ac.name_format: ac for ac in acs}
 
     if required is None:
         required = []
@@ -239,7 +238,7 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
         else:
             if _rests is None:
                 continue
-            if isinstance(vals, six.string_types):
+            if isinstance(vals, str):
                 vals = [vals]
             rvals = []
             for restr in _rests:
@@ -308,7 +307,7 @@ def compile(restrictions):
     return restrictions
 
 
-class Policy(object):
+class Policy:
     """Handles restrictions on assertions."""
 
     def __init__(self, restrictions=None, mds=None):
@@ -582,7 +581,7 @@ class Policy(object):
         )
 
 
-class EntityCategories(object):
+class EntityCategories:
     pass
 
 

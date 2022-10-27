@@ -60,7 +60,7 @@ def test_construct_deconstruct_response():
     )
     ds = DiscoveryServer(config_file=dotname("disco_conf"))
     dsr = ds.parse_discovery_service_request(url)
-    args = dict([(key, dsr[key]) for key in ["returnIDParam", "return"]])
+    args = {key: dsr[key] for key in ["returnIDParam", "return"]}
     url = ds.create_discovery_service_response(entity_id="https://example.com/saml/idp.xml", **args)
 
     idp_id = sp.parse_discovery_service_response(url, returnIDParam="foo")
