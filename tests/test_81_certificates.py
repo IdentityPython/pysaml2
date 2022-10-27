@@ -36,7 +36,7 @@ class TestGenerateCertificates(unittest.TestCase):
             cert_info_ca,
             request=False,
             write_to_file=True,
-            cert_dir=os.path.dirname(os.path.abspath(__file__)) + "/pki",
+            cert_dir=f"{os.path.dirname(os.path.abspath(__file__))}/pki",
         )
 
         req_cert_str, req_key_str = osw.create_certificate(cert_info, request=True)

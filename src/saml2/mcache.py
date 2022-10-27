@@ -57,7 +57,7 @@ class Cache:
 
         res = {}
         oldees = []
-        for (entity_id, item) in self._cache.get_multi(entities, subject_id + "_").items():
+        for (entity_id, item) in self._cache.get_multi(entities, f"{subject_id}_").items():
             try:
                 info = self.get_info(item)
             except TooOld:

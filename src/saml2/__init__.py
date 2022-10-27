@@ -628,7 +628,7 @@ class SamlBase(ExtensionContainer):
         uri_map = {}
         for prefix, uri in prefix_map.items():
             uri_map[uri] = prefix
-            elem.set("xmlns:" + prefix, uri)
+            elem.set(f"xmlns:{prefix}", uri)
 
         # fixup all elements in the tree
         memo = {}
@@ -644,7 +644,7 @@ class SamlBase(ExtensionContainer):
                     return
                 uri, tag = name[1:].split("}")
                 if uri in uri_map:
-                    new_name = uri_map[uri] + ":" + tag
+                    new_name = f"{uri_map[uri]}:{tag}"
                     memo[name] = new_name
                     return new_name
 

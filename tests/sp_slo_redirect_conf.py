@@ -13,7 +13,7 @@ CONFIG = {
         "sp": {
             "endpoints": {
                 "assertion_consumer_service": [(HOME, BINDING_HTTP_POST)],
-                "single_logout_service": [(HOME + "slo", BINDING_HTTP_REDIRECT)],
+                "single_logout_service": [(f"{HOME}slo", BINDING_HTTP_REDIRECT)],
             },
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],

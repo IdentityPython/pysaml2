@@ -194,7 +194,7 @@ def sid():
     :return: A random string prefix with 'id-' to make it
         compliant with the NCName specification
     """
-    return "id-" + rndstr(17)
+    return f"id-{rndstr(17)}"
 
 
 def parse_attribute_map(filenames):

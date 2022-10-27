@@ -331,7 +331,7 @@ class StatusResponse:
                 self.response = self.sec.check_signature(instance)
             except SignatureError:
                 # The response as a whole might be signed or not
-                self.response = self.sec.check_signature(instance, samlp.NAMESPACE + ":Response")
+                self.response = self.sec.check_signature(instance, f"{samlp.NAMESPACE}:Response")
         else:
             self.not_signed = True
             self.response = instance

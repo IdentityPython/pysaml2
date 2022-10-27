@@ -12,8 +12,8 @@ CONFIG = {
     "service": {
         "aa": {
             "endpoints": {
-                "attribute_service": [(BASE + "as", BINDING_HTTP_REDIRECT)],
-                "single_logout_service": [(BASE + "slo", BINDING_SOAP)],
+                "attribute_service": [(f"{BASE}as", BINDING_HTTP_REDIRECT)],
+                "single_logout_service": [(f"{BASE}slo", BINDING_SOAP)],
             },
             "release_policy": {
                 "default": {
@@ -25,7 +25,7 @@ CONFIG = {
             "subject_data": full_path("aa.db"),
         }
     },
-    "entityid": BASE + "aa",
+    "entityid": f"{BASE}aa",
     "name": "Rolands AA",
     "debug": 1,
     "key_file": full_path("test.key"),

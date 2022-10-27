@@ -209,7 +209,7 @@ def metadata(environ, start_response):
         if path[-1] != "/":
             path += "/"
         metadata = create_metadata_string(
-            path + "sp_conf.py", None, args.valid, args.cert, args.keyfile, args.id, args.name, args.sign
+            f"{path}sp_conf.py", None, args.valid, args.cert, args.keyfile, args.id, args.name, args.sign
         )
         start_response("200 OK", [("Content-Type", "text/xml")])
         return metadata

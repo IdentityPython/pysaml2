@@ -962,8 +962,8 @@ if __name__ == "__main__":
 
     _rot = args.mako_root
     LOOKUP = TemplateLookup(
-        directories=[_rot + "templates", _rot + "htdocs"],
-        module_directory=_rot + "modules",
+        directories=[f"{_rot}templates", f"{_rot}htdocs"],
+        module_directory=f"{_rot}modules",
         input_encoding="utf-8",
         output_encoding="utf-8",
     )
@@ -977,8 +977,8 @@ if __name__ == "__main__":
 else:
     _rot = args.mako_root
     LOOKUP = TemplateLookup(
-        directories=[_rot + "templates", _rot + "htdocs"],
-        module_directory=_rot + "modules",
+        directories=[f"{_rot}templates", f"{_rot}htdocs"],
+        module_directory=f"{_rot}modules",
         input_encoding="utf-8",
         output_encoding="utf-8",
     )

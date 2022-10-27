@@ -131,7 +131,7 @@ def load_extensions():
     from saml2 import extension
 
     package = extension
-    prefix = package.__name__ + "."
+    prefix = f"{package.__name__}."
     ext_map = {}
     for importer, modname, ispkg in pkgutil.iter_modules(package.__path__, prefix):
         module = __import__(modname, fromlist="dummy")
