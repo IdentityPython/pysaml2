@@ -1,5 +1,6 @@
 import calendar
 import copy
+import http.cookiejar as http_cookiejar
 from http.cookies import SimpleCookie
 import logging
 import re
@@ -8,7 +9,6 @@ from urllib.parse import urlencode
 from urllib.parse import urlparse
 
 import requests
-from six.moves import http_cookiejar
 
 from saml2 import SAMLError
 from saml2 import class_name

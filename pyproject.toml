@@ -48,7 +48,6 @@ python-dateutil = "*"
 pytz = "*"
 "repoze.who" = {optional = true, version = "*"}
 requests = "^2"
-six = "*"
 xmlschema = ">=1.2.1"
 "zope.interface" = {optional = true, version = "*"}
 

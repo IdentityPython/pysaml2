@@ -18,8 +18,6 @@
 
 import logging
 
-import six
-
 from saml2.validate import valid_instance
 from saml2.version import version as __version__
 

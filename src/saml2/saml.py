@@ -228,7 +228,6 @@ class AttributeValueBase(SamlBase):
             msg = msg.format(xsd=xsd, type=type(value), value=value)
             raise ValueError(msg)
 
-        # only work with six.string_types
         if isinstance(value, bytes):
             value = value.decode("utf-8")
 

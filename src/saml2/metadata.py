@@ -276,7 +276,7 @@ def do_uiinfo(_uiinfo):
         _attr = "keywords"
         val = _uiinfo[_attr]
         inst = getattr(uii, _attr)
-        # list of six.string_types, dictionary or list of dictionaries
+        # list of strings, bytes, dictionary or list of dictionaries
         if isinstance(val, list):
             for value in val:
                 keyw = mdui.Keywords()
