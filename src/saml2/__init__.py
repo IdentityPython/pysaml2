@@ -17,26 +17,12 @@
 """
 
 import logging
+from xml.etree import ElementTree
+
+import defusedxml.ElementTree
 
 from saml2.validate import valid_instance
 from saml2.version import version as __version__
-
-
-try:
-    from xml.etree import ElementTree as ElementTree
-
-    if ElementTree.VERSION < "1.3.0":
-        # cElementTree has no support for register_namespace
-        # neither _namespace_map, thus we sacrify performance
-        # for correctness
-        from xml.etree import ElementTree
-except ImportError:
-    try:
-        import cElementTree as ElementTree
-    except ImportError:
-        from elementtree import ElementTree
-
-import defusedxml.ElementTree
 
 
 logger = logging.getLogger(__name__)

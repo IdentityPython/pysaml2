@@ -18,29 +18,15 @@ except Exception:
 import logging
 from urllib.parse import urlencode
 from urllib.parse import urlparse
+from xml.etree import ElementTree as ElementTree
+
+import defusedxml.ElementTree
 
 import saml2
 from saml2.s_utils import deflate_and_base64_encode
 from saml2.sigver import REQ_ORDER
 from saml2.sigver import RESP_ORDER
 from saml2.xmldsig import SIG_ALLOWED_ALG
-
-
-try:
-    from xml.etree import ElementTree as ElementTree
-
-    if ElementTree.VERSION < "1.3.0":
-        # cElementTree has no support for register_namespace
-        # neither _namespace_map, thus we sacrify performance
-        # for correctness
-        from xml.etree import ElementTree
-except ImportError:
-    try:
-        import cElementTree as ElementTree
-    except ImportError:
-        from elementtree import ElementTree
-
-import defusedxml.ElementTree
 
 
 logger = logging.getLogger(__name__)

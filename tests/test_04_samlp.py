@@ -5,11 +5,6 @@
 
 __author__ = "roland.hedberg@adm.umu.se (Roland Hedberg)"
 
-try:
-    pass
-except ImportError:
-    pass
-
 import samlp_data
 
 import saml2
