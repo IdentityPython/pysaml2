@@ -6,22 +6,13 @@ Suppport for the client part of the SAML2.0 SOAP binding.
 """
 import logging
 import re
+from xml.etree import ElementTree as ElementTree
+
+import defusedxml.ElementTree
 
 from saml2 import create_class_from_element_tree
 from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
 from saml2.schema import soapenv
-
-
-try:
-    from xml.etree import ElementTree as ElementTree
-except ImportError:
-    try:
-        import cElementTree as ElementTree
-    except ImportError:
-        # noinspection PyUnresolvedReferences
-        from elementtree import ElementTree
-
-import defusedxml.ElementTree
 
 
 logger = logging.getLogger(__name__)

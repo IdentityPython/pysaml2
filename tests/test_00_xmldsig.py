@@ -7,12 +7,6 @@ __author__ = "tmatsuo@example.com (Takashi MATSUO)"
 
 import unittest
 
-
-try:
-    pass
-except ImportError:
-    pass
-
 import ds_data
 
 import saml2.xmldsig as ds

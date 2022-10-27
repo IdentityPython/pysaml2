@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from defusedxml.common import EntitiesForbidden
 from pytest import raises
 import saml2_data
 
@@ -14,17 +15,6 @@ from saml2.saml import NameID
 from saml2.saml import SubjectConfirmation
 from saml2.saml import SubjectConfirmationData
 from saml2.saml import SubjectLocality
-
-
-try:
-    pass
-except ImportError:
-    try:
-        pass
-    except ImportError:
-        pass
-
-from defusedxml.common import EntitiesForbidden
 
 
 ITEMS = {

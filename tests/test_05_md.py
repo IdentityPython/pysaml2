@@ -5,12 +5,6 @@
 
 __author__ = "roland.hedberg@umu.se (Roland Hedberg)"
 
-
-try:
-    pass
-except ImportError:
-    pass
-
 import ds_data
 import md_data
 
