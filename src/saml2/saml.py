@@ -18,8 +18,6 @@ import base64
 from datetime import date
 from datetime import datetime
 
-import six
-
 import saml2
 from saml2 import SamlBase
 from saml2 import xmldsig as ds

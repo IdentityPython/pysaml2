@@ -19,8 +19,6 @@ import logging
 from urllib.parse import urlencode
 from urllib.parse import urlparse
 
-import six
-
 import saml2
 from saml2.s_utils import deflate_and_base64_encode
 from saml2.sigver import REQ_ORDER

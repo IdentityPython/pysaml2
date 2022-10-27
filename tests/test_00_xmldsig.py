@@ -9,9 +9,9 @@ import unittest
 
 
 try:
-    from xml.etree import ElementTree
+    pass
 except ImportError:
-    from elementtree import ElementTree
+    pass
 
 import ds_data
 

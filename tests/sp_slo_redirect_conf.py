@@ -2,8 +2,6 @@ from pathutils import full_path
 
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
-from saml2.saml import NAME_FORMAT_URI
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
 
 
 HOME = "http://lingon.catalogix.se:8087/"

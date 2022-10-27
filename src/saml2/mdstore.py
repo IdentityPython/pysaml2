@@ -12,7 +12,6 @@ import sys
 from warnings import warn as _warn
 
 import requests
-import six
 
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT

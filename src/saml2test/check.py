@@ -1,8 +1,6 @@
 import inspect
 import json
 
-import six
-
 
 __author__ = "rolandh"
 

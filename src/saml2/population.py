@@ -1,7 +1,5 @@
 import logging
 
-import six
-
 from saml2.cache import Cache
 
 

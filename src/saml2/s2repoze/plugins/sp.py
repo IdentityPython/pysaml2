@@ -23,7 +23,6 @@ from repoze.who.interfaces import IAuthenticator
 from repoze.who.interfaces import IChallenger
 from repoze.who.interfaces import IIdentifier
 from repoze.who.interfaces import IMetadataProvider
-import six
 from zope.interface import implementer
 
 from saml2 import BINDING_HTTP_POST
@@ -219,7 +218,6 @@ class SAML2Plugin:
                     break
                 except KeyError:
                     logger.debug("No IdP entity ID in query: %s", query)
-                    pass
 
         if idp_entity_id is None:
             if len(idps) == 1:

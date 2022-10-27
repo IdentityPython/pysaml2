@@ -17,8 +17,6 @@ import sys
 from urllib.parse import parse_qs
 import xml.dom.minidom
 
-import six
-
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
@@ -536,7 +534,6 @@ class SSO:
                     idp_entity_id = _idp_entity_id
             except KeyError:
                 logger.debug("No IdP entity ID in query: %s", query)
-                pass
 
         if not idp_entity_id:
 

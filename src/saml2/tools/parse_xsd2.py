@@ -8,8 +8,6 @@ import sys
 import time
 import types
 
-import six
-
 
 __version__ = 0.5
 

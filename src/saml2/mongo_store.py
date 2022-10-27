@@ -6,7 +6,6 @@ from pymongo import MongoClient
 import pymongo.errors
 from pymongo.mongo_replica_set_client import MongoReplicaSetClient
 import pymongo.uri_parser
-import six
 
 from saml2.eptid import Eptid
 from saml2.ident import IdentDB
@@ -280,7 +279,6 @@ def _mdb_get_database(uri, **kwargs):
         # assume URI to be just the database name
         db_name = uri
         _conn = MongoClient()
-        pass
     else:
         if "replicaset" in _parsed_uri["options"]:
             connection_factory = MongoReplicaSetClient

@@ -15,8 +15,6 @@ from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NameID
 from saml2.saml import Subject
 from saml2.samlp import AuthnQuery
-from saml2.samlp import AuthnRequest
-from saml2.samlp import NameIDPolicy
 from saml2.server import Server
 
 

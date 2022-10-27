@@ -8,7 +8,6 @@ from os.path import join
 from OpenSSL import crypto
 import dateutil.parser
 import pytz
-import six
 
 import saml2.cryptography.pki
 

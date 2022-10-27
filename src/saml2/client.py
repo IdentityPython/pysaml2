@@ -1,6 +1,5 @@
 # !/usr/bin/env python
 #
-import six
 
 
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use

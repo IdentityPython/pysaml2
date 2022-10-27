@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import six
 
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT

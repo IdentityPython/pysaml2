@@ -5,7 +5,6 @@ from mechanize import ParseResponseEx
 from mechanize._form import AmbiguityError
 from mechanize._form import ControlNotFoundError
 from mechanize._form import ListControl
-import six
 from urlparse import urlparse
 
 

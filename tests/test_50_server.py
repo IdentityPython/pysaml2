@@ -20,7 +20,6 @@ from saml2 import extension_elements_to_elements
 from saml2 import s_utils
 from saml2 import saml
 from saml2 import samlp
-from saml2 import sigver
 from saml2 import time_util
 from saml2.assertion import Policy
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD

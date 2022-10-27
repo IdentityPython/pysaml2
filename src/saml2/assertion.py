@@ -5,8 +5,6 @@ import logging
 import re
 from warnings import warn as _warn
 
-import six
-
 from saml2 import saml
 from saml2 import xmlenc
 from saml2.attribute_converter import ac_factory

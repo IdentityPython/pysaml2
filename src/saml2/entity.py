@@ -5,7 +5,6 @@ from hashlib import sha1
 import logging
 
 import requests
-import six
 
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_POST
@@ -674,7 +673,6 @@ class Entity(HTTPBase):
                 return response
             except Exception as ex:
                 exception = ex
-                pass
         if exception:
             raise exception
         return response

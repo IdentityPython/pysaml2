@@ -8,7 +8,6 @@ from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.server import Server
 from saml2.sigver import ASSERT_XPATH
 from saml2.sigver import CryptoBackendXmlSec1
-from saml2.sigver import EncryptError
 from saml2.sigver import pre_encrypt_assertion
 from saml2.sigver import pre_encryption_part
 

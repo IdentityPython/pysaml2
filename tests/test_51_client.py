@@ -10,7 +10,6 @@ from fakeIDP import FakeIDP
 from fakeIDP import unpack_form
 from pathutils import full_path
 from pytest import raises
-import six
 
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
