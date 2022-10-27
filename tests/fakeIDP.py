@@ -22,7 +22,7 @@ AUTHN = {"class_ref": INTERNETPROTOCOLPASSWORD, "authn_auth": "http://www.exampl
 
 
 def unpack_form(_str, ver="SAMLRequest"):
-    SR_STR = 'name="%s" value="' % ver
+    SR_STR = f'name="{ver}" value="'
     RS_STR = 'name="RelayState" value="'
 
     i = _str.find(SR_STR)
@@ -118,7 +118,7 @@ class FakeIDP(Server):
 
         authn_resp = self.create_authn_response(identity, userid=userid, authn=AUTHN, **resp_args)
 
-        response = "%s" % authn_resp
+        response = f"{authn_resp}"
 
         _dict = pack.factory(_binding, response, resp_args["destination"], relay_state, "SAMLResponse")
         return DummyResponse(**_dict)
@@ -147,9 +147,9 @@ class FakeIDP(Server):
             #                                                               class_name(attr_resp),
             #                                                               nodeid=attr_resp.id)
             #                soap_message = _signed
-            response = "%s" % soap_message
+            response = f"{soap_message}"
         else:  # Just POST
-            response = "%s" % attr_resp
+            response = f"{attr_resp}"
 
         return DummyResponse(status=200, data=response)
 
@@ -172,8 +172,8 @@ class FakeIDP(Server):
             #                                                               class_name(attr_resp),
             #                                                               nodeid=attr_resp.id)
             #                soap_message = _signed
-            response = "%s" % soap_message
+            response = f"{soap_message}"
         else:  # Just POST
-            response = "%s" % _resp
+            response = f"{_resp}"
 
         return DummyResponse(status=200, data=response)

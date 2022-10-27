@@ -52,7 +52,7 @@ class DiscoveryServer(Entity):
 
         is_passive = dsr.get("isPassive")
         if is_passive not in ["true", "false"]:
-            raise ValueError("Invalid value '{v}' for attribute '{attr}'".format(v=is_passive, attr="isPassive"))
+            raise ValueError(f"Invalid value '{is_passive}' for attribute 'isPassive'")
 
         if "isPassive" in dsr and dsr["isPassive"] == "true":
             dsr["isPassive"] = True

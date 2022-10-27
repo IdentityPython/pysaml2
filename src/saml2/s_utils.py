@@ -318,7 +318,7 @@ def do_ava(val, typ=""):
     elif val is None:
         attrval = None
     else:
-        raise OtherError("strange value type on: %s" % val)
+        raise OtherError(f"strange value type on: {val}")
 
     if typ:
         for ava in attrval:
@@ -417,9 +417,9 @@ def exception_trace(exc):
     message = traceback.format_exception(*sys.exc_info())
 
     try:
-        _exc = "Exception: %s" % exc
+        _exc = f"Exception: {exc}"
     except UnicodeEncodeError:
-        _exc = "Exception: %s" % exc.message.encode("utf-8", "replace")
+        _exc = f"Exception: {exc.message.encode('utf-8', 'replace')}"
 
     return {"message": _exc, "content": "".join(message)}
 

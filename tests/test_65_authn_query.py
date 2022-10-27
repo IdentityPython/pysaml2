@@ -85,7 +85,7 @@ def test_flow():
             authn=AUTHN,
         )
 
-        hinfo = idp.apply_binding(binding, "%s" % resp, destination, relay_state)
+        hinfo = idp.apply_binding(binding, f"{resp}", destination, relay_state)
 
         # ------- @SP ----------
 
@@ -107,7 +107,7 @@ def test_flow():
         assert isinstance(aq, AuthnQuery)
         binding = BINDING_SOAP
 
-        hinfo = sp.apply_binding(binding, "%s" % aq, destination, "state2")
+        hinfo = sp.apply_binding(binding, f"{aq}", destination, "state2")
 
         # -------- @IDP ----------
 
@@ -122,7 +122,7 @@ def test_flow():
 
         print(p_res)
 
-        hinfo = idp.apply_binding(binding, "%s" % p_res, "", "state2", response=True)
+        hinfo = idp.apply_binding(binding, f"{p_res}", "", "state2", response=True)
 
         # ------- @SP ----------
 

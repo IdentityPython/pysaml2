@@ -39,7 +39,7 @@ print(req)
 
 # Get a certificate from an authn request
 
-xml = "%s" % req
+xml = f"{req}"
 
 parsed = authn_request_from_string(xml)
 

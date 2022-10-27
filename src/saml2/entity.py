@@ -122,7 +122,7 @@ def create_artifact(entity_id, message_handle, endpoint_index=0):
 
     if not isinstance(message_handle, bytes):
         message_handle = message_handle.encode("utf-8")
-    ter = b"".join((ARTIFACT_TYPECODE, ("%.2x" % endpoint_index).encode("ascii"), sourceid.digest(), message_handle))
+    ter = b"".join((ARTIFACT_TYPECODE, (f"{endpoint_index:02x}").encode("ascii"), sourceid.digest(), message_handle))
     return base64.b64encode(ter).decode("ascii")
 
 
@@ -160,7 +160,7 @@ class Entity(HTTPBase):
                     tmp = make_temp(r.text, ".pem", False, self.config.delete_tmpfiles)
                     setattr(self.config, item, tmp.name)
                 else:
-                    raise Exception("Could not fetch certificate from %s" % _val)
+                    raise Exception(f"Could not fetch certificate from {_val}")
 
         HTTPBase.__init__(
             self,
@@ -214,7 +214,7 @@ class Entity(HTTPBase):
         try:
             self.metadata.reload(metadata_conf)
         except Exception as ex:
-            logger.error("Loading metadata failed; reason: %s" % str(ex))
+            logger.error(f"Loading metadata failed; reason: {str(ex)}")
             return False
 
         self.sourceid = self.metadata.construct_source_id()
@@ -305,7 +305,7 @@ class Entity(HTTPBase):
             else:
                 info = self.use_http_artifact(msg_str, destination, relay_state)
         else:
-            raise SAMLError("Unknown binding type: %s" % binding)
+            raise SAMLError(f"Unknown binding type: {binding}")
 
         return info
 
@@ -327,8 +327,8 @@ class Entity(HTTPBase):
             else:
                 descr_type = "spsso"
 
-        _url = getattr(request, "%s_url" % service, None)
-        _index = getattr(request, "%s_index" % service, None)
+        _url = getattr(request, f"{service}_url", None)
+        _index = getattr(request, f"{service}_index", None)
 
         for binding in bindings:
             try:
@@ -438,7 +438,7 @@ class Entity(HTTPBase):
             BINDING_HTTP_ARTIFACT,
             None,
         ]:
-            raise UnknownBinding("Don't know how to handle '%s'" % binding)
+            raise UnknownBinding(f"Don't know how to handle '{binding}'")
         else:
             try:
                 if binding == BINDING_HTTP_REDIRECT:
@@ -446,14 +446,14 @@ class Entity(HTTPBase):
                 elif binding == BINDING_HTTP_POST:
                     xmlstr = base64.b64decode(txt)
                 elif binding == BINDING_SOAP:
-                    func = getattr(soap, "parse_soap_enveloped_saml_%s" % msgtype)
+                    func = getattr(soap, f"parse_soap_enveloped_saml_{msgtype}")
                     xmlstr = func(txt)
                 elif binding == BINDING_HTTP_ARTIFACT:
                     xmlstr = base64.b64decode(txt)
                 else:
                     xmlstr = txt
             except Exception:
-                raise UnravelError("Unravelling binding '%s' failed" % binding)
+                raise UnravelError(f"Unravelling binding '{binding}' failed")
 
         return xmlstr
 
@@ -837,7 +837,7 @@ class Entity(HTTPBase):
                             )
                         node_xpath = "".join(
                             [
-                                '/*[local-name()="%s"]' % v
+                                f'/*[local-name()="{v}"]'
                                 for v in ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]
                             ]
                         )
@@ -1459,7 +1459,7 @@ class Entity(HTTPBase):
             logger.error("Unsolicited response")
             raise
         except Exception as err:
-            if "not well-formed" in "%s" % err:
+            if "not well-formed" in f"{err}":
                 logger.error("Not well-formed XML")
             raise
         else:
@@ -1579,11 +1579,7 @@ class Entity(HTTPBase):
 
         typecode = _art[:2]
         if typecode != ARTIFACT_TYPECODE:
-            raise ValueError(
-                "Invalid artifact typecode '{invalid}' should be {valid}".format(
-                    invalid=typecode, valid=ARTIFACT_TYPECODE
-                )
-            )
+            raise ValueError(f"Invalid artifact typecode '{typecode}' should be {ARTIFACT_TYPECODE}")
 
         try:
             endpoint_index = str(int(_art[2:4]))
@@ -1592,7 +1588,7 @@ class Entity(HTTPBase):
         entity = self.sourceid[_art[4:24]]
 
         destination = None
-        for desc in entity["%s_descriptor" % descriptor]:
+        for desc in entity[f"{descriptor}_descriptor"]:
             for srv in desc["artifact_resolution_service"]:
                 if srv["index"] == endpoint_index:
                     destination = srv["location"]

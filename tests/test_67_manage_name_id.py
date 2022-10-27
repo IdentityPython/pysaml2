@@ -23,7 +23,7 @@ def test_basic():
         mid, mreq = sp.create_manage_name_id_request(destination, name_id=nameid, new_id=newid)
 
         print(mreq)
-        rargs = sp.apply_binding(binding, "%s" % mreq, destination, "")
+        rargs = sp.apply_binding(binding, f"{mreq}", destination, "")
 
         # --------- @IDP --------------
 
@@ -45,7 +45,7 @@ def test_flow():
         mid, midq = sp.create_manage_name_id_request(destination, name_id=nameid, new_id=newid)
 
         print(midq)
-        rargs = sp.apply_binding(binding, "%s" % midq, destination, "")
+        rargs = sp.apply_binding(binding, f"{midq}", destination, "")
 
         # --------- @IDP --------------
 
@@ -60,7 +60,7 @@ def test_flow():
         else:
             destination = ""
 
-        respargs = idp.apply_binding(binding, "%s" % mnir, destination, "")
+        respargs = idp.apply_binding(binding, f"{mnir}", destination, "")
 
         print(respargs)
 

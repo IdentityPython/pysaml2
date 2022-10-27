@@ -97,7 +97,7 @@ def create_return_url(base, query, **kwargs):
     else:
         _pre = base
 
-    logger.debug("kwargs: %s" % kwargs)
+    logger.debug(f"kwargs: {kwargs}")
 
     return f"{_pre}?{url_encode_params(kwargs)}"
 
@@ -144,7 +144,7 @@ class UsernamePasswordMako(UserAuthnMethod):
             "logo_url": logo_url,
             "query": query,
         }
-        logger.debug("do_authentication argv: %s" % argv)
+        logger.debug(f"do_authentication argv: {argv}")
         mte = self.template_lookup.get_template(self.mako_template)
         resp.message = mte.render(**argv)
         return resp
@@ -190,7 +190,7 @@ class UsernamePasswordMako(UserAuthnMethod):
         if cookie is None:
             return None
         else:
-            logger.debug("kwargs: %s" % kwargs)
+            logger.debug(f"kwargs: {kwargs}")
             try:
                 info, timestamp = parse_cookie(self.cookie_name, self.srv.seed, cookie)
                 if self.active[info] == timestamp:

@@ -426,14 +426,14 @@ class MetaData:
         Returns any entities with the specified descriptor
         """
         res = {}
-        desc = "%s_descriptor" % descriptor
+        desc = f"{descriptor}_descriptor"
         for eid, ent in self.items():
             if desc in ent:
                 res[eid] = ent
         return res
 
     def __str__(self):
-        return "%s" % self.items()
+        return f"{self.items()}"
 
     def construct_source_id(self):
         raise NotImplementedError
@@ -490,13 +490,13 @@ class MetaData:
             res = []
             for descr in ["spsso", "idpsso", "role", "authn_authority", "attribute_authority", "pdp"]:
                 try:
-                    srvs = ent["%s_descriptor" % descr]
+                    srvs = ent[f"{descr}_descriptor"]
                 except KeyError:
                     continue
 
                 res.extend(extract_certs(srvs))
         else:
-            srvs = ent["%s_descriptor" % descriptor]
+            srvs = ent[f"{descriptor}_descriptor"]
             res = extract_certs(srvs)
 
         return res
@@ -552,7 +552,7 @@ class InMemoryMetaData(MetaData):
 
         # have I seen this entity_id before ? If so if log: ignore it
         if entity_descr.entity_id in self.entity:
-            print("Duplicated Entity descriptor (entity id: '%s')" % entity_descr.entity_id, file=sys.stderr)
+            print(f"Duplicated Entity descriptor (entity id: '{entity_descr.entity_id}')", file=sys.stderr)
             return
 
         _ent = to_dict(entity_descr, metadata_modules())
@@ -561,7 +561,7 @@ class InMemoryMetaData(MetaData):
         for descr in ["spsso", "idpsso", "role", "authn_authority", "attribute_authority", "pdp", "affiliation"]:
             _res = []
             try:
-                _items = _ent["%s_descriptor" % descr]
+                _items = _ent[f"{descr}_descriptor"]
             except KeyError:
                 continue
 
@@ -576,7 +576,7 @@ class InMemoryMetaData(MetaData):
                         _res.append(item)
                         break
             if not _res:
-                del _ent["%s_descriptor" % descr]
+                del _ent[f"{descr}_descriptor"]
             else:
                 flag += 1
 
@@ -1082,7 +1082,7 @@ class MetadataStore(MetaData):
                 url = args[1]
                 _md = MetaDataMDX(url, http_client_timeout=self.http_client_timeout)
         else:
-            raise SAMLError("Unknown metadata type '%s'" % typ)
+            raise SAMLError(f"Unknown metadata type '{typ}'")
         _md.load()
         self.metadata[key] = _md
 
@@ -1115,13 +1115,13 @@ class MetadataStore(MetaData):
                 try:
                     key = item["class"]
                 except (KeyError, AttributeError):
-                    raise SAMLError("Misconfiguration in metadata %s" % item)
+                    raise SAMLError(f"Misconfiguration in metadata {item}")
                 mod, clas = key.rsplit(".", 1)
                 try:
                     mod = importlib.import_module(mod)
                     MDloader = getattr(mod, clas)
                 except (ImportError, AttributeError):
-                    raise SAMLError("Unknown metadata loader %s" % key)
+                    raise SAMLError(f"Unknown metadata loader {key}")
 
                 # Separately handle MDExtern
                 if MDloader == MetaDataExtern:
@@ -1243,25 +1243,25 @@ class MetadataStore(MetaData):
             raise AttributeError("Missing type specification")
         if binding is None:
             binding = BINDING_SOAP
-        return self.service(entity_id, "%s_descriptor" % typ, "assertion_id_request_service", binding)
+        return self.service(entity_id, f"{typ}_descriptor", "assertion_id_request_service", binding)
 
     def single_logout_service(self, entity_id, binding=None, typ=None):
         # IDP + SP
         if typ is None:
             raise AttributeError("Missing type specification")
-        return self.service(entity_id, "%s_descriptor" % typ, "single_logout_service", binding)
+        return self.service(entity_id, f"{typ}_descriptor", "single_logout_service", binding)
 
     def manage_name_id_service(self, entity_id, binding=None, typ=None):
         # IDP + SP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
-        return self.service(entity_id, "%s_descriptor" % typ, "manage_name_id_service", binding)
+        return self.service(entity_id, f"{typ}_descriptor", "manage_name_id_service", binding)
 
     def artifact_resolution_service(self, entity_id, binding=None, typ=None):
         # IDP + SP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
-        return self.service(entity_id, "%s_descriptor" % typ, "artifact_resolution_service", binding)
+        return self.service(entity_id, f"{typ}_descriptor", "artifact_resolution_service", binding)
 
     def assertion_consumer_service(self, entity_id, binding=None, _="spsso"):
         # SP
@@ -1699,7 +1699,7 @@ class MetadataStore(MetaData):
                 except AttributeError:
                     res.entity_descriptor.append(_md.entity_descr)
 
-            return "%s" % res
+            return f"{res}"
         elif format == "md":
             # self.items() returns dictitems(), convert that back into a dict
             return json.dumps(dict(self.items()), indent=2)

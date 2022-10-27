@@ -17,37 +17,37 @@ CONFIG = {
     "name": "Rolands IdP",
     "service": {
         "aa": {
-            "endpoints": {"attribute_service": [("%s/aap" % BASE, BINDING_HTTP_POST), ("%s/aas" % BASE, BINDING_SOAP)]},
+            "endpoints": {"attribute_service": [(f"{BASE}/aap", BINDING_HTTP_POST), (f"{BASE}/aas", BINDING_SOAP)]},
         },
         "aq": {
-            "endpoints": {"authn_query_service": [("%s/aqs" % BASE, BINDING_SOAP)]},
+            "endpoints": {"authn_query_service": [(f"{BASE}/aqs", BINDING_SOAP)]},
         },
         "idp": {
             "endpoints": {
                 "single_sign_on_service": [
-                    ("%s/sso/redirect" % BASE, BINDING_HTTP_REDIRECT),
-                    ("%s/sso/post" % BASE, BINDING_HTTP_POST),
-                    ("%s/sso/art" % BASE, BINDING_HTTP_ARTIFACT),
-                    ("%s/sso/paos" % BASE, BINDING_SOAP),
+                    (f"{BASE}/sso/redirect", BINDING_HTTP_REDIRECT),
+                    (f"{BASE}/sso/post", BINDING_HTTP_POST),
+                    (f"{BASE}/sso/art", BINDING_HTTP_ARTIFACT),
+                    (f"{BASE}/sso/paos", BINDING_SOAP),
                 ],
                 "single_logout_service": [
-                    ("%s/slo/soap" % BASE, BINDING_SOAP),
-                    ("%s/slo/post" % BASE, BINDING_HTTP_POST),
+                    (f"{BASE}/slo/soap", BINDING_SOAP),
+                    (f"{BASE}/slo/post", BINDING_HTTP_POST),
                 ],
-                "artifact_resolution_service": [("%s/ars" % BASE, BINDING_SOAP)],
-                "assertion_id_request_service": [("%s/airs" % BASE, BINDING_URI)],
-                "authn_query_service": [("%s/aqs" % BASE, BINDING_SOAP)],
+                "artifact_resolution_service": [(f"{BASE}/ars", BINDING_SOAP)],
+                "assertion_id_request_service": [(f"{BASE}/airs", BINDING_URI)],
+                "authn_query_service": [(f"{BASE}/aqs", BINDING_SOAP)],
                 "manage_name_id_service": [
-                    ("%s/mni/soap" % BASE, BINDING_SOAP),
-                    ("%s/mni/post" % BASE, BINDING_HTTP_POST),
-                    ("%s/mni/redirect" % BASE, BINDING_HTTP_REDIRECT),
-                    ("%s/mni/art" % BASE, BINDING_HTTP_ARTIFACT),
+                    (f"{BASE}/mni/soap", BINDING_SOAP),
+                    (f"{BASE}/mni/post", BINDING_HTTP_POST),
+                    (f"{BASE}/mni/redirect", BINDING_HTTP_REDIRECT),
+                    (f"{BASE}/mni/art", BINDING_HTTP_ARTIFACT),
                 ],
                 "name_id_mapping_service": [
-                    ("%s/nim/soap" % BASE, BINDING_SOAP),
-                    ("%s/nim/post" % BASE, BINDING_HTTP_POST),
-                    ("%s/nim/redirect" % BASE, BINDING_HTTP_REDIRECT),
-                    ("%s/nim/art" % BASE, BINDING_HTTP_ARTIFACT),
+                    (f"{BASE}/nim/soap", BINDING_SOAP),
+                    (f"{BASE}/nim/post", BINDING_HTTP_POST),
+                    (f"{BASE}/nim/redirect", BINDING_HTTP_REDIRECT),
+                    (f"{BASE}/nim/art", BINDING_HTTP_ARTIFACT),
                 ],
             },
             "policy": {

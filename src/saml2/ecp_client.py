@@ -167,8 +167,8 @@ class Client(Entity):
         _acs_url = _ecp_response.assertion_consumer_service_url
         if rc_url != _acs_url:
             error = (
-                "response_consumer_url '%s' does not match" % rc_url,
-                "assertion_consumer_service_url '%s" % _acs_url,
+                f"response_consumer_url '{rc_url}' does not match",
+                f"assertion_consumer_service_url '{_acs_url}",
             )
             # Send an error message to the SP
             _ = self.send(rc_url, "POST", data=soap.soap_fault(error))
@@ -247,7 +247,7 @@ class Client(Entity):
             # url I started off with.
             pass
         else:
-            raise SAMLError("Error POSTing package to SP: %s" % response.text)
+            raise SAMLError(f"Error POSTing package to SP: {response.text}")
 
         logger.debug("[P3] SP response: %s", response.text)
 
@@ -262,14 +262,14 @@ class Client(Entity):
             headers = set_list2dict(headers)
             headers["PAOS"] = PAOS_HEADER_INFO
             if "Accept" in headers:
-                headers["Accept"] += ";%s" % MIME_PAOS
+                headers["Accept"] += f";{MIME_PAOS}"
             elif "accept" in headers:
                 headers["Accept"] = headers["accept"]
-                headers["Accept"] += ";%s" % MIME_PAOS
+                headers["Accept"] += f";{MIME_PAOS}"
                 del headers["accept"]
             headers = dict2set_list(headers)
         else:
-            headers = [("Accept", "text/html; %s" % MIME_PAOS), ("PAOS", PAOS_HEADER_INFO)]
+            headers = [("Accept", f"text/html; {MIME_PAOS}"), ("PAOS", PAOS_HEADER_INFO)]
 
         return headers
 
@@ -298,7 +298,7 @@ class Client(Entity):
         print(response.text)
 
         if response.status_code != 200:
-            raise SAMLError("Request to SP failed: %s" % response.text)
+            raise SAMLError(f"Request to SP failed: {response.text}")
 
         # The response might be a AuthnRequest instance in a SOAP envelope
         # body. If so it's the start of the ECP conversation

@@ -359,7 +359,7 @@ class SSO(Service):
             kwargs = {}
 
         http_args = IDP.apply_binding(
-            self.binding_out, "%s" % _resp, self.destination, relay_state, response=True, **kwargs
+            self.binding_out, f"{_resp}", self.destination, relay_state, response=True, **kwargs
         )
 
         logger.debug("HTTPargs: %s", http_args)
@@ -587,7 +587,7 @@ def do_verify(environ, start_response, _):
 
         kaka = set_cookie("idpauthn", "/", uid, query["authn_reference"][0])
 
-        lox = "{}?id={}&key={}".format(query["redirect_uri"][0], uid, query["key"][0])
+        lox = f"{query['redirect_uri'][0]}?id={uid}&key={query['key'][0]}"
         logger.debug("Redirect => %s", lox)
         resp = Redirect(lox, headers=[kaka], content="text/html")
 
@@ -622,7 +622,7 @@ class SLO(Service):
             req_info = IDP.parse_logout_request(request, binding)
         except Exception as exc:
             logger.error("Bad request: %s", exc)
-            resp = BadRequest("%s" % exc)
+            resp = BadRequest(f"{exc}")
             return resp(self.environ, self.start_response)
 
         msg = req_info.message
@@ -652,10 +652,10 @@ class SLO(Service):
             response = True
 
         try:
-            hinfo = IDP.apply_binding(binding, "%s" % resp, destination, relay_state, response=response)
+            hinfo = IDP.apply_binding(binding, f"{resp}", destination, relay_state, response=response)
         except Exception as exc:
             logger.error("ServiceError: %s", exc)
-            resp = ServiceError("%s" % exc)
+            resp = ServiceError(f"{exc}")
             return resp(self.environ, self.start_response)
 
         # _tlh = dict2list_of_tuples(hinfo["headers"])
@@ -698,7 +698,7 @@ class NMI(Service):
         _resp = IDP.create_manage_name_id_response(request)
 
         # It's using SOAP binding
-        hinfo = IDP.apply_binding(BINDING_SOAP, "%s" % _resp, "", relay_state, response=True)
+        hinfo = IDP.apply_binding(BINDING_SOAP, f"{_resp}", "", relay_state, response=True)
 
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)
@@ -720,7 +720,7 @@ class AIDR(Service):
             resp = NotFound(aid)
             return resp(self.environ, self.start_response)
 
-        hinfo = IDP.apply_binding(BINDING_URI, "%s" % assertion, response=True)
+        hinfo = IDP.apply_binding(BINDING_URI, f"{assertion}", response=True)
 
         logger.debug("HINFO: %s", hinfo)
         resp = Response(hinfo["data"], headers=hinfo["headers"])
@@ -746,7 +746,7 @@ class ARS(Service):
 
         msg = IDP.create_artifact_response(_req, _req.artifact.text)
 
-        hinfo = IDP.apply_binding(BINDING_SOAP, "%s" % msg, "", "", response=True)
+        hinfo = IDP.apply_binding(BINDING_SOAP, f"{msg}", "", "", response=True)
 
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)
@@ -767,7 +767,7 @@ class AQS(Service):
         msg = IDP.create_authn_query_response(_query.subject, _query.requested_authn_context, _query.session_index)
 
         logger.debug("response: %s", msg)
-        hinfo = IDP.apply_binding(BINDING_SOAP, "%s" % msg, "", "", response=True)
+        hinfo = IDP.apply_binding(BINDING_SOAP, f"{msg}", "", "", response=True)
 
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)
@@ -796,7 +796,7 @@ class ATTR(Service):
         msg = IDP.create_attribute_response(identity, name_id=name_id, **args)
 
         logger.debug("response: %s", msg)
-        hinfo = IDP.apply_binding(BINDING_SOAP, "%s" % msg, "", "", response=True)
+        hinfo = IDP.apply_binding(BINDING_SOAP, f"{msg}", "", "", response=True)
 
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)
@@ -829,7 +829,7 @@ class NIM(Service):
         _resp = IDP.create_name_id_mapping_response(name_id, **info)
 
         # Only SOAP
-        hinfo = IDP.apply_binding(BINDING_SOAP, "%s" % _resp, "", "", response=True)
+        hinfo = IDP.apply_binding(BINDING_SOAP, f"{_resp}", "", "", response=True)
 
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)

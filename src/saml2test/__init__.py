@@ -88,9 +88,9 @@ def exception_trace(tag, exc, log=None):
     message = traceback.format_exception(*sys.exc_info())
 
     try:
-        _exc = "Exception: %s" % exc
+        _exc = f"Exception: {exc}"
     except UnicodeEncodeError:
-        _exc = "Exception: %s" % exc.message.encode("utf-8", "replace")
+        _exc = f"Exception: {exc.message.encode('utf-8', 'replace')}"
 
     return {"status": CRITICAL, "message": _exc, "content": "".join(message)}
 

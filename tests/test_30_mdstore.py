@@ -199,7 +199,7 @@ def _eq(l1, l2):
 def _fix_valid_until(xmlstring):
     new_date = datetime.datetime.now() + datetime.timedelta(days=1)
     new_date = new_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-    return re.sub(r' validUntil=".*?"', ' validUntil="%s"' % new_date, xmlstring)
+    return re.sub(r' validUntil=".*?"', f' validUntil="{new_date}"', xmlstring)
 
 
 def test_invalid_metadata():

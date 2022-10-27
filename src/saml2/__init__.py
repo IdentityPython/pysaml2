@@ -587,7 +587,7 @@ class SamlBase(ExtensionContainer):
         uri_set = self.get_ns_map(elements, set())
         prefix_map = {}
         for uri in sorted(uri_set):
-            prefix_map["encas%d" % len(prefix_map)] = uri
+            prefix_map[f"encas{len(prefix_map)}"] = uri
         return prefix_map
 
     def get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(self, assertion_tag, advice_tag):
@@ -743,7 +743,7 @@ class SamlBase(ExtensionContainer):
         elif val is None:
             pass
         else:
-            raise ValueError("Type shouldn't be '%s'" % val)
+            raise ValueError(f"Type shouldn't be '{val}'")
 
         return self
 

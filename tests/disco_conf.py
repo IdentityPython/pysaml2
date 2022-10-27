@@ -7,13 +7,13 @@ from saml2.extension.idpdisc import BINDING_DISCO
 BASE = "http://localhost:8088"
 
 CONFIG = {
-    "entityid": "%s/disco.xml" % BASE,
+    "entityid": f"{BASE}/disco.xml",
     "name": "Rolands Discoserver",
     "service": {
         "ds": {
             "endpoints": {
                 "disco_service": [
-                    ("%s/disco" % BASE, BINDING_DISCO),
+                    (f"{BASE}/disco", BINDING_DISCO),
                 ]
             },
         },

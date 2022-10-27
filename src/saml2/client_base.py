@@ -220,7 +220,7 @@ class Base(Entity):
         # IdP in the configuration raise exception
         eids = self.metadata.with_descriptor("idpsso")
         if len(eids) > 1:
-            raise IdpUnspecified("Too many IdPs to choose from: %s" % eids)
+            raise IdpUnspecified(f"Too many IdPs to choose from: {eids}")
 
         try:
             srvs = self.metadata.single_sign_on_service(list(eids.keys())[0], binding)

@@ -75,7 +75,7 @@ def test_basic_flow():
             authn=AUTHN,
         )
 
-        hinfo = idp.apply_binding(binding, "%s" % resp, destination, relay_state)
+        hinfo = idp.apply_binding(binding, f"{resp}", destination, relay_state)
 
         # --------- @SP -------------
 
@@ -100,7 +100,7 @@ def test_basic_flow():
 
         resp = idp.create_assertion_id_request_response(aid)
 
-        hinfo = idp.apply_binding(binding, "%s" % resp, None, "", response=True)
+        hinfo = idp.apply_binding(binding, f"{resp}", None, "", response=True)
 
         # ----------- @SP -------------
 

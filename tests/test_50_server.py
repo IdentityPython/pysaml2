@@ -217,7 +217,7 @@ class TestServer1:
 
         # should raise an error because faulty spentityid
         binding = BINDING_HTTP_REDIRECT
-        htargs = self.client.apply_binding(binding, "%s" % authn_request, "http://www.example.com", "abcd")
+        htargs = self.client.apply_binding(binding, f"{authn_request}", "http://www.example.com", "abcd")
         _dict = parse_qs(htargs["headers"][0][1].split("?")[1])
         print(_dict)
         with raises(OtherError):
@@ -227,7 +227,7 @@ class TestServer1:
         req_id, authn_request = self.client.create_authn_request(destination="http://www.example.com")
 
         binding = BINDING_HTTP_REDIRECT
-        htargs = self.client.apply_binding(binding, "%s" % authn_request, "http://www.example.com", "abcd")
+        htargs = self.client.apply_binding(binding, f"{authn_request}", "http://www.example.com", "abcd")
         _dict = parse_qs(htargs["headers"][0][1].split("?")[1])
         print(_dict)
 
@@ -256,7 +256,7 @@ class TestServer1:
 
         print(authn_request)
         binding = BINDING_HTTP_REDIRECT
-        htargs = self.client.apply_binding(binding, "%s" % authn_request, "http://www.example.com", "abcd")
+        htargs = self.client.apply_binding(binding, f"{authn_request}", "http://www.example.com", "abcd")
         _dict = parse_qs(htargs["headers"][0][1].split("?")[1])
         print(_dict)
 
@@ -624,7 +624,7 @@ class TestServer1:
         )
         assert valid
 
-        decr_text_old = copy.deepcopy("%s" % signed_resp)
+        decr_text_old = copy.deepcopy(f"{signed_resp}")
 
         with raises(DecryptError):
             decr_text = self.server.sec.decrypt(
@@ -769,7 +769,7 @@ class TestServer1:
             encrypt_cert_advice=cert_str_advice,
         )
 
-        _resp = "%s" % _resp
+        _resp = f"{_resp}"
 
         sresponse = response_from_string(_resp)
 
@@ -889,7 +889,7 @@ class TestServer1:
             pefim=True,
         )
 
-        _resp = "%s" % _resp
+        _resp = f"{_resp}"
 
         sresponse = response_from_string(_resp)
 
@@ -1293,7 +1293,7 @@ class TestServer1NonAsciiAva:
 
         # should raise an error because faulty spentityid
         binding = BINDING_HTTP_REDIRECT
-        htargs = self.client.apply_binding(binding, "%s" % authn_request, "http://www.example.com", "abcd")
+        htargs = self.client.apply_binding(binding, f"{authn_request}", "http://www.example.com", "abcd")
         _dict = parse_qs(htargs["headers"][0][1].split("?")[1])
         print(_dict)
         with raises(OtherError):
@@ -1303,7 +1303,7 @@ class TestServer1NonAsciiAva:
         req_id, authn_request = self.client.create_authn_request(destination="http://www.example.com")
 
         binding = BINDING_HTTP_REDIRECT
-        htargs = self.client.apply_binding(binding, "%s" % authn_request, "http://www.example.com", "abcd")
+        htargs = self.client.apply_binding(binding, f"{authn_request}", "http://www.example.com", "abcd")
         _dict = parse_qs(htargs["headers"][0][1].split("?")[1])
         print(_dict)
 
@@ -1332,7 +1332,7 @@ class TestServer1NonAsciiAva:
 
         print(authn_request)
         binding = BINDING_HTTP_REDIRECT
-        htargs = self.client.apply_binding(binding, "%s" % authn_request, "http://www.example.com", "abcd")
+        htargs = self.client.apply_binding(binding, f"{authn_request}", "http://www.example.com", "abcd")
         _dict = parse_qs(htargs["headers"][0][1].split("?")[1])
         print(_dict)
 
@@ -1700,7 +1700,7 @@ class TestServer1NonAsciiAva:
         )
         assert valid
 
-        decr_text_old = copy.deepcopy("%s" % signed_resp)
+        decr_text_old = copy.deepcopy(f"{signed_resp}")
 
         with raises(DecryptError):
             decr_text = self.server.sec.decrypt(
@@ -1845,7 +1845,7 @@ class TestServer1NonAsciiAva:
             encrypt_cert_advice=cert_str_advice,
         )
 
-        _resp = "%s" % _resp
+        _resp = f"{_resp}"
 
         sresponse = response_from_string(_resp)
 
@@ -1965,7 +1965,7 @@ class TestServer1NonAsciiAva:
             pefim=True,
         )
 
-        _resp = "%s" % _resp
+        _resp = f"{_resp}"
 
         sresponse = response_from_string(_resp)
 
@@ -2408,7 +2408,7 @@ class TestServerLogout:
             response = server.create_logout_response(request, bindings)
 
             binding, destination = server.pick_binding("single_logout_service", bindings, "spsso", request)
-            http_args = server.apply_binding(binding, "%s" % response, destination, "relay_state", response=True)
+            http_args = server.apply_binding(binding, f"{response}", destination, "relay_state", response=True)
 
             assert len(http_args) == 5
             assert http_args["headers"][0][0] == "Location"
@@ -2424,7 +2424,7 @@ class TestServerLogout:
             response = server.create_logout_response(request, bindings)
 
             binding, destination = server.pick_binding("single_logout_service", bindings, "spsso", request)
-            http_args = server.apply_binding(binding, "%s" % response, destination, "relay_state", response=True)
+            http_args = server.apply_binding(binding, f"{response}", destination, "relay_state", response=True)
 
             assert len(http_args) == 5
             assert len(http_args["data"]) > 0

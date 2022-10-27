@@ -212,9 +212,7 @@ def do_click(client, form, **kwargs):
                     else:
                         _nr += 1
                 except ControlNotFoundError:
-                    raise Exception(
-                        "No submit control with the name='%s' and " "value='%s' could be found" % (_name, _val)
-                    )
+                    raise Exception(f"No submit control with the name='{_name}' and value='{_val}' could be found")
     else:
         request = form.click()
 

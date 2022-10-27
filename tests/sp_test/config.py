@@ -22,24 +22,24 @@ else:
 BASE = "http://localhost:8088"
 
 CONFIG = {
-    "entityid": "%s/idp.xml" % BASE,
+    "entityid": f"{BASE}/idp.xml",
     "description": "My IDP",
     "service": {
         "idp": {
             "name": "Rolands IdP",
             "endpoints": {
                 "single_sign_on_service": [
-                    ("%s/sso/redirect" % BASE, BINDING_HTTP_REDIRECT),
-                    ("%s/sso/post" % BASE, BINDING_HTTP_POST),
+                    (f"{BASE}/sso/redirect", BINDING_HTTP_REDIRECT),
+                    (f"{BASE}/sso/post", BINDING_HTTP_POST),
                 ],
                 "single_logout_service": [
-                    ("%s/slo/post" % BASE, BINDING_HTTP_POST),
-                    ("%s/slo/redirect" % BASE, BINDING_HTTP_REDIRECT),
+                    (f"{BASE}/slo/post", BINDING_HTTP_POST),
+                    (f"{BASE}/slo/redirect", BINDING_HTTP_REDIRECT),
                 ],
-                "assertion_id_request_service": [("%s/airs" % BASE, BINDING_URI)],
+                "assertion_id_request_service": [(f"{BASE}/airs", BINDING_URI)],
                 "manage_name_id_service": [
-                    ("%s/mni/post" % BASE, BINDING_HTTP_POST),
-                    ("%s/mni/redirect" % BASE, BINDING_HTTP_REDIRECT),
+                    (f"{BASE}/mni/post", BINDING_HTTP_POST),
+                    (f"{BASE}/mni/redirect", BINDING_HTTP_REDIRECT),
                 ],
             },
             "policy": {
