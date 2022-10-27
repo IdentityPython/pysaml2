@@ -13,8 +13,6 @@ from urllib.parse import urlencode
 from urllib.parse import urlparse
 from warnings import warn as _warn
 
-import six
-
 import saml2
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT

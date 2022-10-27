@@ -12,8 +12,6 @@ import re
 import sys
 import time
 
-import six
-
 
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 TIME_FORMAT_WITH_FRAGMENT = re.compile(r"^(\d{4,4}-\d{2,2}-\d{2,2}T\d{2,2}:\d{2,2}:\d{2,2})(\.\d*)?Z?$")

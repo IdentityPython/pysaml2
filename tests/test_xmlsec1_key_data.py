@@ -1,8 +1,6 @@
-from datetime import datetime
 from unittest.mock import Mock
 from unittest.mock import patch
 
-from dateutil import parser
 from pathutils import dotname
 from pathutils import full_path
 from pytest import raises

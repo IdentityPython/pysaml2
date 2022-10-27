@@ -3,8 +3,6 @@
 import calendar
 import logging
 
-import six
-
 from saml2 import SAMLError
 from saml2 import class_name
 from saml2 import extension_elements_to_elements

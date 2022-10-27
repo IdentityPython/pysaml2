@@ -11,7 +11,6 @@ from saml2.md import RequestedAttribute
 from saml2.mdie import to_dict
 from saml2.mdstore import MetadataStore
 from saml2.saml import NAME_FORMAT_URI
-from saml2.saml import Attribute
 from saml2.server import Server
 
 

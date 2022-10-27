@@ -9,7 +9,6 @@ from saml2.config import SPConfig
 from saml2.pack import http_redirect_message
 from saml2.server import Server
 from saml2.sigver import SIG_RSA_SHA1
-from saml2.sigver import import_rsa_key_from_file
 from saml2.sigver import verify_redirect_signature
 
 

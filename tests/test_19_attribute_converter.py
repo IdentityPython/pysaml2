@@ -10,11 +10,8 @@ from saml2.attribute_converter import AttributeConverterNOOP
 from saml2.attribute_converter import from_local
 from saml2.attribute_converter import to_local
 import saml2.attributemaps.saml_uri as saml_map
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
-from saml2.saml import NameID
 from saml2.saml import attribute_from_string
 from saml2.saml import attribute_statement_from_string
-from saml2.saml import name_id_from_string
 
 
 def _eq(l1, l2):

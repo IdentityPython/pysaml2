@@ -3,7 +3,6 @@ import sys
 import traceback
 
 import cookielib
-import six
 from urlparse import parse_qs
 
 from saml2test import CheckError

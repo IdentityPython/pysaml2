@@ -1,4 +1,3 @@
-from saml2 import create_class_from_element_tree as parse_element_as
 from saml2 import create_class_from_xml_string as parse_str_as
 from saml2.config import Config
 from saml2.extension.sp_type import SPType

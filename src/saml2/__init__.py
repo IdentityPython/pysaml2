@@ -136,8 +136,6 @@ def create_class_from_element_tree(target_class, tree, namespace=None, tag=None)
 class Error(Exception):
     """Exception class thrown by this module."""
 
-    pass
-
 
 class SAMLError(Exception):
     pass

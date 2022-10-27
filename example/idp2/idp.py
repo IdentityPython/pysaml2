@@ -13,7 +13,6 @@ from urllib.parse import parse_qs
 from idp_user import EXTRA
 from idp_user import USERS
 from mako.lookup import TemplateLookup
-import six
 
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_POST

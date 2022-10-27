@@ -3,7 +3,6 @@
 import base64
 
 from pathutils import full_path
-import six
 
 from saml2 import s_utils as utils
 from saml2 import saml

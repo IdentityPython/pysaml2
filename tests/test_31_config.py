@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 
-import logging
-import sys
 
 from pathutils import dotname
 from pathutils import full_path
 
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
-from saml2 import logger
 from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT as AUTHN_PASSWORD_PROTECTED
 from saml2.authn_context import TIMESYNCTOKEN as AUTHN_TIME_SYNC_TOKEN
 from saml2.config import Config

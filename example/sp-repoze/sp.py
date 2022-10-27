@@ -3,16 +3,13 @@ import argparse
 import logging
 import os
 import re
-import subprocess
 
 from Cookie import SimpleCookie
 import sp_conf
-from sp_conf import CONFIG
 from urlparse import parse_qs
 
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import time_util
-from saml2.config import Config
 from saml2.httputil import NotFound
 from saml2.httputil import Redirect
 from saml2.httputil import Response
@@ -20,8 +17,6 @@ from saml2.httputil import Unauthorized
 
 # from saml2.httputil import ServiceError
 from saml2.metadata import create_metadata_string
-from saml2.metadata import entities_descriptor
-from saml2.sigver import security_context
 
 
 logger = logging.getLogger("saml2.SP")

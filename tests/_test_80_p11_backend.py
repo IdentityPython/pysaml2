@@ -17,7 +17,6 @@ import tempfile
 import traceback
 
 from pathutils import full_path
-import pytest
 
 from saml2 import class_name
 from saml2 import saml

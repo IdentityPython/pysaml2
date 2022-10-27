@@ -11,12 +11,9 @@ from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
 from saml2 import config
-from saml2 import md
-from saml2 import saml
 from saml2 import sigver
 from saml2.attribute_converter import ac_factory
 from saml2.attribute_converter import d_to_local_name
-from saml2.mdstore import MetaDataMDX
 from saml2.mdstore import MetadataStore
 from saml2.mdstore import locations
 from saml2.mdstore import name

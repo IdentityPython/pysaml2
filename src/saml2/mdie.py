@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import six
 
 from saml2 import ExtensionElement
 from saml2 import SamlBase

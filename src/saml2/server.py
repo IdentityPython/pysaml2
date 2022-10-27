@@ -10,8 +10,6 @@ import logging
 import shelve
 import threading
 
-import six
-
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import class_name
 from saml2 import element_to_extension_element

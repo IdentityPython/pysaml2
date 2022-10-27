@@ -10,8 +10,6 @@ import sys
 import traceback
 import zlib
 
-import six
-
 from saml2 import VERSION
 from saml2 import saml
 from saml2 import samlp

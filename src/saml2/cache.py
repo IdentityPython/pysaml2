@@ -3,8 +3,6 @@
 import logging
 import shelve
 
-import six
-
 from saml2 import SAMLError
 from saml2 import time_util
 from saml2.ident import code

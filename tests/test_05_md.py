@@ -5,13 +5,11 @@
 
 __author__ = "roland.hedberg@umu.se (Roland Hedberg)"
 
-import unittest
-
 
 try:
-    from xml.etree import ElementTree
+    pass
 except ImportError:
-    from elementtree import ElementTree
+    pass
 
 import ds_data
 import md_data

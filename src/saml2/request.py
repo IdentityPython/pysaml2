@@ -254,15 +254,12 @@ class AuthzDecisionQuery(Request):
 
     def action(self):
         """Which action authorization is requested for"""
-        pass
 
     def evidence(self):
         """The evidence on which the decision is based"""
-        pass
 
     def resource(self):
         """On which resource the action is expected to occur"""
-        pass
 
 
 class NameIDMappingRequest(Request):

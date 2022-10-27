@@ -4,8 +4,6 @@ from urllib.parse import parse_qs
 from urllib.parse import urlencode
 from urllib.parse import urlsplit
 
-import six
-
 from saml2 import SAMLError
 import saml2.cryptography.symmetric
 from saml2.httputil import Redirect

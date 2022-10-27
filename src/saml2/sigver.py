@@ -17,7 +17,6 @@ from time import mktime
 from uuid import uuid4 as gen_random_key
 
 import dateutil
-import six
 
 
 # importlib.resources was introduced in python 3.7
@@ -109,8 +108,6 @@ class SignatureError(XmlsecError):
 
 class BadSignature(SigverError):
     """The signature is invalid."""
-
-    pass
 
 
 def get_pem_wrapped_unwrapped(cert):
@@ -1497,7 +1494,6 @@ class SecurityContext:
                     break
             except XmlsecError as exc:
                 logger.error("check_sig: %s", str(exc))
-                pass
             except Exception as exc:
                 logger.error("check_sig: %s", str(exc))
                 raise

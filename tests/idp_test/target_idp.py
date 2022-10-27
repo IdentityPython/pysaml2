@@ -7,8 +7,6 @@ __author__ = "rolandh"
 import json
 
 from saml2 import xmldsig as ds
-from saml2.saml import NAME_FORMAT_BASIC
-from saml2.saml import NAME_FORMAT_UNSPECIFIED
 from saml2.saml import NAME_FORMAT_URI
 
 

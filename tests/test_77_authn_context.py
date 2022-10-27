@@ -20,11 +20,9 @@ from saml2.authn_context import AuthnBroker
 from saml2.authn_context import authn_context_class_ref
 from saml2.authn_context import authn_context_decl_from_extension_elements
 from saml2.authn_context import authn_context_factory
-from saml2.authn_context import ppt
 from saml2.authn_context import pword
 from saml2.authn_context import requested_authn_context
 from saml2.saml import AuthnContext
-from saml2.saml import AuthnContextClassRef
 from saml2.saml import authn_context_from_string
 from saml2.samlp import RequestedAuthnContext
 

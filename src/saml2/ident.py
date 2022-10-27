@@ -5,8 +5,6 @@ import shelve
 from urllib.parse import quote
 from urllib.parse import unquote
 
-import six
-
 from saml2 import SAMLError
 from saml2.s_utils import PolicyError
 from saml2.s_utils import rndbytes
