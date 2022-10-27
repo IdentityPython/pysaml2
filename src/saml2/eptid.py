@@ -8,8 +8,6 @@ import hashlib
 import logging
 import shelve
 
-import six
-
 
 logger = logging.getLogger(__name__)
 
@@ -38,12 +36,12 @@ class Eptid:
         return "!".join([idp, sp, hashval])
 
     def __getitem__(self, key):
-        if six.PY3 and isinstance(key, bytes):
+        if isinstance(key, bytes):
             key = key.decode("utf-8")
         return self._db[key]
 
     def __setitem__(self, key, value):
-        if six.PY3 and isinstance(key, bytes):
+        if isinstance(key, bytes):
             key = key.decode("utf-8")
         self._db[key] = value
 
