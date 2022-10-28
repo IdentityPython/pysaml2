@@ -9,7 +9,6 @@ import logging
 import threading
 import time
 from typing import Mapping
-from warnings import warn as _warn
 
 import six
 from six.moves.urllib.parse import parse_qs
@@ -169,7 +168,7 @@ class Base(Entity):
             "authn_requests_signed": False,
             "want_assertions_signed": False,
             "want_response_signed": True,
-            "want_assertions_or_response_signed": False,
+            "want_assertions_or_response_signed": True,
         }
         for attr, val_default in attribute_defaults.items():
             val_config = self.config.getattr(attr, "sp")
@@ -185,15 +184,14 @@ class Base(Entity):
                 self.want_assertions_or_response_signed,
             ]
         ):
-            warn_msg = (
+            error_msg = (
+                "This configuration is insecure. "
                 "The SAML service provider accepts "
                 "unsigned SAML Responses and Assertions. "
-                "This configuration is insecure. "
-                "Consider setting want_assertions_signed, want_response_signed "
+                "Set at least one of want_assertions_signed, want_response_signed "
                 "or want_assertions_or_response_signed configuration options."
             )
-            logger.warning(warn_msg)
-            _warn(warn_msg)
+            raise SAMLError(error_msg)
 
         self.artifact2response = {}
 
