@@ -96,7 +96,7 @@ class Request(object):
             logger.info("Request data: %s", xmldata)
             raise incorrectly_signed
 
-        logger.info("Request message: %s", self.message)
+        logger.debug("Request message: %s", self.message)
 
         try:
             valid_instance(self.message)
@@ -111,7 +111,7 @@ class Request(object):
         certs = self.sec.metadata.certs(issuer, "any", "signing")
         logger.debug("Certs to verify request sig: %s, _saml_msg: %s", certs, _saml_msg)
         verified = any(verify_redirect_signature(_saml_msg, self.sec.sec_backend, cert) for cert_name, cert in certs)
-        logger.info("Redirect request signature check: %s", verified)
+        logger.debug("Redirect request signature check: %s", verified)
         return verified
 
     def issue_instant_ok(self):

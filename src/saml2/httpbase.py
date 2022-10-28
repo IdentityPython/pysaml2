@@ -319,11 +319,11 @@ class HTTPBase(object):
             args["headers"] = dict(args["headers"])
             response = self.send(**args)
         except Exception as exc:
-            logger.info("HTTPClient exception: %s", str(exc))
+            logger.error("HTTPClient exception: %s", str(exc))
             raise
 
         if response.status_code == 200:
-            logger.info("SOAP response: %s", response.text)
+            logger.debug("SOAP response: %s", response.text)
             return response
         else:
             raise HTTPError("%d:%s" % (response.status_code, response.content))
