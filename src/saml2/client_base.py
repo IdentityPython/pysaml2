@@ -804,7 +804,7 @@ class Base(Entity):
             logger.error("Response type not supported: %s", saml2.class_name(resp))
             return None
 
-        if resp.assertion and len(resp.response.encrypted_assertion) == 0 and resp.assertion.subject.name_id:
+        if resp.assertion and len(resp.response.encrypted_assertion) == 0 and resp.name_id:
             self.users.add_information_about_person(resp.session_info())
             logger.info("--- ADDED person info ----")
 
