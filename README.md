@@ -29,6 +29,37 @@ there are extensions that allow you to use it with other frameworks.
 **License**: [LICENSE][license]
 
 
+## Specifications
+
+Retrieved from https://wiki.oasis-open.org/security/FrontPage
+
+#### SAML V2.0 Standard
+
+- SAML2 Core (aka Assertions and Protocols): http://www.oasis-open.org/committees/download.php/56776/sstc-saml-core-errata-2.0-wd-07.pdf
+  - Assertion schema: http://docs.oasis-open.org/security/saml/v2.0/saml-schema-assertion-2.0.xsd
+  - Protocols schema: http://docs.oasis-open.org/security/saml/v2.0/saml-schema-protocol-2.0.xsd
+- Bindings: http://www.oasis-open.org/committees/download.php/56779/sstc-saml-bindings-errata-2.0-wd-06.pdf
+- Profiles: http://www.oasis-open.org/committees/download.php/56782/sstc-saml-profiles-errata-2.0-wd-07.pdf
+- Metadata: http://www.oasis-open.org/committees/download.php/56785/sstc-saml-metadata-errata-2.0-wd-05.pdf
+  - Metadata schema: http://docs.oasis-open.org/security/saml/v2.0/saml-schema-metadata-2.0.xsd
+- Authentication Context: http://docs.oasis-open.org/security/saml/v2.0/saml-authn-context-2.0-os.pdf
+- Conformance Requirements: https://docs.oasis-open.org/security/saml/v2.0/saml-conformance-2.0-os.pdf
+- Security and Privacy Considerations: http://docs.oasis-open.org/security/saml/v2.0/saml-sec-consider-2.0-os.pdf
+- Glossary: http://docs.oasis-open.org/security/saml/v2.0/saml-glossary-2.0-os.pdf
+
+#### Profiles and extensions
+
+- Metadata Extension for SAML V2.0 and V1.x Query Requesters: http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-metadata-ext-query-os.pdf
+- SAML V2.0 Metadata Interoperability Profile: https://docs.oasis-open.org/security/saml/Post2.0/sstc-metadata-iop-os.pdf
+- SAML V2.0 Metadata Extensions for Login and Discovery User Interface Version 1.0: https://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-metadata-ui/v1.0/os/sstc-saml-metadata-ui-v1.0-os.pdf
+- SAML V2.0 LDAP/X.500 Attribute Profile: http://www.oasis-open.org/committees/download.php/28042/sstc-saml-attribute-x500-cs-01.pdf
+- SAML V2.0 Enhanced Client or Proxy Profile Version 2.0: https://docs.oasis-open.org/security/saml/Post2.0/saml-ecp/v2.0/cs01/saml-ecp-v2.0-cs01.pdf
+
+#### Committee Specifications
+
+- SAML V2.0 Subject Identifier Attributes Profile Version 1.0: https://docs.oasis-open.org/security/saml-subject-id-attr/v1.0/cs01/saml-subject-id-attr-v1.0-cs01.pdf
+
+
 ## Installation
 
 You can install PySAML2 through pip:
