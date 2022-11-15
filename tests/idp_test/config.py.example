@@ -68,4 +68,3 @@ CONFIG = {
     "secret": "0123456789",
     "only_use_keys_in_metadata": False
 }
-
