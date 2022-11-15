@@ -10,7 +10,7 @@
      TC IPR Statement: https://www.oasis-open.org/committees/security/ipr.php
 -->
 
-<schema 
+<schema
   targetNamespace="urn:oasis:names:tc:SAML:metadata:ui"
   xmlns="http://www.w3.org/2001/XMLSchema"
   xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
@@ -64,7 +64,7 @@
       </extension>
     </simpleContent>
   </complexType>
-  
+
   <simpleType name="listOfStrings">
     <list itemType="string"/>
   </simpleType>
@@ -91,7 +91,7 @@
   </complexType>
 
   <element name="IPHint" type="string"/>
-  <element name="DomainHint" type="string"/>	
+  <element name="DomainHint" type="string"/>
   <element name="GeolocationHint" type="anyURI"/>
 
 </schema>

@@ -10,7 +10,7 @@
 
 -->
 
-<schema 
+<schema
   targetNamespace="urn:oasis:names:tc:SAML:metadata:algsupport"
   xmlns="http://www.w3.org/2001/XMLSchema"
   xmlns:alg="urn:oasis:names:tc:SAML:metadata:algsupport"

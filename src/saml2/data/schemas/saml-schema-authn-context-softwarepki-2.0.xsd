@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <xs:schema targetNamespace="urn:oasis:names:tc:SAML:2.0:ac:classes:SoftwarePKI"
-  xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns="urn:oasis:names:tc:SAML:2.0:ac:classes:SoftwarePKI"
   finalDefault="extension"
   blockDefault="substitution"
@@ -10,13 +10,13 @@
   <xs:redefine schemaLocation="saml-schema-authn-context-types-2.0.xsd">
 
     <xs:annotation>
-      <xs:documentation> 
+      <xs:documentation>
         Class identifier: urn:oasis:names:tc:SAML:2.0:ac:classes:SoftwarePKI
         Document identifier: saml-schema-authn-context-softwarepki-2.0
         Location: http://docs.oasis-open.org/security/saml/v2.0/
         Revision history:
           V2.0 (March, 2005):
-            New authentication context class schema for SAML V2.0. 
+            New authentication context class schema for SAML V2.0.
       </xs:documentation>
     </xs:annotation>
 
@@ -47,8 +47,8 @@
           </xs:sequence>
         </xs:restriction>
       </xs:complexContent>
-    </xs:complexType>    
-    
+    </xs:complexType>
+
     <xs:complexType name="TechnicalProtectionBaseType">
       <xs:complexContent>
         <xs:restriction base="TechnicalProtectionBaseType">
@@ -71,7 +71,7 @@
         </xs:restriction>
       </xs:complexContent>
     </xs:complexType>
-    
+
     <xs:complexType name="AuthenticatorBaseType">
       <xs:complexContent>
         <xs:restriction base="AuthenticatorBaseType">
@@ -109,7 +109,7 @@
         </xs:restriction>
       </xs:complexContent>
     </xs:complexType>
-    
+
     <xs:complexType name="KeyStorageType">
       <xs:complexContent>
         <xs:restriction base="KeyStorageType">
