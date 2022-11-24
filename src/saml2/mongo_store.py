@@ -4,7 +4,6 @@ import logging
 
 from pymongo import MongoClient
 import pymongo.errors
-from pymongo.mongo_replica_set_client import MongoReplicaSetClient
 import pymongo.uri_parser
 
 from saml2.eptid import Eptid
@@ -222,12 +221,12 @@ class MDB:
         if key is None:
             if kwargs:
                 for item in self.db.find(kwargs):
-                    self.db.remove(item["_id"])
+                    self.db.delete_one(item["_id"])
         else:
             doc = {self.primary_key: key}
             doc.update(kwargs)
             for item in self.db.find(doc):
-                self.db.remove(item["_id"])
+                self.db.delete_one(item["_id"])
 
     def keys(self):
         for item in self.db.find():
@@ -271,24 +270,18 @@ def _mdb_get_database(uri, **kwargs):
         kwargs["tz_aware"] = True
 
     connection_factory = MongoClient
-    _parsed_uri = {}
 
     try:
         _parsed_uri = pymongo.uri_parser.parse_uri(uri)
     except pymongo.errors.InvalidURI:
         # assume URI to be just the database name
         db_name = uri
-        _conn = MongoClient()
+        _conn = connection_factory()
     else:
-        if "replicaset" in _parsed_uri["options"]:
-            connection_factory = MongoReplicaSetClient
         db_name = _parsed_uri.get("database", "pysaml2")
         _conn = connection_factory(uri, **kwargs)
 
     _db = _conn[db_name]
-
-    if "username" in _parsed_uri:
-        _db.authenticate(_parsed_uri.get("username", None), _parsed_uri.get("password", None))
 
     return _db
 
