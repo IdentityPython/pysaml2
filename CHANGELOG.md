@@ -1,5 +1,9 @@
 # Changelog
 
+## 7.3.0 (XXXX-XX-XX)
+
+- Support for pymongo >=3.5
+
 
 ## 7.2.1 (2022-08-23)
 
