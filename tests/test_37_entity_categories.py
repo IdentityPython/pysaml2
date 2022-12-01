@@ -289,3 +289,109 @@ def test_filter_ava_esi_coco():
         ava["schacPersonalUniqueCode"],
         ["urn:schac:personalUniqueCode:int:esi:ladok.se:externtstudentuid-00000000-1111-2222-3333-444444444444"],
     )
+
+
+def test_filter_ava_refeds_anonymous_access():
+    entity_id = "https://anonymous.example.edu/saml2/metadata/"
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    mds.imp([{"class": "saml2.mdstore.MetaDataFile", "metadata": [(full_path("entity_anonymous_sp.xml"),)]}])
+
+    policy_conf = {"default": {"lifetime": {"minutes": 15}, "entity_categories": ["swamid"]}}
+
+    policy = Policy(policy_conf, mds)
+    ava = {
+        "displayName": ["Test Testsson"],
+        "eduPersonAssurance": ["http://www.swamid.se/policy/assurance/al1"],
+        "eduPersonScopedAffiliation": ["student@example.com"],
+        "eduPersonTargetedID": "foo!bar!xyz",
+        "givenName": ["Test"],
+        "mail": ["test@example.com"],
+        "pairwise-id": ["pairwise-id@example.com"],
+        "schacHomeOrganization": ["example.com"],
+        "sn": ["Testsson"],
+        "subject-id": ["subject-id@example.com"],
+    }
+
+    ava = policy.filter(ava, entity_id)
+
+    assert _eq(list(ava.keys()), ["eduPersonScopedAffiliation", "schacHomeOrganization"])
+    assert _eq(ava["eduPersonScopedAffiliation"], ["student@example.com"])
+    assert _eq(ava["schacHomeOrganization"], ["example.com"])
+
+
+def test_filter_ava_refeds_pseudonymous_access():
+    entity_id = "https://pseudonymous.example.edu/saml2/metadata/"
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    mds.imp([{"class": "saml2.mdstore.MetaDataFile", "metadata": [(full_path("entity_pseudonymous_sp.xml"),)]}])
+
+    policy_conf = {"default": {"lifetime": {"minutes": 15}, "entity_categories": ["swamid"]}}
+
+    policy = Policy(policy_conf, mds)
+    ava = {
+        "displayName": ["Test Testsson"],
+        "eduPersonAssurance": ["http://www.swamid.se/policy/assurance/al1"],
+        "eduPersonScopedAffiliation": ["student@example.com"],
+        "eduPersonTargetedID": "foo!bar!xyz",
+        "givenName": ["Test"],
+        "mail": ["test@example.com"],
+        "pairwise-id": ["pairwise-id@example.com"],
+        "schacHomeOrganization": ["example.com"],
+        "sn": ["Testsson"],
+        "subject-id": ["subject-id@example.com"],
+    }
+
+    ava = policy.filter(ava, entity_id)
+
+    assert _eq(
+        list(ava.keys()), ["pairwise-id", "eduPersonScopedAffiliation", "eduPersonAssurance", "schacHomeOrganization"]
+    )
+    assert _eq(ava["pairwise-id"], ["pairwise-id@example.com"])
+    assert _eq(ava["eduPersonScopedAffiliation"], ["student@example.com"])
+    assert _eq(ava["eduPersonAssurance"], ["http://www.swamid.se/policy/assurance/al1"])
+    assert _eq(ava["schacHomeOrganization"], ["example.com"])
+
+
+def test_filter_ava_refeds_personalized_access():
+    entity_id = "https://personalized.example.edu/saml2/metadata/"
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    mds.imp([{"class": "saml2.mdstore.MetaDataFile", "metadata": [(full_path("entity_personalized_sp.xml"),)]}])
+
+    policy_conf = {"default": {"lifetime": {"minutes": 15}, "entity_categories": ["swamid"]}}
+
+    policy = Policy(policy_conf, mds)
+    ava = {
+        "displayName": ["Test Testsson"],
+        "eduPersonAssurance": ["http://www.swamid.se/policy/assurance/al1"],
+        "eduPersonScopedAffiliation": ["student@example.com"],
+        "eduPersonTargetedID": "foo!bar!xyz",
+        "givenName": ["Test"],
+        "mail": ["test@example.com"],
+        "pairwise-id": ["pairwise-id@example.com"],
+        "schacHomeOrganization": ["example.com"],
+        "sn": ["Testsson"],
+        "subject-id": ["subject-id@example.com"],
+    }
+
+    ava = policy.filter(ava, entity_id)
+
+    assert _eq(
+        list(ava.keys()),
+        [
+            "subject-id",
+            "mail",
+            "displayName",
+            "givenName",
+            "sn",
+            "eduPersonScopedAffiliation",
+            "eduPersonAssurance",
+            "schacHomeOrganization",
+        ],
+    )
+    assert _eq(ava["subject-id"], ["subject-id@example.com"])
+    assert _eq(ava["mail"], ["test@example.com"])
+    assert _eq(ava["displayName"], ["Test Testsson"])
+    assert _eq(ava["givenName"], ["Test"])
+    assert _eq(ava["sn"], ["Testsson"])
+    assert _eq(ava["eduPersonScopedAffiliation"], ["student@example.com"])
+    assert _eq(ava["eduPersonAssurance"], ["http://www.swamid.se/policy/assurance/al1"])
+    assert _eq(ava["schacHomeOrganization"], ["example.com"])
