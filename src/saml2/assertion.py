@@ -290,7 +290,8 @@ def compile(restrictions):
             for key, items in _mod.RELEASE.items():
                 alist = [k.lower() for k in items]
                 _only_required = getattr(_mod, "ONLY_REQUIRED", {}).get(key, False)
-                _ec[key] = (alist, _only_required)
+                _no_aggregation = getattr(_mod, "NO_AGGREGATION", {}).get(key, False)
+                _ec[key] = (alist, _only_required, _no_aggregation)
             ecs.append(_ec)
         spec["entity_categories"] = ecs or None
 
@@ -434,7 +435,7 @@ class Policy:
             if mds:
                 ecs = mds.entity_categories(sp_entity_id)
                 for ec_map in maps:
-                    for key, (atlist, only_required) in ec_map.items():
+                    for key, (atlist, only_required, no_aggregation) in ec_map.items():
                         if key == "":  # always released
                             attrs = atlist
                         elif isinstance(key, tuple):
@@ -454,6 +455,9 @@ class Policy:
                         else:
                             attrs = []
 
+                        if attrs and no_aggregation:
+                            # clear restrictions if the found category is a no aggregation category
+                            restrictions = {}
                         for attr in attrs:
                             restrictions[attr] = None
                         else:
