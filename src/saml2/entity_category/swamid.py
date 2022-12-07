@@ -101,7 +101,7 @@ HEI = "http://www.swamid.se/category/hei-service"  # Deprecated from 2021-03-31
 
 RELEASE = {
     # NOTICE: order is important
-    # no aggregation categories needs to come last and in order of least to most restrictive
+    # no-aggregation categories need to come last and in order of least to most restrictive
     "": [],
     SFS_1993_1153: ["norEduPersonNIN", "eduPersonAssurance"],
     (RESEARCH_AND_EDUCATION, EU): NAME + STATIC_ORG_INFO + OTHER,
