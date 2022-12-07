@@ -100,6 +100,8 @@ NREN = "http://www.swamid.se/category/nren-service"  # Deprecated from 2021-03-3
 HEI = "http://www.swamid.se/category/hei-service"  # Deprecated from 2021-03-31
 
 RELEASE = {
+    # NOTICE: order is important
+    # no aggregation categories needs to come last and in order of least to most restrictive
     "": [],
     SFS_1993_1153: ["norEduPersonNIN", "eduPersonAssurance"],
     (RESEARCH_AND_EDUCATION, EU): NAME + STATIC_ORG_INFO + OTHER,
@@ -111,7 +113,7 @@ RELEASE = {
     ESI: MYACADEMICID_ESI,
     (ESI, COCOv1): MYACADEMICID_ESI + GEANT_COCO,
     (ESI, COCOv2): MYACADEMICID_ESI + REFEDS_COCO,
-    # order is important for no aggregation categories as the last one wins if more than one is found
+    # no aggregation categories
     PERSONALIZED: REFEDS_PERSONALIZED_ACCESS,
     PSEUDONYMOUS: REFEDS_PSEUDONYMOUS_ACCESS,
     ANONYMOUS: REFEDS_ANONYMOUS_ACCESS,
