@@ -418,6 +418,17 @@ class MetaData:
         """
         raise NotImplementedError
 
+    def subject_id_requirement(self, entity_id):
+        """
+        Returns what subject identifier the SP requires if any
+
+        :param entity_id: The entity id of the SP
+        :type entity_id: str
+        :return: RequestedAttribute dict or None
+        :rtype: Optional[dict]
+        """
+        raise NotImplementedError
+
     def dumps(self):
         return json.dumps(list(self.items()), indent=2)
 
@@ -1289,6 +1300,32 @@ class MetadataStore(MetaData):
         for _md in self.metadata.values():
             if entity_id in _md:
                 return _md.attribute_requirement(entity_id, index)
+
+    def subject_id_requirement(self, entity_id):
+        try:
+            entity_attributes = self.entity_attributes(entity_id)
+        except KeyError:
+            return None
+
+        if "urn:oasis:names:tc:SAML:profiles:subject-id:req" in entity_attributes:
+            subject_id_req = entity_attributes["urn:oasis:names:tc:SAML:profiles:subject-id:req"][0]
+            if subject_id_req == "any" or subject_id_req == "pairwise-id":
+                return {
+                    "__class__": "urn:oasis:names:tc:SAML:2.0:metadata&RequestedAttribute",
+                    "name": "urn:oasis:names:tc:SAML:attribute:pairwise-id",
+                    "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                    "friendly_name": "pairwise-id",
+                    "is_required": "true",
+                }
+            elif subject_id_req == "subject-id":
+                return {
+                    "__class__": "urn:oasis:names:tc:SAML:2.0:metadata&RequestedAttribute",
+                    "name": "urn:oasis:names:tc:SAML:attribute:subject-id",
+                    "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                    "friendly_name": "subject-id",
+                    "is_required": "true",
+                }
+        return None
 
     def keys(self):
         res = []
