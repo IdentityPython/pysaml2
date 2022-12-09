@@ -189,6 +189,12 @@ METADATACONF = {
             "metadata": [(full_path("empty_metadata_file.xml"),)],
         }
     ],
+    "17": [
+        {
+            "class": "saml2.mdstore.MetaDataFile",
+            "metadata": [(full_path("entity_esi_and_coco_sp.xml"),)],
+        }
+    ],
 }
 
 
@@ -652,6 +658,17 @@ def test_registration_info_no_policy():
     assert "http://eduid.hu" == registration_info["registration_authority"]
     assert registration_info["registration_instant"] is None
     assert registration_info["registration_policy"] == {}
+
+
+def test_subject_id_requirement():
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    mds.imp(METADATACONF["17"])
+    required_subject_id = mds.subject_id_requirement(entity_id="https://esi-coco.example.edu/saml2/metadata/")
+    assert required_subject_id["__class__"] == "urn:oasis:names:tc:SAML:2.0:metadata&RequestedAttribute"
+    assert required_subject_id["name"] == "urn:oasis:names:tc:SAML:attribute:pairwise-id"
+    assert required_subject_id["name_format"] == "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+    assert required_subject_id["friendly_name"] == "pairwise-id"
+    assert required_subject_id["is_required"] == "true"
 
 
 def test_extension():
