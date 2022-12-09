@@ -559,7 +559,7 @@ class Policy:
         required_attributes = spec.get("required", [])
         optional_attributes = spec.get("optional", [])
         required_subject_id = metadata_store.subject_id_requirement(sp_entity_id) if metadata_store else None
-        if required_subject_id:
+        if required_subject_id and required_subject_id not in required_attributes:
             required_attributes.append(required_subject_id)
         return self.filter(
             ava,
