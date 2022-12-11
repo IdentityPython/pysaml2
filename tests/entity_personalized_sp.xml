@@ -64,7 +64,6 @@ wHyaxzYldWmVC5omkgZeAdCGpJ316GQF8Zwg/yDOUzm4cvGeIESf1Q6ZxBwI6zGE
     </ns0:KeyDescriptor>
     <ns0:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://personalized.example.edu/saml2/ls/"/>
     <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://personalized.example.edu/saml2/acs/" index="1"/>
-    <!-- Require eduPersonTargetedID -->
     <ns0:AttributeConsumingService index="0">
        <ns0:ServiceName xml:lang="en">personalized-SP</ns0:ServiceName>
         <ns0:ServiceDescription xml:lang="en">refeds personalized access SP</ns0:ServiceDescription>

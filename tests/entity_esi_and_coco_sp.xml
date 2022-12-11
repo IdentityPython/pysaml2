@@ -7,6 +7,9 @@
               <saml:AttributeValue>https://myacademicid.org/entity-categories/esi</saml:AttributeValue>
               <saml:AttributeValue>http://www.geant.net/uri/dataprotection-code-of-conduct/v1</saml:AttributeValue>
           </saml:Attribute>
+          <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+              <saml:AttributeValue>any</saml:AttributeValue>
+          </saml:Attribute>
       </mdattr:EntityAttributes></ns0:Extensions>
   <ns0:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
     <ns0:KeyDescriptor use="encryption">
@@ -65,7 +68,7 @@ wHyaxzYldWmVC5omkgZeAdCGpJ316GQF8Zwg/yDOUzm4cvGeIESf1Q6ZxBwI6zGE
     </ns0:KeyDescriptor>
     <ns0:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://esi-coco.example.edu/saml2/ls/"/>
     <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://esi-coco.example.edu/saml2/acs/" index="1"/>
-    <!-- Require eduPersonTargetedID -->
+    <!-- Require schacHomeOrganization and eduPersonScopedAffiliation -->
     <ns0:AttributeConsumingService index="0">
         <ns0:ServiceName xml:lang="en">esi-coco-SP</ns0:ServiceName>
         <ns0:ServiceDescription xml:lang="en">ESI and COCO SP</ns0:ServiceDescription>

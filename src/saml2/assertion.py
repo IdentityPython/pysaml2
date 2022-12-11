@@ -556,11 +556,16 @@ class Policy:
 
         metadata_store = metadata or self.metadata_store
         spec = metadata_store.attribute_requirement(sp_entity_id) or {} if metadata_store else {}
+        required_attributes = spec.get("required", [])
+        optional_attributes = spec.get("optional", [])
+        required_subject_id = metadata_store.subject_id_requirement(sp_entity_id) if metadata_store else None
+        if required_subject_id and required_subject_id not in required_attributes:
+            required_attributes.append(required_subject_id)
         return self.filter(
             ava,
             sp_entity_id,
-            required=spec.get("required"),
-            optional=spec.get("optional"),
+            required=required_attributes or None,
+            optional=optional_attributes or None,
         )
 
     def conditions(self, sp_entity_id):
