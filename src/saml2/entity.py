@@ -870,7 +870,7 @@ class Entity(HTTPBase):
                         _assertion.signature = pre_signature_part(
                             _assertion.id,
                             self.sec.my_cert,
-                            1,
+                            2,
                             sign_alg=sign_alg,
                             digest_alg=digest_alg,
                         )
