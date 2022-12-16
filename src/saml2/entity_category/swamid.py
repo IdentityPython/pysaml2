@@ -113,10 +113,12 @@ RELEASE = {
     ESI: MYACADEMICID_ESI,
     (ESI, COCOv1): MYACADEMICID_ESI + GEANT_COCO,
     (ESI, COCOv2): MYACADEMICID_ESI + REFEDS_COCO,
+    # XXX: disabled temporarily until we can figure out how to handle them
+    #      these need to be able to be combined with other categories just not with each other
     # no aggregation categories
-    PERSONALIZED: REFEDS_PERSONALIZED_ACCESS,
-    PSEUDONYMOUS: REFEDS_PSEUDONYMOUS_ACCESS,
-    ANONYMOUS: REFEDS_ANONYMOUS_ACCESS,
+    # PERSONALIZED: REFEDS_PERSONALIZED_ACCESS,
+    # PSEUDONYMOUS: REFEDS_PSEUDONYMOUS_ACCESS,
+    # ANONYMOUS: REFEDS_ANONYMOUS_ACCESS,
 }
 
 ONLY_REQUIRED = {
