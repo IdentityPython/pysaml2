@@ -98,8 +98,7 @@ class SessionStorageMDB:
     def remove_authn_statements(self, name_id):
         logger.debug("remove authn about: %s", name_id)
         key = sha1(code_binary(name_id)).hexdigest()
-        for item in self.assertion.find({"name_id_key": key}):
-            self.assertion.delete_one(item["_id"])
+        self.assertion.delete_many(filter={"name_id_key": key})
 
     def get_authn_statements(self, name_id, session_index=None, requested_context=None):
         """
@@ -220,13 +219,11 @@ class MDB:
     def remove(self, key=None, **kwargs):
         if key is None:
             if kwargs:
-                for item in self.db.find(kwargs):
-                    self.db.delete_one(item["_id"])
+                self.db.delete_many(filter=kwargs)
         else:
             doc = {self.primary_key: key}
             doc.update(kwargs)
-            for item in self.db.find(doc):
-                self.db.delete_one(item["_id"])
+            self.db.delete_many(filter=doc)
 
     def keys(self):
         for item in self.db.find():
