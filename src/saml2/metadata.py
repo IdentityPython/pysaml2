@@ -533,6 +533,17 @@ def do_idpsso_descriptor(conf, cert=None, enc_cert=None):
     idpsso = md.IDPSSODescriptor()
     idpsso.protocol_support_enumeration = samlp.NAMESPACE
 
+    exts = conf.getattr("extensions", "idp")
+    if exts:
+        if idpsso.extensions is None:
+            idpsso.extensions = md.Extensions()
+
+        for key, val in exts.items():
+            _ext = do_extensions(key, val)
+            if _ext:
+                for _e in _ext:
+                    idpsso.extensions.add_extension_element(_e)
+
     endps = conf.getattr("endpoints", "idp")
     if endps:
         for (endpoint, instlist) in do_endpoints(endps, ENDPOINTS["idp"]).items():
