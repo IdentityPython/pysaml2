@@ -675,6 +675,17 @@ def entity_descriptor(confd):
     if confd.contact_person is not None:
         entd.contact_person = do_contact_persons_info(confd.contact_person)
 
+    exts = confd.extensions
+    if exts:
+        if not entd.extensions:
+            entd.extensions = md.Extensions()
+
+        for key, val in exts.items():
+            _ext = do_extensions(key, val)
+            if _ext:
+                for _e in _ext:
+                    entd.extensions.add_extension_element(_e)
+
     if confd.entity_attributes:
         if not entd.extensions:
             entd.extensions = md.Extensions()
