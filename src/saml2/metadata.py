@@ -589,6 +589,17 @@ def do_aa_descriptor(conf, cert=None, enc_cert=None):
     aad = md.AttributeAuthorityDescriptor()
     aad.protocol_support_enumeration = samlp.NAMESPACE
 
+    exts = conf.getattr("extensions", "aa")
+    if exts:
+        if aad.extensions is None:
+            aad.extensions = md.Extensions()
+
+        for key, val in exts.items():
+            _ext = do_extensions(key, val)
+            if _ext:
+                for _e in _ext:
+                    aad.extensions.add_extension_element(_e)
+
     endps = conf.getattr("endpoints", "aa")
 
     if endps:
@@ -617,6 +628,17 @@ def do_aq_descriptor(conf, cert=None, enc_cert=None):
     aqs = md.AuthnAuthorityDescriptor()
     aqs.protocol_support_enumeration = samlp.NAMESPACE
 
+    exts = conf.getattr("extensions", "aa")
+    if exts:
+        if aqs.extensions is None:
+            aqs.extensions = md.Extensions()
+
+        for key, val in exts.items():
+            _ext = do_extensions(key, val)
+            if _ext:
+                for _e in _ext:
+                    aqs.extensions.add_extension_element(_e)
+
     endps = conf.getattr("endpoints", "aq")
 
     if endps:
@@ -636,6 +658,17 @@ def do_pdp_descriptor(conf, cert=None, enc_cert=None):
     pdp = md.PDPDescriptor()
 
     pdp.protocol_support_enumeration = samlp.NAMESPACE
+
+    exts = conf.getattr("extensions", "pdp")
+    if exts:
+        if pdp.extensions is None:
+            pdp.extensions = md.Extensions()
+
+        for key, val in exts.items():
+            _ext = do_extensions(key, val)
+            if _ext:
+                for _e in _ext:
+                    pdp.extensions.add_extension_element(_e)
 
     endps = conf.getattr("endpoints", "pdp")
 
