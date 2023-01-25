@@ -3,6 +3,7 @@ from binascii import hexlify
 import copy
 from hashlib import sha1
 import logging
+import zlib
 
 import requests
 
@@ -444,7 +445,10 @@ class Entity(HTTPBase):
                 if binding == BINDING_HTTP_REDIRECT:
                     xmlstr = decode_base64_and_inflate(txt)
                 elif binding == BINDING_HTTP_POST:
-                    xmlstr = base64.b64decode(txt)
+                    try:
+                        xmlstr = decode_base64_and_inflate(txt)
+                    except zlib.error:
+                        xmlstr = base64.b64decode(txt)
                 elif binding == BINDING_SOAP:
                     func = getattr(soap, f"parse_soap_enveloped_saml_{msgtype}")
                     xmlstr = func(txt)
