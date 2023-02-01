@@ -269,5 +269,5 @@ try:
 
 except ImportError:
 
-    class LDAPAuthn(UserAuthnMethod):
+    class LDAPAuthn(UserAuthnMethod):  # type: ignore[no-redef]
         pass

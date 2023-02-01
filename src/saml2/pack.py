@@ -13,7 +13,7 @@ import base64
 try:
     import html
 except Exception:
-    import cgi as html
+    import cgi as html  # type: ignore[no-redef]
 
 import logging
 from urllib.parse import urlencode

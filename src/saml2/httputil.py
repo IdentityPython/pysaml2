@@ -4,6 +4,7 @@ import hmac
 from http.cookies import SimpleCookie
 import logging
 import time
+from typing import Optional
 from urllib.parse import parse_qs
 from urllib.parse import quote
 
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class Response:
-    _template = None
+    _template: Optional[str] = None
     _status = "200 OK"
     _content_type = "text/html"
     _mako_template = None

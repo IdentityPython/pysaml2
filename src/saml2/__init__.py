@@ -17,6 +17,9 @@
 """
 
 import logging
+from typing import Any
+from typing import Optional
+from typing import Union
 from xml.etree import ElementTree
 
 import defusedxml.ElementTree
@@ -433,14 +436,14 @@ class SamlBase(ExtensionContainer):
     nodes into ExtensionElements.
     """
 
-    c_children = {}
-    c_attributes = {}
-    c_attribute_type = {}
-    c_child_order = []
-    c_cardinality = {}
-    c_any = None
-    c_any_attribute = None
-    c_value_type = None
+    c_children: Any = {}
+    c_attributes: Any = {}
+    c_attribute_type: Any = {}
+    c_child_order: list[str] = []
+    c_cardinality: dict[str, dict[str, int]] = {}
+    c_any: Optional[dict[str, str]] = None
+    c_any_attribute: Optional[dict[str, str]] = None
+    c_value_type: Any = None
     c_ns_prefix = None
 
     def _get_all_c_children_with_order(self):
