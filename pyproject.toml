@@ -225,15 +225,16 @@ src_paths = [
     'test',
 ]
 
-# XXX TODO
-#[tool.mypy]
-#pretty = true
-#check_untyped_defs = true
-#ignore_errors = false
-#ignore_missing_imports = true
-#show_error_codes = true
-#strict_optional = true
-#warn_unused_ignores = true
-#warn_redundant_casts = true
-#warn_unused_configs = true
-#warn_unreachable = true
+[tool.mypy]
+pretty = true
+check_untyped_defs = false
+ignore_errors = false
+ignore_missing_imports = true
+show_error_codes = true
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unreachable = true
+install_types = true
+non_interactive = true
