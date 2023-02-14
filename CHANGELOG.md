@@ -1,8 +1,23 @@
 # Changelog
 
-## 7.3.0 (XXXX-XX-XX)
+## 7.3.0 (2023-02-14)
 
-- Support for pymongo >=3.5
+- During metadata generation, render extensions both for EntityDescriptor and IdPSSODescriptor
+- Fix compatibility with certain SAML implementation that inflate messasges on the POST binding
+- Update the SWAMID entity category requirements
+- Fix check for NameID when it originates from an encrypted asssertion
+- Add support for pymongo `>=3.5` and `<5`
+- Update README with supported specifications
+- Remove dependency on the six package
+- Cleanup unused imports and pythonisms for Python versions older than 3.6
+- Convert README to markdown
+- Introduce flake8 to check for issues
+- Use black and isort to manage formatting and imports
+- Use poetry to manage the project dependencies, packaging and versions
+- Fix whitespace typos on the eIDAS schemas
+- Try different logout bindings on the saml2.client level
+- Add the mailLocalAddress attribute as part of the saml and shib uri name format bundles
+- Add the isMemberOf attribute as part of the basic attribute format bundle
 
 
 ## 7.2.1 (2022-08-23)
