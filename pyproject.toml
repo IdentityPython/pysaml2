@@ -37,7 +37,7 @@ merge_metadata = "saml2.tools.merge_metadata:main"
 parse_xsd2 = "saml2.tools.parse_xsd2:main"
 
 [tool.poetry.dependencies]
-python = "^3.6.2"
+python = "^3.9"
 cryptography = ">=3.1"
 defusedxml = "*"
 importlib-metadata = {version = ">=1.7.0", python = "<3.8"}
@@ -66,6 +66,13 @@ Flake8-pyproject = "^1.1.0.post0"
 flake8-bugbear = "^22.8.23"
 flake8-logging-format = "^0.7.5"
 ipdb = "^0.13.9"
+mypy = "^1.0.0"
+types-pyopenssl = "^23.0.0.3"
+types-python-dateutil = "^2.8.19.6"
+types-pytz = "^2022.7.1.0"
+types-setuptools = "^67.2.0.1"
+types-six = "^1.16.21.4"
+types-requests = "^2.28.11.12"
 
 [tool.poetry.group.test]
 optional = true
@@ -225,15 +232,16 @@ src_paths = [
     'test',
 ]
 
-# XXX TODO
-#[tool.mypy]
-#pretty = true
-#check_untyped_defs = true
-#ignore_errors = false
-#ignore_missing_imports = true
-#show_error_codes = true
-#strict_optional = true
-#warn_unused_ignores = true
-#warn_redundant_casts = true
-#warn_unused_configs = true
-#warn_unreachable = true
+[tool.mypy]
+pretty = true
+check_untyped_defs = false
+ignore_errors = false
+ignore_missing_imports = true
+show_error_codes = true
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unreachable = true
+install_types = true
+non_interactive = true

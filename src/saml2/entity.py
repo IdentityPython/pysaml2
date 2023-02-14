@@ -1583,7 +1583,7 @@ class Entity(HTTPBase):
 
         typecode = _art[:2]
         if typecode != ARTIFACT_TYPECODE:
-            raise ValueError(f"Invalid artifact typecode '{typecode}' should be {ARTIFACT_TYPECODE}")
+            raise ValueError(f"Invalid artifact typecode {repr(typecode)} should be {repr(ARTIFACT_TYPECODE)}")
 
         try:
             endpoint_index = str(int(_art[2:4]))

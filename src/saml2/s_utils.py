@@ -343,7 +343,7 @@ def do_attribute(val, typ, key):
             friendly = ""
         if name:
             attr.name = name
-        if format:
+        if nformat:
             attr.name_format = nformat
         if friendly:
             attr.friendly_name = friendly
