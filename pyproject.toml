@@ -99,6 +99,9 @@ addopts = "-ra -vvv"
 testpaths = [
     "tests",
 ]
+markers = [
+    "mongo",
+]
 pythonpath = [
     "tests",
 ]
