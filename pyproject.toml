@@ -37,7 +37,7 @@ merge_metadata = "saml2.tools.merge_metadata:main"
 parse_xsd2 = "saml2.tools.parse_xsd2:main"
 
 [tool.poetry.dependencies]
-python = "^3.6.2"
+python = "^3.9"
 cryptography = ">=3.1"
 defusedxml = "*"
 importlib-metadata = {version = ">=1.7.0", python = "<3.8"}
@@ -66,6 +66,7 @@ Flake8-pyproject = "^1.1.0.post0"
 flake8-bugbear = "^22.8.23"
 flake8-logging-format = "^0.7.5"
 ipdb = "^0.13.9"
+mypy = "^1.0.0"
 
 [tool.poetry.group.test]
 optional = true
