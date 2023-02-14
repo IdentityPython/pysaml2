@@ -200,14 +200,15 @@ def all_locations(srvs):
     return values
 
 
-def attribute_requirement(entity, index=None):
+def attribute_requirement(entity_descriptor, index=None):
     res = {"required": [], "optional": []}
-    for acs in entity["attribute_consuming_service"]:
+    acss = entity_descriptor.get("attribute_consuming_service") or []
+    for acs in acss:
         if index is not None and acs["index"] != index:
             continue
 
         for attr in acs["requested_attribute"]:
-            if "is_required" in attr and attr["is_required"] == "true":
+            if attr.get("is_required") == "true":
                 res["required"].append(attr)
             else:
                 res["optional"].append(attr)
@@ -676,24 +677,26 @@ class InMemoryMetaData(MetaData):
         return res
 
     def attribute_requirement(self, entity_id, index=None):
-        """Returns what attributes the SP requires and which are optional
+        """
+        Returns what attributes the SP requires and which are optional
         if any such demands are registered in the Metadata.
+
+        In case the metadata have multiple SPSSODescriptor elements,
+        the sum of the required and optional attributes is returned.
 
         :param entity_id: The entity id of the SP
         :param index: which of the attribute consumer services its all about
             if index=None then return all attributes expected by all
             attribute_consuming_services.
-        :return: 2-tuple, list of required and list of optional attributes
+        :return: dict of required and optional list of attributes
         """
         res = {"required": [], "optional": []}
 
-        try:
-            for sp in self[entity_id]["spsso_descriptor"]:
-                _res = attribute_requirement(sp, index)
-                res["required"].extend(_res["required"])
-                res["optional"].extend(_res["optional"])
-        except KeyError:
-            return None
+        sp_descriptors = self[entity_id].get("spsso_descriptor") or []
+        for sp_desc in sp_descriptors:
+            _res = attribute_requirement(sp_desc, index)
+            res["required"].extend(_res.get("required") or [])
+            res["optional"].extend(_res.get("optional") or [])
 
         return res
 
@@ -1297,35 +1300,56 @@ class MetadataStore(MetaData):
         )
 
     def attribute_requirement(self, entity_id, index=None):
-        for _md in self.metadata.values():
-            if entity_id in _md:
-                return _md.attribute_requirement(entity_id, index)
+        for md_source in self.metadata.values():
+            if entity_id in md_source:
+                return md_source.attribute_requirement(entity_id, index)
 
     def subject_id_requirement(self, entity_id):
         try:
             entity_attributes = self.entity_attributes(entity_id)
         except KeyError:
-            return None
+            return []
 
-        if "urn:oasis:names:tc:SAML:profiles:subject-id:req" in entity_attributes:
-            subject_id_req = entity_attributes["urn:oasis:names:tc:SAML:profiles:subject-id:req"][0]
-            if subject_id_req == "any" or subject_id_req == "pairwise-id":
-                return {
+        subject_id_reqs = entity_attributes.get("urn:oasis:names:tc:SAML:profiles:subject-id:req") or []
+        subject_id_req = next(iter(subject_id_reqs), None)
+        if subject_id_req == "any":
+            return [
+                {
                     "__class__": "urn:oasis:names:tc:SAML:2.0:metadata&RequestedAttribute",
                     "name": "urn:oasis:names:tc:SAML:attribute:pairwise-id",
                     "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
                     "friendly_name": "pairwise-id",
                     "is_required": "true",
-                }
-            elif subject_id_req == "subject-id":
-                return {
+                },
+                {
                     "__class__": "urn:oasis:names:tc:SAML:2.0:metadata&RequestedAttribute",
                     "name": "urn:oasis:names:tc:SAML:attribute:subject-id",
                     "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
                     "friendly_name": "subject-id",
                     "is_required": "true",
                 }
-        return None
+            ]
+        elif subject_id_req == "pairwise-id":
+            return [
+                {
+                    "__class__": "urn:oasis:names:tc:SAML:2.0:metadata&RequestedAttribute",
+                    "name": "urn:oasis:names:tc:SAML:attribute:pairwise-id",
+                    "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                    "friendly_name": "pairwise-id",
+                    "is_required": "true",
+                }
+            ]
+        elif subject_id_req == "subject-id":
+            return [
+                {
+                    "__class__": "urn:oasis:names:tc:SAML:2.0:metadata&RequestedAttribute",
+                    "name": "urn:oasis:names:tc:SAML:attribute:subject-id",
+                    "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                    "friendly_name": "subject-id",
+                    "is_required": "true",
+                }
+            ]
+        return []
 
     def keys(self):
         res = []

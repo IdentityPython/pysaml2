@@ -664,11 +664,24 @@ def test_subject_id_requirement():
     mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
     mds.imp(METADATACONF["17"])
     required_subject_id = mds.subject_id_requirement(entity_id="https://esi-coco.example.edu/saml2/metadata/")
-    assert required_subject_id["__class__"] == "urn:oasis:names:tc:SAML:2.0:metadata&RequestedAttribute"
-    assert required_subject_id["name"] == "urn:oasis:names:tc:SAML:attribute:pairwise-id"
-    assert required_subject_id["name_format"] == "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
-    assert required_subject_id["friendly_name"] == "pairwise-id"
-    assert required_subject_id["is_required"] == "true"
+    expected = [
+        {
+            "__class__": "urn:oasis:names:tc:SAML:2.0:metadata&RequestedAttribute",
+            "name": "urn:oasis:names:tc:SAML:attribute:pairwise-id",
+            "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+            "friendly_name": "pairwise-id",
+            "is_required": "true",
+        },
+        {
+            "__class__": "urn:oasis:names:tc:SAML:2.0:metadata&RequestedAttribute",
+            "name": "urn:oasis:names:tc:SAML:attribute:subject-id",
+            "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+            "friendly_name": "subject-id",
+            "is_required": "true",
+        },
+    ]
+    assert required_subject_id
+    assert all(e in expected for e in required_subject_id)
 
 
 def test_extension():
