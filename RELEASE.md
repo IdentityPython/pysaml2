@@ -41,31 +41,15 @@ When releasing a new version, the following steps should be taken:
 
 7. Push the changes and the release to Github:
 
-   ```
-   git push --follow-tags
-   ```
+    ```
+    git push --follow-tags
+    ```
 
 8. Publish the release on PyPI:
 
-   generate a source and wheel distribution at once
-   ```
-   python setup.py sdist bdist_wheel
-   ```
-
-   generated files are under dist/
-   ```
-   ls dist/
-   ```
-
-   upload release on test.pypi.org
-   ```
-   twine upload --repository-url https://test.pypi.org/legacy/ dist/pysaml2-X.Y.Z*
-   ```
-
-   then, upload release on official pypi.org
-   ```
-   twine upload dist/pysaml2-X.Y.Z*
-   ```
+    ```
+    poetry publish --build
+    ```
 
 9. Send an email to the pysaml2 list announcing this release
 
