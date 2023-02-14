@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.4.0 (2023-XX-XX)
+
+- Add mypy configuration
+- Bump Python to 3.9
+
+
 ## 7.3.0 (2023-02-14)
 
 - During metadata generation, render extensions both for EntityDescriptor and IdPSSODescriptor
