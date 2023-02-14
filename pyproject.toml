@@ -245,3 +245,29 @@ warn_unused_configs = true
 warn_unreachable = true
 install_types = true
 non_interactive = true
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = true
+envlist =
+  py36
+  py37
+  py38
+  py39
+  py310
+
+[testenv]
+skip_install = true
+whitelist_externals =
+  xmlsec1
+  poetry
+commands_pre =
+  poetry install --with test,coverage
+  xmlsec1 --version
+  poetry run python --version
+  poetry run pytest --version
+  poetry run tox --version
+commands =
+  poetry run pytest --import-mode=importlib --cov=saml2 --cov-report=term-missing
+"""
