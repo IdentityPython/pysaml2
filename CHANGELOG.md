@@ -1,9 +1,12 @@
 # Changelog
 
-## 7.4.0 (2023-XX-XX)
+## 7.4.0 (2023-02-14)
 
-- Add mypy configuration
+- Ensure the ID of each Signature element is unique when signing an encrypted assertion
 - Bump Python to 3.9
+- dev: Add mypy configuration and type stubs
+- tests: move tox.ini config into pyproject.toml
+- docs: Update release instructions
 
 
 ## 7.3.0 (2023-02-14)
