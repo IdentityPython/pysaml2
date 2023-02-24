@@ -561,7 +561,7 @@ class Policy:
         requirements_subject_id = metadata_store.subject_id_requirement(sp_entity_id) if metadata_store else []
         for r in requirements_subject_id:
             if r not in required_attributes:
-                required_attributes.extend(r)
+                required_attributes.append(r)
         return self.filter(
             ava,
             sp_entity_id,
