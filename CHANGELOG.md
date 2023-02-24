@@ -1,5 +1,10 @@
 # Changelog
 
+## 7.3.1 (2023-02-24)
+
+- Fix subject-id requirements processing
+
+
 ## 7.3.0 (2023-02-14)
 
 - During metadata generation, render extensions both for EntityDescriptor and IdPSSODescriptor
