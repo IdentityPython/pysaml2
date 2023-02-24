@@ -1,5 +1,10 @@
 # Changelog
 
+## 7.4.1 (2023-02-24)
+
+- Fix subject-id requirements processing
+
+
 ## 7.4.0 (2023-02-14)
 
 - Ensure the ID of each Signature element is unique when signing an encrypted assertion

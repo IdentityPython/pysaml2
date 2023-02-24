@@ -22,14 +22,10 @@ When releasing a new version, the following steps should be taken:
 
 4. Update the [CHANGELOG.md]
 
-    ```
-    git add CHANGELOG.md
-    ```
-
 5. Commit and sign the changes:
 
     ```
-    git add -u
+    git add -u  # CHANGELOG.md pyproject.toml
     git commit -v -s -m "Release version X.Y.Z"
     ```
 

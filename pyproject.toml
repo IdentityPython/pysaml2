@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pysaml2"
-version = "7.4.0"
+version = "7.4.1"
 description = "Python implementation of SAML Version 2 Standard"
 license = "Apache-2.0"
 authors = ["IdentityPython <discuss@idpy.org>"]
