@@ -6,6 +6,7 @@ from pathutils import full_path
 
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
+from saml2.assertion import EntityCategoryPolicy
 from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT as AUTHN_PASSWORD_PROTECTED
 from saml2.authn_context import TIMESYNCTOKEN as AUTHN_TIME_SYNC_TOKEN
 from saml2.config import Config
@@ -202,6 +203,23 @@ IDP_XMLSECURITY = {
     "crypto_backend": "XMLSecurity",
 }
 
+IDP_SWAMID = {
+    "entityid": "urn:mace:umu.se:saml:sunet:idp",
+    "name": "Swamid entity categories restrictions in an IdP",
+    "service": {
+        "idp": {
+            "endpoints": {
+                "single_sign_on_service": ["http://localhost:8088/"],
+            },
+            "policy": {
+                "default": {
+                    "entity_categories": ["swamid", "edugain"],
+                },
+            },
+        }
+    },
+}
+
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
@@ -386,6 +404,25 @@ def test_unset_force_authn():
 def test_set_force_authn():
     cnf = SPConfig().load(sp2)
     assert bool(cnf.getattr("force_authn", "sp")) == True
+
+
+def test_idp_loading_entity_categories_restrictions():
+    """Test loading an IdP config with two entity categories in the policy and make sure they are loaded correctly"""
+    c = IdPConfig().load(IDP_SWAMID)
+    c.context = "idp"
+
+    ec_policy: EntityCategoryPolicy = c.getattr("policy", "idp").get("entity_categories", "sp entity id")
+    print(ec_policy)
+
+    assert list(ec_policy.categories.keys()) == ["swamid", "edugain"]
+
+    # Make sure all the categories have at least two rules (edugain currently has two)
+    for rules in ec_policy.categories.values():
+        assert len(rules) >= 2
+
+    # Look for a specific rule in the swamid category
+    swamid_rules = ec_policy.categories["swamid"]
+    assert any(rule.match.required == ["https://refeds.org/category/personalized"] for rule in swamid_rules)
 
 
 if __name__ == "__main__":
