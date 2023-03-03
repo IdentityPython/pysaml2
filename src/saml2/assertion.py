@@ -606,22 +606,22 @@ class Policy:
             return default
         return attribute_restriction
 
-    def get_nameid_format(self, sp_entity_id):
+    def get_nameid_format(self, sp_entity_id: str):
         """Get the NameIDFormat to used for the entity id
         :param: The SP entity ID
-        :retur: The format
+        :return: The format
         """
         return self.get("nameid_format", sp_entity_id, saml.NAMEID_FORMAT_TRANSIENT)
 
-    def get_name_form(self, sp_entity_id):
+    def get_name_form(self, sp_entity_id: str):
         """Get the NameFormat to used for the entity id
         :param: The SP entity ID
-        :retur: The format
+        :return: The format
         """
 
         return self.get("name_form", sp_entity_id, default=NAME_FORMAT_URI)
 
-    def get_lifetime(self, sp_entity_id):
+    def get_lifetime(self, sp_entity_id: str):
         """The lifetime of the assertion
         :param sp_entity_id: The SP entity ID
         :param: lifetime as a dictionary
@@ -629,7 +629,7 @@ class Policy:
         # default is a hour
         return self.get("lifetime", sp_entity_id, {"hours": 1})
 
-    def get_attribute_restrictions(self, sp_entity_id):
+    def get_attribute_restrictions(self, sp_entity_id: str) -> Optional[AttributeRestrictions]:
         """Return the attribute restriction for SP that want the information
 
         :param sp_entity_id: The SP entity ID
@@ -638,7 +638,7 @@ class Policy:
 
         return self.get("attribute_restrictions", sp_entity_id)
 
-    def get_fail_on_missing_requested(self, sp_entity_id):
+    def get_fail_on_missing_requested(self, sp_entity_id: str):
         """Return the whether the IdP should should fail if the SPs
         requested attributes could not be found.
 
@@ -648,7 +648,7 @@ class Policy:
 
         return self.get("fail_on_missing_requested", sp_entity_id, default=True)
 
-    def get_sign(self, sp_entity_id):
+    def get_sign(self, sp_entity_id: str):
         """
         Possible choices
         "sign": ["response", "assertion", "on_demand"]
@@ -691,7 +691,7 @@ class Policy:
             required=required,
         )
 
-    def not_on_or_after(self, sp_entity_id):
+    def not_on_or_after(self, sp_entity_id: str):
         """When the assertion stops being valid, should not be
         used after this time.
 
@@ -758,7 +758,7 @@ class Policy:
 
         return subject_ava or {}
 
-    def restrict(self, ava, sp_entity_id, metadata=None):
+    def restrict(self, ava: AttributeValues, sp_entity_id: str, metadata: Optional[MetadataStore] = None):
         """Identity attribute names are expected to be expressed as FriendlyNames
 
         :return: A filtered ava according to the IdPs/AAs rules and
