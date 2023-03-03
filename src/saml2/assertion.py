@@ -91,40 +91,26 @@ AllowedAttributeValue = re.Pattern[str]
 AttributeRestrictions = dict[str, Optional[list[AllowedAttributeValue]]]
 
 
-def _filter_values(vals, vlist=None, must=False):
-    """Removes values from *vals* that does not appear in vlist
+def _filter_values(values: list[str], allowed_values: list[str], must: bool = False) -> list[str]:
+    """Removes values from *values* that does not appear in allowed_values.
 
     :param vals: The values that are to be filtered
-    :param vlist: required or optional value
+    :param allowed_values: required or optional values
     :param must: Whether the allowed values must appear
     :return: The set of values after filtering
     """
 
-    if not vlist:  # No value specified equals any value
-        return vals
+    if not allowed_values:  # No value specified equals any value
+        return values
 
-    if vals is None:  # cannot iterate over None, return early
-        return vals
+    res = [x for x in values if x in allowed_values]
 
-    if isinstance(vlist, str):
-        vlist = [vlist]
-
-    res = []
-
-    for val in vlist:
-        if val in vals:
-            res.append(val)
-
-    if must:
-        if res:
-            return res
-        else:
-            raise MissingValue("Required attribute value missing")
-    else:
-        return res
+    if must and not res:
+        raise MissingValue("Required attribute value missing")
+    return res
 
 
-def _match(attr, ava):
+def _match(attr: str, ava: AttributeValues) -> Optional[str]:
     if attr in ava:
         return attr
 
@@ -139,20 +125,48 @@ def _match(attr, ava):
     return None
 
 
-def filter_on_attributes(ava, required=None, optional=None, acs=None, fail_on_unfulfilled_requirements=True):
-    """Filter
+AttributesAsDicts = list[AttributeAsDict]
+
+
+def filter_on_attributes(
+    ava: AttributeValues,
+    required: Optional[AttributesAsDicts] = None,
+    optional: Optional[AttributesAsDicts] = None,
+    acs: Optional[list[AttributeConverter]] = None,
+    fail_on_unfulfilled_requirements: bool = True,
+) -> AttributeValues:
+    """Filter attributes in `ava', returning a new instance of AttributeValues.
+
+    * Ensure that all the values in the attribute value assertion are allowed
+    * Ensure that all the required attributes are present (else raise MissingValue)
 
     :param ava: An attribute value assertion as a dictionary
-    :param required: list of RequestedAttribute instances defined to be
-        required
-    :param optional: list of RequestedAttribute instances defined to be
-        optional
+    :param required: list of attributes defined to be required
+    :param optional: list of attributes defined to be optional
     :param fail_on_unfulfilled_requirements: If required attributes
         are missing fail or fail not depending on this parameter.
     :return: The modified attribute value assertion
     """
 
-    def _match_attr_name(attr, ava):
+    def _filter_value_or_values(
+        val: Union[list[str], str], allowed_values: list[str], must: bool = False
+    ) -> Union[str, list[str]]:
+        """Convert single value to list of values before calling _filter_values."""
+        values: list[str]
+        if isinstance(val, str):
+            values = [val]
+        else:
+            values = val
+        res = _filter_values(values, allowed_values, must)
+        return res
+
+    def _identify_attribute(attr: AttributeAsDict, ava: AttributeValues) -> Optional[str]:
+        """Find and identify `attr' in `ava'.
+
+        The attribute we want to work with might be identified by its name, name_format,
+        friendly_name or it's URI. This function tries to find the attribute in `ava' and
+        returns the friendly_name of the attribute in `ava'.
+        """
         name = attr["name"].lower()
         name_format = attr.get("name_format")
         friendly_name = attr.get("friendly_name")
@@ -164,38 +178,52 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None, fail_on_un
         )
         return _fn
 
-    def _apply_attr_value_restrictions(attr, res, must=False):
-        values = [av["text"] for av in attr.get("attribute_value", [])]
+    def _apply_attr_value_restrictions(
+        friendly_name: str, attr: AttributeAsDict, res: AttributeValuesStrict, must: bool = False
+    ):
+        """Add the attribute `friendly_name` to `res`, filtering its values if necessary."""
+        _av_list = attr.get("attribute_value", [])
+        assert _av_list is not None  # please mypy, the get() above defaults to empty list
+        allowed_values = [av["text"] for av in _av_list]
 
-        try:
-            res[_fn].extend(_filter_values(ava[_fn], values))
-        except KeyError:
-            # ignore duplicate RequestedAttribute entries
-            val = _filter_values(ava[_fn], values)
-            res[_fn] = val if val is not None else []
+        _values = _filter_value_or_values(ava[friendly_name], allowed_values, must)
+        if not _values:
+            return  # nothing to add
 
-        return _filter_values(ava[_fn], values, must)
+        if friendly_name not in res:
+            res[friendly_name] = []
 
-    res = {}
+        res[friendly_name].extend(_values)
+
+    new_ava = AttributeValuesStrict({})
     if required is None:
         required = []
 
     for attr in required:
-        _fn = _match_attr_name(attr, ava)
+        _fn = _identify_attribute(attr, ava)
 
         if _fn:
-            _apply_attr_value_restrictions(attr, res, True)
+            _apply_attr_value_restrictions(_fn, attr, new_ava, True)
         elif fail_on_unfulfilled_requirements:
-            desc = f"Required attribute missing: '{attr['name']}'"
-            raise MissingValue(desc)
+            raise MissingValue(f"Required attribute missing: '{attr['name']}'")
 
     if optional is None:
         optional = []
 
     for attr in optional:
-        _fn = _match_attr_name(attr, ava)
+        _fn = _identify_attribute(attr, ava)
         if _fn:
-            _apply_attr_value_restrictions(attr, res, False)
+            _apply_attr_value_restrictions(_fn, attr, new_ava, False)
+
+    # TODO: Kludge to turn lists-of-strings back into strings if the data was given
+    #       as a string in `ava`. This is needed to make the tests pass, but maybe it
+    #       would be preferable to declare ava to only have lists of strings?
+    res = AttributeValues({})
+    for this in new_ava.keys():
+        if isinstance(ava[this], str):
+            res[this] = new_ava[this][0]
+        else:
+            res[this] = new_ava[this]
 
     return res
 
@@ -282,7 +310,9 @@ def filter_on_wire_representation(ava, acs, required=None, optional=None):
     return res
 
 
-def filter_attribute_value_assertions(ava, attribute_restrictions=None):
+def filter_attribute_value_assertions(
+    ava: AttributeValues, attribute_restrictions: Optional[AttributeRestrictions] = None
+) -> AttributeValues:
     """Will weed out attribute values and values according to the
     rules defined in the attribute restrictions. If filtering results in
     an attribute without values, then the attribute is removed from the
@@ -294,10 +324,11 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
     :return: The modified attribute value assertion
     """
     if not attribute_restrictions:
+        # If there are no restrictions, release everything we have
         return ava
 
     for attr, vals in list(ava.items()):
-        _attr = attr.lower()
+        _attr = attr.lower()  # TODO: check if needed
         try:
             _rests = attribute_restrictions[_attr]
         except KeyError:
@@ -307,7 +338,7 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
                 continue
             if isinstance(vals, str):
                 vals = [vals]
-            rvals = []
+            rvals: list[str] = []
             for restr in _rests:
                 for val in vals:
                     if restr.match(val):
@@ -670,7 +701,14 @@ class Policy:
 
         return in_a_while(**self.get_lifetime(sp_entity_id))
 
-    def filter(self, ava, sp_entity_id, mdstore=None, required=None, optional=None):
+    def filter(
+        self,
+        ava: AttributeValues,
+        sp_entity_id: str,
+        mdstore: Optional[MetadataStore] = None,
+        required: Optional[list[AttributeAsDict]] = None,
+        optional: Optional[list[AttributeAsDict]] = None,
+    ) -> AttributeValues:
         """What attribute and attribute values returns depends on what
         the SP or the registration authority has said it wants in the request
         or in the metadata file and what the IdP/AA wants to release.
