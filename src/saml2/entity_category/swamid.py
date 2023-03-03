@@ -100,8 +100,6 @@ NREN = "http://www.swamid.se/category/nren-service"  # Deprecated from 2021-03-3
 HEI = "http://www.swamid.se/category/hei-service"  # Deprecated from 2021-03-31
 
 RELEASE = {
-    # NOTICE: order is important
-    # no-aggregation categories need to come last and in order of least to most restrictive
     "": [],
     SFS_1993_1153: ["norEduPersonNIN", "eduPersonAssurance"],
     (RESEARCH_AND_EDUCATION, EU): NAME + STATIC_ORG_INFO + OTHER,
@@ -113,12 +111,6 @@ RELEASE = {
     ESI: MYACADEMICID_ESI,
     (ESI, COCOv1): MYACADEMICID_ESI + GEANT_COCO,
     (ESI, COCOv2): MYACADEMICID_ESI + REFEDS_COCO,
-    # XXX: disabled temporarily until we can figure out how to handle them
-    #      these need to be able to be combined with other categories just not with each other
-    # no aggregation categories
-    # PERSONALIZED: REFEDS_PERSONALIZED_ACCESS,
-    # PSEUDONYMOUS: REFEDS_PSEUDONYMOUS_ACCESS,
-    # ANONYMOUS: REFEDS_ANONYMOUS_ACCESS,
 }
 
 ONLY_REQUIRED = {
@@ -128,8 +120,42 @@ ONLY_REQUIRED = {
     (ESI, COCOv2): True,
 }
 
-NO_AGGREGATION = {
-    PERSONALIZED: True,
-    PSEUDONYMOUS: True,
-    ANONYMOUS: True,
-}
+# These restrictions are parsed (and validated) into a list of saml2.assertion.EntityCategoryRule instances.
+RESTRICTIONS = [
+    {
+        "match": {
+            "required": [PERSONALIZED],
+            "conflicts": [PSEUDONYMOUS, ANONYMOUS],
+        },
+        "attributes": REFEDS_PERSONALIZED_ACCESS,
+    },
+    {
+        "match": {
+            "required": [PSEUDONYMOUS],
+            "conflicts": [ANONYMOUS],
+        },
+        "attributes": REFEDS_PSEUDONYMOUS_ACCESS,
+    },
+    {
+        "match": {
+            "required": [ANONYMOUS],
+        },
+        "attributes": REFEDS_ANONYMOUS_ACCESS,
+    },
+    # Example of conversion of some of the rules in RELEASE to this new format:
+    #
+    # {
+    #     "match": {
+    #         "required": [COCOv1],
+    #     },
+    #     "attributes": GEANT_COCO,
+    #     "only_required": True,
+    # },
+    # {
+    #     "match": {
+    #         "required": [ESI, COCOv1],
+    #     },
+    #     "attributes": MYACADEMICID_ESI + GEANT_COCO,
+    #     "only_required": True,
+    # },
+]

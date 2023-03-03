@@ -1,15 +1,35 @@
 #!/usr/bin/env python
+from __future__ import annotations
+
 import copy
 import importlib
 import logging
 import re
 from warnings import warn as _warn
 
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Literal
+from typing import Mapping
+from typing import Optional
+from typing import Type
+from typing import TypedDict
+from typing import TypeVar
+from typing import Union
+from warnings import warn as _warn
+
+from pydantic import BaseModel
+from pydantic import ValidationError
+from pydantic import validator
+
 from saml2 import saml
 from saml2 import xmlenc
+from saml2.attribute_converter import AttributeConverter
 from saml2.attribute_converter import ac_factory
 from saml2.attribute_converter import from_local
 from saml2.attribute_converter import get_local_name
+from saml2.mdstore import MetadataStore
 from saml2.s_utils import MissingValue
 from saml2.s_utils import assertion_factory
 from saml2.s_utils import factory
@@ -17,9 +37,58 @@ from saml2.s_utils import sid
 from saml2.saml import NAME_FORMAT_URI
 from saml2.time_util import in_a_while
 from saml2.time_util import instant
+from saml2.typing import AttributeAsDict
+from saml2.typing import AttributeValues
+from saml2.typing import AttributeValuesStrict
 
 
 logger = logging.getLogger(__name__)
+extra_logger = logger.getChild("extra")
+
+
+class EntityCategoryMatcher(BaseModel):
+    """
+    Part of EntityCategoryRule.
+
+    Decides, based on a list of entity categories for an SP, if this rule applies to the SP or not.
+    """
+
+    required: List[str]  # List of entity category URIs that must be present in the SP's entity categories
+    conflicts: List[str] = []  # List of entity category URIs that must not be present in the SP's entity categories
+
+    def matches(self, sp_ecs: List[str]) -> bool:
+        """Return True if all our entity categories is present in the list of SP entity categories"""
+        _conflicts = self._conflicts(sp_ecs)
+        if _conflicts:
+            extra_logger.debug(f"Not matching, SP entity categories in conflict with {self.conflicts}")
+            return False
+        if self.required == [""]:
+            # A rule with this matching criteria results in attributes always being released
+            return True
+        return all([x in sp_ecs for x in self.required])
+
+    def _conflicts(self, sp_ecs: List[str]) -> bool:
+        """Return True if any of the SP's entity categories are present in `conflicts'."""
+        return any([x in sp_ecs for x in self.conflicts])
+
+
+class EntityCategoryRule(BaseModel):
+    """A rule to decide whether or not to add a list of attributes for release to an SP."""
+
+    match: EntityCategoryMatcher
+    attributes: List[str]  # attributes to release if this rule matches (friendly names)
+    only_required: bool = False  # If this rule matches, only include the required attributes for the SP
+
+    @validator("attributes")
+    def lowercase_attribute_names(cls, v: List[str]):
+        """Make sure all attribute names are lower case, for easier comparison later."""
+        return [x.lower() for x in v]
+
+
+# The regexps are an optional "allow-list" for values. If regexps are provided, one of them has to
+# match a value for it to be released.
+AllowedAttributeValue = re.Pattern[str]
+AttributeRestrictions = dict[str, Optional[list[AllowedAttributeValue]]]
 
 
 def _filter_values(vals, vlist=None, must=False):
@@ -264,66 +333,215 @@ def restriction_from_attribute_spec(attributes):
     return restr
 
 
-def compile(restrictions):
-    """This is only for IdPs or AAs, and it's about limiting what
-    is returned to the SP.
-    In the configuration file, restrictions on which values that
-    can be returned are specified with the help of regular expressions.
-    This function goes through and pre-compiles the regular expressions.
+class EntityCategoryPolicy(BaseModel):
+    """Holder of rule sets for entity categories.
 
-    :param restrictions: policy configuration
-    :return: The assertion with the string specification replaced with
-        a compiled regular expression.
+    `categories' keys are category names (currently also module names from where the rules are loaded)
+    `categories' values are lists of rules for that category.
     """
-    for who, spec in restrictions.items():
-        spec = spec or {}
 
-        entity_categories = spec.get("entity_categories", [])
-        ecs = []
-        for cat in entity_categories:
+    categories: dict[str, list[EntityCategoryRule]]
+
+    def __str__(self) -> str:
+        return f"<{self.__class__.__name__}: {self.categories.keys()}>"
+
+    @classmethod
+    def from_module_names(cls: Type["EntityCategoryPolicy"], entity_categories: List[str]) -> "EntityCategoryPolicy":
+        """Load a list of rules for a category.
+
+        In the current implementation, the rules are loaded from a module - one module per category.
+
+        The old format was to have the rules in the module's RELEASE dictionary, and the ONLY_REQUIRED dictionary.
+
+        The new format is to load a list of rules from the RESTRICTIONS in the module, and use pydantic to validate
+        and convert the rules to EntityCategoryRule objects.
+        """
+        res: dict[str, list[EntityCategoryRule]] = {}
+        for category in entity_categories:
             try:
-                _mod = importlib.import_module(cat)
+                _mod = importlib.import_module(category)
             except ImportError:
-                _mod = importlib.import_module(f"saml2.entity_category.{cat}")
+                _mod = importlib.import_module(f"saml2.entity_category.{category}")
 
-            _ec = {}
+            # `rules' is the list of rules loaded from this module
+            rules: list[EntityCategoryRule] = []
+
+            # Old format, load rules from RELEASE and ONLY_REQUIRED (two dictionaries)
             for key, items in _mod.RELEASE.items():
                 alist = [k.lower() for k in items]
                 _only_required = getattr(_mod, "ONLY_REQUIRED", {}).get(key, False)
-                _no_aggregation = getattr(_mod, "NO_AGGREGATION", {}).get(key, False)
-                _ec[key] = (alist, _only_required, _no_aggregation)
-            ecs.append(_ec)
-        spec["entity_categories"] = ecs or None
 
-        attribute_restrictions = spec.get("attribute_restrictions") or {}
-        _attribute_restrictions = {}
-        for key, values in attribute_restrictions.items():
-            lkey = key.lower()
-            values = [] if not values else values
-            _attribute_restrictions[lkey] = [re.compile(value) for value in values] or None
-        spec["attribute_restrictions"] = _attribute_restrictions or None
+                # Convert tuples to a list of strings, and a single string to a list of one string
+                _key_as_list: List[str]
+                if isinstance(key, str):
+                    _key_as_list = [key]
+                else:
+                    _key_as_list = list(key)
 
-    return restrictions
+                rules.append(
+                    EntityCategoryRule(
+                        match=EntityCategoryMatcher(required=_key_as_list, conflicts=[]),
+                        attributes=alist,
+                        only_required=_only_required,
+                    )
+                )
+
+            # New format, load rules from RESTRICTIONS (a list)
+            if hasattr(_mod, "RESTRICTIONS") and isinstance(_mod.RESTRICTIONS, list):
+                for this in _mod.RESTRICTIONS:
+                    try:
+                        rules.append(EntityCategoryRule.parse_obj(this))
+                    except ValidationError:
+                        logger.warning(f"Invalid entity category rule: {this}")
+                        raise
+
+            res[category] = rules
+        return cls(categories=res)
+
+    def attribute_restrictions_for_sp(
+        self,
+        acs: List[AttributeConverter],
+        sp_entity_id: Optional[str] = None,
+        mds: Optional[MetadataStore] = None,  # TODO: Possibly a 'MetaData' instance (parent of MetadataStore)
+        required: Optional[List[AttributeAsDict]] = None,
+    ) -> AttributeRestrictions:
+        """
+        Compile the attribute restrictions for a given SP.
+
+        Attribute restrictions are expressed as a dict with attribute names as keys
+        and optionally a list of regular expressions as values.
+
+        If the value is a list of regular expressions, then the value of the attribute must match
+        one of the regular expressions. Otherwise the attribute is not allowed (meaning will not be released).
+
+        If the value is None, then all values are allowed (think of it as "no restrictions apply").
+        """
+        restrictions: AttributeRestrictions = {}
+
+        required_friendly_names: List[str] = []
+        if required is not None:
+            for d in required:
+                # The dicts in 'required' can have a 'friendly_name', or a 'name' and a 'name_format'.
+                # See the documentation of the RequiredAttribute type.
+                _friendly_name: Optional[str] = d.get("friendly_name")
+                if not _friendly_name:
+                    _friendly_name = get_local_name(acs=acs, attr=d["name"], name_format=d["name_format"])
+                assert isinstance(_friendly_name, str)
+                required_friendly_names.append(_friendly_name.lower())
+
+        if not mds:
+            return restrictions
+
+        sp_categories: List[str] = mds.entity_categories(sp_entity_id)
+
+        extra_logger.debug(
+            f"Compiling attributes to release based on SP {sp_entity_id} entity categories: {sp_categories}"
+        )
+        extra_logger.debug(f"Required attributes for this SP: {required_friendly_names}")
+
+        for rule_set in self.categories.values():
+            for this_rule in rule_set:
+                _matches = this_rule.match.matches(sp_categories)
+                extra_logger.debug(f"Rule {this_rule.match}, matches: {_matches}")
+                if _matches:
+                    if this_rule.only_required:
+                        attrs = [a for a in this_rule.attributes if a in required_friendly_names]
+                        _not_adding = [a for a in this_rule.attributes if a not in required_friendly_names]
+                        extra_logger.debug(f"Adding only required attributes: {attrs}, not adding: {_not_adding}")
+                    else:
+                        attrs = this_rule.attributes
+                        extra_logger.debug(f"Adding attributes: {attrs}")
+
+                    for attr in attrs:
+                        restrictions[attr] = None
+
+        if not restrictions:
+            restrictions[""] = None
+
+        logger.debug(f"Compiled attribute restrictions: {restrictions}")
+        return restrictions
+
+
+PolicyConfigKey = Union[str, Literal["default"]]
+
+
+class PolicyConfigValue(BaseModel):
+    lifetime: Optional[Any]
+    attribute_restrictions: Optional[AttributeRestrictions]
+    name_form: Optional[str]
+    nameid_format: Optional[str]
+    entity_categories: EntityCategoryPolicy
+    sign: Optional[Union[Literal["response"], Literal["assertion"], Literal["on_demand"]]]
+    fail_on_missing_requested: Optional[bool]
+
+    class Config:
+        arbitrary_types_allowed = True  # allow re.Pattern as type in AttributeRestrictions
+
+
+PolicyConfig = dict[PolicyConfigKey, PolicyConfigValue]
 
 
 class Policy:
     """Handles restrictions on assertions."""
 
-    def __init__(self, restrictions=None, mds=None):
+    def __init__(self, restrictions: Optional[Mapping[str, Any]] = None, mds: Optional[MetadataStore] = None):
         self.metadata_store = mds
         self._restrictions = self.setup_restrictions(restrictions)
         logger.debug("policy restrictions: %s", self._restrictions)
-        self.acs = []
+        self.acs: list[AttributeConverter] = []
 
-    def setup_restrictions(self, restrictions=None):
+    def setup_restrictions(self, restrictions: Optional[Mapping[str, Any]] = None) -> Optional[PolicyConfig]:
         if restrictions is None:
             return None
 
         restrictions = copy.deepcopy(restrictions)
-        restrictions = compile(restrictions)
+        restrictions = self._compile_restrictions(restrictions)
         return restrictions
 
-    def get(self, attribute, sp_entity_id, default=None):
+    @staticmethod
+    def _compile_restrictions(restrictions: Mapping[str, Any]) -> PolicyConfig:
+        """
+        Pre-compile regular expressions in rules in `restrictions'.
+
+        This is only for IdPs or AAs, and it's about limiting what
+        is returned to the SP.
+        In the configuration file, restrictions on which values that
+        can be returned are specified with the help of regular expressions.
+        This function goes through and pre-compiles the regular expressions.
+
+        :param restrictions: policy configuration
+        :return: The assertion with the string specification replaced with
+            a compiled regular expression.
+        """
+        config: PolicyConfig = {}
+        for who, spec in restrictions.items():
+            if spec is None:
+                spec = {}
+
+            entity_categories: list[str] = spec.get("entity_categories", [])
+            _new_entity_categories = EntityCategoryPolicy.from_module_names(entity_categories)
+
+            attribute_restrictions: Mapping[str, list[str]] = spec.get("attribute_restrictions") or {}
+            _attribute_restrictions: AttributeRestrictions = {}
+            for key, values in attribute_restrictions.items():
+                lkey = key.lower()
+                values = [] if not values else values
+                _attribute_restrictions[lkey] = [re.compile(value) for value in values] or None
+            _new_attribute_restrictions = _attribute_restrictions or None
+
+            config[who] = PolicyConfigValue(
+                lifetime=spec.get("lifetime"),
+                attribute_restrictions=_new_attribute_restrictions,
+                name_form=spec.get("name_form"),
+                nameid_format=spec.get("nameid_format"),
+                entity_categories=_new_entity_categories,
+                sign=spec.get("sign"),
+                fail_on_missing_requested=spec.get("fail_on_missing_requested"),
+            )
+
+        return config
+
+    def get(self, attribute: str, sp_entity_id: str, default: Any = None) -> Any:
         """
 
         :param attribute:
@@ -334,25 +552,28 @@ class Policy:
         if not self._restrictions:
             return default
 
-        ra_info = self.metadata_store.registration_info(sp_entity_id) or {} if self.metadata_store is not None else {}
-        ra_entity_id = ra_info.get("registration_authority")
+        ra_info: Mapping[str, Any] = {}
+        if self.metadata_store is not None:
+            ra_info = self.metadata_store.registration_info(sp_entity_id) or {}
+        ra_entity_id: str = ra_info.get("registration_authority")  # type: ignore[assignment]
 
         sp_restrictions = self._restrictions.get(sp_entity_id)
         ra_restrictions = self._restrictions.get(ra_entity_id)
         default_restrictions = self._restrictions.get("default") or self._restrictions.get("")
-        restrictions = (
+        restrictions: Optional[PolicyConfigValue] = (
             sp_restrictions
             if sp_restrictions is not None
             else ra_restrictions
             if ra_restrictions is not None
             else default_restrictions
             if default_restrictions is not None
-            else {}
+            else None
         )
 
-        attribute_restriction = restrictions.get(attribute)
-        restriction = attribute_restriction if attribute_restriction is not None else default
-        return restriction
+        attribute_restriction = getattr(restrictions, attribute, None)
+        if attribute_restriction is None:
+            return default
+        return attribute_restriction
 
     def get_nameid_format(self, sp_entity_id):
         """Get the NameIDFormat to used for the entity id
@@ -407,7 +628,9 @@ class Policy:
 
         return self.get("sign", sp_entity_id, default=[])
 
-    def get_entity_categories(self, sp_entity_id, mds=None, required=None):
+    def _get_restrictions_for_entity_categories(
+        self, sp_entity_id: str, mds: Optional[MetadataStore] = None, required: Optional[List[AttributeAsDict]] = None
+    ) -> AttributeRestrictions:
         """
 
         :param sp_entity_id:
@@ -424,59 +647,18 @@ class Policy:
             logger.warning(warn_msg)
             _warn(warn_msg, DeprecationWarning)
 
-        def post_entity_categories(maps, sp_entity_id=None, mds=None, required=None):
-            restrictions = {}
-            required_friendly_names = [
-                d.get("friendly_name") or get_local_name(acs=self.acs, attr=d["name"], name_format=d["name_format"])
-                for d in (required or [])
-            ]
-            required = [friendly_name.lower() for friendly_name in required_friendly_names]
-
-            if mds:
-                ecs = mds.entity_categories(sp_entity_id)
-                for ec_map in maps:
-                    for key, (atlist, only_required, no_aggregation) in ec_map.items():
-                        if key == "":  # always released
-                            attrs = atlist
-                        elif isinstance(key, tuple):
-                            if only_required:
-                                attrs = [a for a in atlist if a in required]
-                            else:
-                                attrs = atlist
-                            for _key in key:
-                                if _key not in ecs:
-                                    attrs = []
-                                    break
-                        elif key in ecs:
-                            if only_required:
-                                attrs = [a for a in atlist if a in required]
-                            else:
-                                attrs = atlist
-                        else:
-                            attrs = []
-
-                        if attrs and no_aggregation:
-                            # clear restrictions if the found category is a no aggregation category
-                            restrictions = {}
-                        for attr in attrs:
-                            restrictions[attr] = None
-                        else:
-                            restrictions[""] = None
-
-            return restrictions
-
-        sentinel = object()
-        result1 = self.get("entity_categories", sp_entity_id, default=sentinel)
-        if result1 is sentinel:
+        result1: Optional[EntityCategoryPolicy] = self.get("entity_categories", sp_entity_id)
+        if result1 is None or not result1.categories:
             return {}
 
-        result2 = post_entity_categories(
-            result1,
+        assert isinstance(result1, EntityCategoryPolicy)
+
+        return result1.attribute_restrictions_for_sp(
+            acs=self.acs,
             sp_entity_id=sp_entity_id,
             mds=(mds or self.metadata_store),
             required=required,
         )
-        return result2
 
     def not_on_or_after(self, sp_entity_id):
         """When the assertion stops being valid, should not be
@@ -519,7 +701,7 @@ class Policy:
         subject_ava = ava.copy()
 
         # entity category restrictions
-        _ent_rest = self.get_entity_categories(sp_entity_id, mds=mdstore, required=required)
+        _ent_rest = self._get_restrictions_for_entity_categories(sp_entity_id, mds=mdstore, required=required)
         if _ent_rest:
             subject_ava = filter_attribute_value_assertions(subject_ava, _ent_rest)
         elif required or optional:
@@ -853,3 +1035,8 @@ class Assertion(dict):
                 del self[key]
 
         return ava
+
+
+def compile(restrictions: Mapping[str, Any]) -> PolicyConfig:
+    _warn("compile() is believe to be unused as an exported function and will be removed, use Policy() instead")
+    return Policy._compile_restrictions(restrictions)

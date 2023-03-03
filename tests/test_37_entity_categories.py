@@ -293,7 +293,6 @@ def test_filter_ava_esi_coco():
     )
 
 
-@pytest.mark.skip("Temporarily disabled")
 def test_filter_ava_refeds_anonymous_access():
     entity_id = "https://anonymous.example.edu/saml2/metadata/"
     mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
@@ -322,7 +321,6 @@ def test_filter_ava_refeds_anonymous_access():
     assert _eq(ava["schacHomeOrganization"], ["example.com"])
 
 
-@pytest.mark.skip("Temporarily disabled")
 def test_filter_ava_refeds_pseudonymous_access():
     entity_id = "https://pseudonymous.example.edu/saml2/metadata/"
     mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
@@ -355,7 +353,6 @@ def test_filter_ava_refeds_pseudonymous_access():
     assert _eq(ava["schacHomeOrganization"], ["example.com"])
 
 
-@pytest.mark.skip("Temporarily disabled")
 def test_filter_ava_refeds_personalized_access():
     entity_id = "https://personalized.example.edu/saml2/metadata/"
     mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
