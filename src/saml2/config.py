@@ -120,6 +120,7 @@ AA_IDP_ARGS = [
     "domain",
     "name_qualifier",
     "edu_person_targeted_id",
+    "error_url",
 ]
 
 PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
