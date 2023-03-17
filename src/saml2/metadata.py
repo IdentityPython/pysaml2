@@ -583,6 +583,10 @@ def do_idpsso_descriptor(conf, cert=None, enc_cert=None):
         except KeyError:
             setattr(idpsso, key, DEFAULTS[key])
 
+    error_url = conf.getattr("error_url", "idp")
+    if error_url:
+        idpsso.error_url = error_url
+
     return idpsso
 
 

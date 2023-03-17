@@ -1320,6 +1320,19 @@ Example::
         },
     },
 
+error_url
+"""""""""
+
+The URL to which the user's browser may be redirected in the event of a failure.
+
+Example::
+
+    "service":
+        "idp": {
+            "error_url": "http://localhost:8088/error_page",
+        },
+    }
+
 only_use_keys_in_metadata
 """""""""""""""""""""""""
 
