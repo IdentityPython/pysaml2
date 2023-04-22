@@ -106,6 +106,7 @@ def create_metadata_string(
     conf.key_file = config.key_file or keyfile
     conf.cert_file = config.cert_file or cert
     conf.xmlsec_binary = config.xmlsec_binary
+    conf.crypto_backend = config.crypto_backend
     secc = security_context(conf)
 
     sign_alg = sign_alg or config.signing_algorithm
