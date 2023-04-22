@@ -471,18 +471,25 @@ def import_rsa_key_from_file(filename):
     return key
 
 
-def parse_xmlsec_output(output):
+def parse_xmlsec_verify_output(xmlsec_vsn, output):
     """Parse the output from xmlsec to try to find out if the
     command was successfull or not.
 
     :param output: The output from Popen
     :return: A boolean; True if the command was a success otherwise False
     """
-    for line in output.splitlines():
-        if line == "OK":
-            return True
-        elif line == "FAIL":
-            raise XmlsecError(output)
+    if xmlsec_vsn < (1, 3):
+        for line in output.splitlines():
+            if line == "OK":
+                return True
+            elif line == "FAIL":
+                raise XmlsecError(output)
+    else:
+        for line in output.splitlines():
+            if line == 'Verification status: OK':
+                return True
+            elif line == 'Verification status: FAILED':
+                raise XmlsecError(output)
     raise XmlsecError(output)
 
 
@@ -629,6 +636,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
             raise ValueError("xmlsec_binary should be of type string")
         self.xmlsec = xmlsec_binary
         self.delete_tmpfiles = delete_tmpfiles
+        vsn = self.version()
+        [maj_num_str, min_num_str] = vsn.split('.')[0:2]
+        self.vsn = (int(maj_num_str), int(min_num_str))
         try:
             self.non_xml_crypto = RSACrypto(kwargs["rsa_key"])
         except KeyError:
@@ -824,7 +834,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         except XmlsecError as e:
             raise SignatureError(com_list) from e
 
-        return parse_xmlsec_output(stderr)
+        return parse_xmlsec_verify_output(self.vsn, stderr)
 
     def _run_xmlsec(self, com_list, extra_args):
         """
@@ -836,6 +846,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         """
         with NamedTemporaryFile(suffix=".xml") as ntf:
             com_list.extend(["--output", ntf.name])
+            if self.vsn >= (1, 3):
+                com_list.extend(['--lax-key-search'])
             com_list += extra_args
 
             logger.debug("xmlsec command: %s", " ".join(com_list))
