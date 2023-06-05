@@ -806,9 +806,10 @@ class CryptoBackendXmlSec1(CryptoBackend):
         com_list = [
             self.xmlsec,
             "--verify",
+            "--enabled-key-data",
+            "x509",
             "--enabled-reference-uris",
             "empty,same-doc",
-            "--enabled-key-data",
             "raw-x509-cert",
             f"--pubkey-cert-{cert_type}",
             cert_file,
