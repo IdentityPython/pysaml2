@@ -471,14 +471,14 @@ def import_rsa_key_from_file(filename):
     return key
 
 
-def parse_xmlsec_verify_output(xmlsec_vsn, output):
+def parse_xmlsec_verify_output(output, version=None):
     """Parse the output from xmlsec to try to find out if the
     command was successfull or not.
 
     :param output: The output from Popen
     :return: A boolean; True if the command was a success otherwise False
     """
-    if xmlsec_vsn < (1, 3):
+    if version is None or version < (1, 3):
         for line in output.splitlines():
             if line == "OK":
                 return True
@@ -600,8 +600,17 @@ def verify_redirect_signature(saml_msg, crypto, cert=None, sigkey=None):
 
 
 class CryptoBackend:
+    @property
     def version(self):
         raise NotImplementedError()
+
+    @property
+    def version_nums(self):
+        try:
+            vns = tuple(int(t) for t in self.version)
+        except ValueError:
+            vns = (0, 0, 0)
+        return vns
 
     def encrypt(self, text, recv_key, template, key_type):
         raise NotImplementedError()
@@ -636,14 +645,12 @@ class CryptoBackendXmlSec1(CryptoBackend):
             raise ValueError("xmlsec_binary should be of type string")
         self.xmlsec = xmlsec_binary
         self.delete_tmpfiles = delete_tmpfiles
-        vsn = self.version()
-        [maj_num_str, min_num_str] = vsn.split('.')[0:2]
-        self.vsn = (int(maj_num_str), int(min_num_str))
         try:
             self.non_xml_crypto = RSACrypto(kwargs["rsa_key"])
         except KeyError:
             pass
 
+    @property
     def version(self):
         com_list = [self.xmlsec, "--version"]
         pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
@@ -652,7 +659,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         try:
             return content.split(" ")[1]
         except IndexError:
-            return ""
+            return "0.0.0"
 
     def encrypt(self, text, recv_key, template, session_key_type, xpath=""):
         """
@@ -834,7 +841,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         except XmlsecError as e:
             raise SignatureError(com_list) from e
 
-        return parse_xmlsec_verify_output(self.vsn, stderr)
+        return parse_xmlsec_verify_output(stderr, self.version_nums)
 
     def _run_xmlsec(self, com_list, extra_args):
         """
@@ -846,7 +853,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         """
         with NamedTemporaryFile(suffix=".xml") as ntf:
             com_list.extend(["--output", ntf.name])
-            if self.vsn >= (1, 3):
+            if self.version_nums >= (1, 3):
                 com_list.extend(['--lax-key-search'])
             com_list += extra_args
 
@@ -882,10 +889,13 @@ class CryptoBackendXMLSecurity(CryptoBackend):
     def __init__(self):
         CryptoBackend.__init__(self)
 
+    @property
     def version(self):
-        # XXX if XMLSecurity.__init__ included a __version__, that would be
-        # better than static 0.0 here.
-        return "XMLSecurity 0.0"
+        try:
+            import xmlsec
+            return xmlsec.__version__
+        except (ImportError, AttributeError):
+            return "0.0.0"
 
     def sign_statement(self, statement, node_name, key_file, node_id):
         """
