@@ -607,7 +607,7 @@ class CryptoBackend:
     @property
     def version_nums(self):
         try:
-            vns = tuple(int(t) for t in self.version)
+            vns = tuple(int(t) for t in self.version.split("."))
         except ValueError:
             vns = (0, 0, 0)
         return vns
