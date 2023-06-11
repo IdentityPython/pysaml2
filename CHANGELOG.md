@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.4.2 (2023-06-11)
+
+- Add support for xmlsec1 1.3.x
+- Use the set crypto_backend when creating the entity metadata
+
+
 ## 7.4.1 (2023-02-24)
 
 - Fix subject-id requirements processing
