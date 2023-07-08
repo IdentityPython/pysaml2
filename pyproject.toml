@@ -24,7 +24,6 @@ classifiers = [
 packages = [
     { include = "saml2", from = "src" },
     { include = "saml2test", from = "src" },
-    { include = "utility", from = "src" },
 ]
 
 [tool.poetry.urls]
