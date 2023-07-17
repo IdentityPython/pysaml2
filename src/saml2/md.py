@@ -10,7 +10,6 @@ from saml2 import saml
 from saml2 import xmldsig as ds
 from saml2 import xmlenc as xenc
 
-
 NAMESPACE = "urn:oasis:names:tc:SAML:2.0:metadata"
 
 
@@ -803,6 +802,7 @@ class KeyDescriptorType_(SamlBase):
         text=None,
         extension_elements=None,
         extension_attributes=None,
+        mgf=None,
     ):
         SamlBase.__init__(
             self, text=text, extension_elements=extension_elements, extension_attributes=extension_attributes
@@ -810,6 +810,7 @@ class KeyDescriptorType_(SamlBase):
         self.key_info = key_info
         self.encryption_method = encryption_method or []
         self.use = use
+        self.mgf = mgf
 
 
 def key_descriptor_type__from_string(xml_string):
