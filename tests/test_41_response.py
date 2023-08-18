@@ -146,7 +146,7 @@ class TestResponse:
         assert isinstance(resp, AuthnResponse)
         with raises(SignatureError):
             resp.verify()
-        assert 'incorrectly_signed_response' in caplog.text
+        assert 'The signature on the assertion cannot be verified.' in caplog.text
 
     def test_other_response(self):
         with open(full_path("attribute_response.xml")) as fp:
