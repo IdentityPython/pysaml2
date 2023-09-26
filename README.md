@@ -71,7 +71,9 @@ pip install pysaml2
 ### External dependencies
 
 PySAML2 works with the [`xmlsec`][xmlsec] binary.
-This should be readily available in most Linux distributions:
+Notice that support for xmlsec `1 1.3` was added with `v7.4.2`.
+
+`xmlsec` should be readily available in most Linux distributions:
 
 ```shell
 $ apt-get install xmlsec1
