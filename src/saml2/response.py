@@ -791,7 +791,8 @@ class AuthnResponse(StatusResponse):
                 try:
                     self.sec.check_signature(assertion, class_name(assertion), self.xmlstr)
                 except Exception as exc:
-                    logger.error("correctly_signed_response: %s", exc)
+                    logger.error("The signature on the assertion cannot be verified.")
+                    logger.debug("correctly_signed_response: %s", exc)
                     raise
 
         self.assertion = assertion
