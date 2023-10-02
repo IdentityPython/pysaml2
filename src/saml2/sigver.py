@@ -333,7 +333,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     return signed_xml
 
 
-def make_temp(content, suffix="", decode=True, delete_tmpfiles=True):
+def make_temp(content, suffix="", decode=True):
     """
     Create a temporary file with the given content.
 
@@ -345,19 +345,25 @@ def make_temp(content, suffix="", decode=True, delete_tmpfiles=True):
         suffix in certain circumstances.
     :param decode: The input content might be base64 coded. If so it
         must, in some cases, be decoded before being placed in the file.
-    :param delete_tmpfiles: Whether to keep the tmp files or delete them when they are
-        no longer in use
     :return: 2-tuple with file pointer ( so the calling function can
         close the file) and filename (which is for instance needed by the
         xmlsec function).
     """
     content_encoded = content.encode("utf-8") if not isinstance(content, bytes) else content
     content_raw = base64.b64decode(content_encoded) if decode else content_encoded
-    ntf = NamedTemporaryFile(suffix=suffix, delete=delete_tmpfiles)
+    ntf = NamedTemporaryFile(suffix=suffix, delete=False)
     ntf.write(content_raw)
     ntf.seek(0)
     return ntf
 
+def delete_filename(filename):
+    """
+    Silent remove filename if exists
+    """
+    try:
+        os.remove(filename)
+    except FileNotFoundError:
+        pass     
 
 def split_len(seq, length):
     return [seq[i : i + length] for i in range(0, len(seq), length)]
@@ -673,7 +679,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :return:
         """
         logger.debug("Encryption input len: %d", len(text))
-        tmp = make_temp(text, decode=False, delete_tmpfiles=self.delete_tmpfiles)
+        tmp = make_temp(text, decode=False)
         com_list = [
             self.xmlsec,
             "--encrypt",
@@ -693,6 +699,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
         except XmlsecError as e:
             raise EncryptError(com_list) from e
 
+        if self.delete_tmpfiles:
+            delete_filename(tmp.name)
+
         return output
 
     def encrypt_assertion(self, statement, enc_key, template, key_type="des-192", node_xpath=None, node_id=None):
@@ -709,8 +718,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if isinstance(statement, SamlBase):
             statement = pre_encrypt_assertion(statement)
 
-        tmp = make_temp(str(statement), decode=False, delete_tmpfiles=self.delete_tmpfiles)
-        tmp2 = make_temp(str(template), decode=False, delete_tmpfiles=self.delete_tmpfiles)
+        tmp = make_temp(str(statement), decode=False)
+        tmp2 = make_temp(str(template), decode=False)
 
         if not node_xpath:
             node_xpath = ASSERT_XPATH
@@ -736,6 +745,10 @@ class CryptoBackendXmlSec1(CryptoBackend):
         except XmlsecError as e:
             raise EncryptError(com_list) from e
 
+        if self.delete_tmpfiles:
+            delete_filename(tmp.name)
+            delete_filename(tmp2.name)  
+
         return output.decode("utf-8")
 
     def decrypt(self, enctext, key_file):
@@ -747,7 +760,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         """
 
         logger.debug("Decrypt input len: %d", len(enctext))
-        tmp = make_temp(enctext, decode=False, delete_tmpfiles=self.delete_tmpfiles)
+        tmp = make_temp(enctext, decode=False)
 
         com_list = [
             self.xmlsec,
@@ -762,6 +775,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
             (_stdout, _stderr, output) = self._run_xmlsec(com_list, [tmp.name])
         except XmlsecError as e:
             raise DecryptError(com_list) from e
+
+        if self.delete_tmpfiles:
+            delete_filename(tmp.name)
 
         return output.decode("utf-8")
 
@@ -778,7 +794,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if isinstance(statement, SamlBase):
             statement = str(statement)
 
-        tmp = make_temp(statement, suffix=".xml", decode=False, delete_tmpfiles=self.delete_tmpfiles)
+        tmp = make_temp(statement, suffix=".xml", decode=False)
 
         com_list = [
             self.xmlsec,
@@ -796,6 +812,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
             (stdout, stderr, output) = self._run_xmlsec(com_list, [tmp.name])
         except XmlsecError as e:
             raise SignatureError(com_list) from e
+
+        if self.delete_tmpfiles:
+            delete_filename(tmp.name)
 
         # this does not work if --store-signatures is used
         if output:
@@ -818,7 +837,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if not isinstance(signedtext, bytes):
             signedtext = signedtext.encode("utf-8")
 
-        tmp = make_temp(signedtext, suffix=".xml", decode=False, delete_tmpfiles=self.delete_tmpfiles)
+        tmp = make_temp(signedtext, suffix=".xml", decode=False)
 
         com_list = [
             self.xmlsec,
@@ -841,6 +860,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
         except XmlsecError as e:
             raise SignatureError(com_list) from e
 
+        if self.delete_tmpfiles:
+            delete_filename(tmp.name)
+
         return parse_xmlsec_verify_output(stderr, self.version_nums)
 
     def _run_xmlsec(self, com_list, extra_args):
@@ -851,7 +873,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             key-value parameters
         :result: Whatever xmlsec wrote to an --output temporary file
         """
-        with NamedTemporaryFile(suffix=".xml", delete=self.delete_tmpfiles) as ntf:
+        with NamedTemporaryFile(suffix=".xml", delete=False) as ntf:
             com_list.extend(["--output", ntf.name])
             if self.version_nums >= (1, 3):
                 com_list.extend(['--lax-key-search'])
@@ -870,7 +892,12 @@ class CryptoBackendXmlSec1(CryptoBackend):
                 raise XmlsecError(errmsg)
 
             ntf.seek(0)
-            return p_out, p_err, ntf.read()
+            ntf_read = ntf.read()
+
+            if self.delete_tmpfiles:
+                delete_filename(ntf.name)
+
+            return p_out, p_err, ntf_read
 
 
 class CryptoBackendXMLSecurity(CryptoBackend):
@@ -1309,10 +1336,15 @@ class SecurityContext:
 
         keys_filtered = (key for key in keys if key)
         keys_encoded = (key.encode("ascii") if not isinstance(key, bytes) else key for key in keys_filtered)
-        key_files = list(make_temp(key, decode=False, delete_tmpfiles=self.delete_tmpfiles) for key in keys_encoded)
+        key_files = list(make_temp(key, decode=False) for key in keys_encoded)
         key_file_names = list(tmp.name for tmp in key_files)
 
         dectext = self.decrypt(enctext, key_file=key_file_names)
+
+        if self.delete_tmpfiles:
+            for tmp in key_files:
+                delete_filename(tmp.name)
+
         return dectext
 
     def decrypt(self, enctext, key_file=None):
@@ -1387,7 +1419,7 @@ class SecurityContext:
             for cert_name, cert in _certs:
                 if isinstance(cert, str):
                     content = pem_format(cert)
-                    tmp = make_temp(content, suffix=".pem", decode=False, delete_tmpfiles=self.delete_tmpfiles)
+                    tmp = make_temp(content, suffix=".pem", decode=False)
                     certs.append(tmp)
                 else:
                     certs.append(cert)
@@ -1397,7 +1429,7 @@ class SecurityContext:
         if not certs and not self.only_use_keys_in_metadata:
             logger.debug("==== Certs from instance ====")
             certs = [
-                make_temp(content=pem_format(cert), suffix=".pem", decode=False, delete_tmpfiles=self.delete_tmpfiles)
+                make_temp(content=pem_format(cert), suffix=".pem", decode=False)
                 for cert in cert_from_instance(item)
             ]
         else:
@@ -1523,6 +1555,10 @@ class SecurityContext:
                 raise CertificateError("Invalid certificate!")
         else:
             raise SignatureError("Failed to verify signature")
+
+        if self.delete_tmpfiles:
+            for tmp in certs:
+                delete_filename(tmp.name)        
 
         return item
 
@@ -1686,11 +1722,14 @@ class SecurityContext:
         """
         if not key_file and key:
             content = str(key).encode()
-            tmp = make_temp(content, suffix=".pem", delete_tmpfiles=self.delete_tmpfiles)
+            tmp = make_temp(content, suffix=".pem")
             key_file = tmp.name
 
         if not key and not key_file:
             key_file = self.key_file
+
+        if self.delete_tmpfiles:
+            delete_filename(tmp.name)
 
         return self.crypto.sign_statement(
             statement,
