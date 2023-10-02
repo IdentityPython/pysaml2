@@ -700,6 +700,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             raise EncryptError(com_list) from e
 
         if self.delete_tmpfiles:
+            tmp.close()
             delete_filename(tmp.name)
 
         return output
@@ -746,6 +747,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
             raise EncryptError(com_list) from e
 
         if self.delete_tmpfiles:
+            tmp.close()
+            tmp2.close()
             delete_filename(tmp.name)
             delete_filename(tmp2.name)  
 
@@ -777,6 +780,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             raise DecryptError(com_list) from e
 
         if self.delete_tmpfiles:
+            tmp.close()
             delete_filename(tmp.name)
 
         return output.decode("utf-8")
@@ -814,6 +818,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             raise SignatureError(com_list) from e
 
         if self.delete_tmpfiles:
+            tmp.close()
             delete_filename(tmp.name)
 
         # this does not work if --store-signatures is used
@@ -861,6 +866,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             raise SignatureError(com_list) from e
 
         if self.delete_tmpfiles:
+            tmp.close()
             delete_filename(tmp.name)
 
         return parse_xmlsec_verify_output(stderr, self.version_nums)
@@ -895,6 +901,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             ntf_read = ntf.read()
 
             if self.delete_tmpfiles:
+                ntf.close()
                 delete_filename(ntf.name)
 
             return p_out, p_err, ntf_read
@@ -1343,6 +1350,7 @@ class SecurityContext:
 
         if self.delete_tmpfiles:
             for tmp in key_files:
+                tmp.close()
                 delete_filename(tmp.name)
 
         return dectext
@@ -1558,6 +1566,7 @@ class SecurityContext:
 
         if self.delete_tmpfiles:
             for tmp in certs:
+                tmp.close()
                 delete_filename(tmp.name)        
 
         return item
@@ -1728,7 +1737,8 @@ class SecurityContext:
         if not key and not key_file:
             key_file = self.key_file
 
-        if self.delete_tmpfiles:
+        if 'tmp' in locals()  and self.delete_tmpfiles:
+            tmp.close()
             delete_filename(tmp.name)
 
         return self.crypto.sign_statement(
