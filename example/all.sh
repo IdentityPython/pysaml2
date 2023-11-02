@@ -8,13 +8,13 @@ startme() {
     if [ ! -f service_conf.py ] ; then
         cp service_conf.py.example service_conf.py
     fi
-    ../../tools/make_metadata.py sp_conf > sp.xml
+    ../../src/saml2/tools/make_metadata.py sp_conf > sp.xml
 
     cd ../idp2
     if [ ! -f idp_conf.py ] ; then
         cp idp_conf.py.example idp_conf.py
     fi
-    ../../tools/make_metadata.py idp_conf > idp.xml
+    ../../src/saml2/tools/make_metadata.py idp_conf > idp.xml
 
     cd ../sp-wsgi
     ./sp.py sp_conf &
