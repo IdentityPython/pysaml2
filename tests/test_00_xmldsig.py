@@ -12,6 +12,26 @@ import ds_data
 import saml2.xmldsig as ds
 
 
+def test_eidas_ns():
+    from saml2.xml.schema import validate as validate_doc_with_schema
+    xmlstr = """
+    <AttributeValue
+      xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
+      b:type="tn:PersonIdentifierType"
+      xmlns:tn="http://eidas.europa.eu/attributes/naturalperson"
+      xmlns:b="http://www.w3.org/2001/XMLSchema-instance"
+    >CZ/CZ/f93fab3a-b132-4c21-ba05-f00a9988441e</AttributeValue>
+    """
+    assert validate_doc_with_schema(xmlstr) is None
+
+    import saml2
+    from saml2.saml import AttributeValue
+    item = saml2.create_class_from_xml_string(AttributeValue, xmlstr)
+    assert item is not None
+
+    assert validate_doc_with_schema(str(item)) is None
+
+
 class TestObject:
     def setup_class(self):
         self.object = ds.Object()

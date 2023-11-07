@@ -14,7 +14,7 @@ from saml2.sigver import pre_encryption_part
 
 __author__ = "roland"
 
-TMPL_NO_HEADER = """<ns0:EncryptedData xmlns:ns0="http://www.w3.org/2001/04/xmlenc#" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" Id="{ed_id}" Type="http://www.w3.org/2001/04/xmlenc#Element"><ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc" /><ns1:KeyInfo><ns0:EncryptedKey Id="{ek_id}"><ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p" />{key_info}<ns0:CipherData><ns0:CipherValue /></ns0:CipherData></ns0:EncryptedKey></ns1:KeyInfo><ns0:CipherData><ns0:CipherValue /></ns0:CipherData></ns0:EncryptedData>"""
+TMPL_NO_HEADER = """<ns0:EncryptedData xmlns:ns0="http://www.w3.org/2001/04/xmlenc#" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" Id="{ed_id}" Type="http://www.w3.org/2001/04/xmlenc#Element"><ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc"/><ns1:KeyInfo><ns0:EncryptedKey Id="{ek_id}"><ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"/>{key_info}<ns0:CipherData><ns0:CipherValue/></ns0:CipherData></ns0:EncryptedKey></ns1:KeyInfo><ns0:CipherData><ns0:CipherValue/></ns0:CipherData></ns0:EncryptedData>"""
 TMPL = f"<?xml version='1.0' encoding='UTF-8'?>\n{TMPL_NO_HEADER}"
 
 IDENTITY = {

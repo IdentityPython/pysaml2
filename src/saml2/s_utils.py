@@ -332,6 +332,8 @@ def do_attribute(val, typ, key):
     attrval = do_ava(val, typ)
     if attrval:
         attr.attribute_value = attrval
+        for attrval_v in attrval:
+            attr.c_ns_prefix.update(attrval_v.c_ns_prefix)
 
     if isinstance(key, str):
         attr.name = key

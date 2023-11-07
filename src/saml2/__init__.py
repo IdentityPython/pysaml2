@@ -20,9 +20,22 @@ import logging
 from typing import Any
 from typing import Optional
 from typing import Union
+
 from xml.etree import ElementTree
+from xml.etree.ElementTree import Element
+from xml.etree.ElementTree import iselement
 
 import defusedxml.ElementTree
+from defusedxml.ElementTree import tostring
+from defusedxml.ElementTree import fromstring
+
+import lxml.etree
+from lxml.etree import XMLParser
+from lxml.etree import tostring
+from lxml.etree import fromstring
+from lxml.etree import ElementTree
+from lxml.etree import Element
+from lxml.etree import iselement
 
 from saml2.validate import valid_instance
 from saml2.version import version as __version__
@@ -68,6 +81,30 @@ def class_name(instance):
     return f"{instance.c_namespace}:{instance.c_tag}"
 
 
+def xml_from_string(xmlstr, *args, **kwargs):
+    if isinstance(xmlstr, str):
+        xmlstr = xmlstr.encode("utf-8")
+
+    parser = XMLParser(
+        no_network=True,
+        ns_clean=False,
+        remove_comments=True,
+        remove_pis=True,
+        strip_cdata=True,
+        resolve_entities=False,
+        huge_tree=False,
+    )
+    data = fromstring(xmlstr, parser=parser, *args, **kwargs)
+    #data = fromstring(xmlstr)
+
+    return data
+
+
+def xml_to_string(xmldata, *args, **kwargs):
+    xmlstr = tostring(xmldata, *args, **kwargs)
+    return xmlstr
+
+
 def create_class_from_xml_string(target_class, xml_string):
     """Creates an instance of the target class from a string.
 
@@ -84,7 +121,7 @@ def create_class_from_xml_string(target_class, xml_string):
     """
     if not isinstance(xml_string, bytes):
         xml_string = xml_string.encode("utf-8")
-    tree = defusedxml.ElementTree.fromstring(xml_string)
+    tree = xml_from_string(xml_string)
     return create_class_from_element_tree(target_class, tree)
 
 
@@ -155,24 +192,31 @@ class ExtensionElement:
         self.attributes = attributes or {}
         self.children = children or []
         self.text = text
+        self.c_ns_prefix = {}
 
     def to_string(self):
         """Serialize the object into a XML string"""
         element_tree = self.transfer_to_element_tree()
-        return ElementTree.tostring(element_tree, encoding="UTF-8")
+        return xml_to_string(element_tree, encoding="UTF-8")
 
     def transfer_to_element_tree(self):
         if self.tag is None:
             return None
 
-        element_tree = ElementTree.Element("")
-
-        if self.namespace is not None:
-            element_tree.tag = f"{{{self.namespace}}}{self.tag}"
-        else:
-            element_tree.tag = self.tag
+        _tag = (
+            f"{{{self.namespace}}}{self.tag}"
+            if self.namespace is not None
+            else self.tag
+        )
+        element_tree = Element(_tag)
 
         for key, value in iter(self.attributes.items()):
+            if key.startswith("xmlns:"):
+                prefix = key.split(":")[1]
+                if prefix == "ns":
+                    prefix = None
+                self.c_ns_prefix[prefix] = value
+                continue
             element_tree.attrib[key] = value
 
         for child in self.children:
@@ -263,12 +307,16 @@ class ExtensionElement:
 
 
 def extension_element_from_string(xml_string):
-    element_tree = defusedxml.ElementTree.fromstring(xml_string)
+    element_tree = xml_from_string(xml_string)
     return _extension_element_from_element_tree(element_tree)
 
 
 def _extension_element_from_element_tree(element_tree):
     elementc_tag = element_tree.tag
+    if not isinstance(elementc_tag, str):
+        # XXX node is of type Entity (&e) or comment
+        # XXX enities and comments should be removed
+        return None
     if "}" in elementc_tag:
         namespace = elementc_tag[1 : elementc_tag.index("}")]
         tag = elementc_tag[elementc_tag.index("}") + 1 :]
@@ -287,13 +335,14 @@ def _extension_element_from_element_tree(element_tree):
 class ExtensionContainer:
     c_tag = ""
     c_namespace = ""
+    c_ns_prefix = {}
 
-    def __init__(self, text=None, extension_elements=None, extension_attributes=None):
-
+    def __init__(self, text=None, extension_elements=None, extension_attributes=None, nsmap=None):
         self.text = text
         self.extension_elements = extension_elements or []
         self.extension_attributes = extension_attributes or {}
         self.encrypted_assertion = None
+        self.c_ns_prefix = nsmap or {}
 
     # Three methods to create an object from an ElementTree
     def harvest_element_tree(self, tree):
@@ -315,6 +364,12 @@ class ExtensionContainer:
         for child in self.extension_elements:
             child.become_child_element_of(tree)
         for attribute, value in iter(self.extension_attributes.items()):
+            if attribute.startswith("xmlns:"):
+                prefix = attribute.split(":")[1]
+                if prefix == "ns":
+                    prefix = None
+                self.c_ns_prefix[prefix] = value
+                continue
             tree.attrib[attribute] = value
         tree.text = self.text
 
@@ -514,10 +569,10 @@ class SamlBase(ExtensionContainer):
 
         :param node: The node to which this instance should be a child
         """
-        new_child = self._to_element_tree()
+        new_child = self._to_element_tree(self.c_ns_prefix)
         node.append(new_child)
 
-    def _to_element_tree(self):
+    def _to_element_tree(self, nsmap={}):
         """
 
         Note, this method is designed to be used only with classes that have a
@@ -525,7 +580,7 @@ class SamlBase(ExtensionContainer):
         should not be called on in this class.
 
         """
-        new_tree = ElementTree.Element(f"{{{self.__class__.c_namespace}}}{self.__class__.c_tag}")
+        new_tree = Element(f"{{{self.__class__.c_namespace}}}{self.__class__.c_tag}", nsmap=nsmap)
         self._add_members_to_element_tree(new_tree)
         return new_tree
 
@@ -588,7 +643,7 @@ class SamlBase(ExtensionContainer):
                     if assertion is not None:
                         self.set_prefixes(assertion, prefix_map)
 
-        return ElementTree.tostring(tree, encoding="UTF-8").decode("utf-8")
+        return xml_to_string(tree, encoding="UTF-8").decode("utf-8")
 
     def get_xml_string_with_self_contained_assertion_within_encrypted_assertion(self, assertion_tag):
         """Makes a encrypted assertion only containing self contained
@@ -603,18 +658,19 @@ class SamlBase(ExtensionContainer):
 
         self.set_prefixes(tree.find(self.encrypted_assertion._to_element_tree().tag).find(assertion_tag), prefix_map)
 
-        return ElementTree.tostring(tree, encoding="UTF-8").decode("utf-8")
+        return xml_to_string(tree, encoding="UTF-8").decode("utf-8")
 
     def set_prefixes(self, elem, prefix_map):
 
         # check if this is a tree wrapper
-        if not ElementTree.iselement(elem):
+        if not iselement(elem):
             elem = elem.getroot()
 
         # build uri map and add to root element
         uri_map = {}
         for prefix, uri in prefix_map.items():
             uri_map[uri] = prefix
+            # XXX issue
             elem.set(f"xmlns:{prefix}", uri)
 
         # fixup all elements in the tree
@@ -652,7 +708,7 @@ class SamlBase(ExtensionContainer):
 
         self.set_prefixes(elem, nspair)
 
-        return ElementTree.tostring(elem, encoding="UTF-8")
+        return xml_to_string(elem, encoding="UTF-8")
 
     def to_string(self, nspair=None):
         """Converts the Saml object to a string containing XML.
@@ -661,13 +717,12 @@ class SamlBase(ExtensionContainer):
             constructing the text representation.
         :return: String representation of the object
         """
-        if not nspair and self.c_ns_prefix:
-            nspair = self.c_ns_prefix
+        nspair = nspair or self.c_ns_prefix or None
 
-        if nspair:
-            self.register_prefix(nspair)
+        #if nspair:
+        #    self.register_prefix(nspair)
 
-        return ElementTree.tostring(self._to_element_tree(), encoding="UTF-8")
+        return xml_to_string(self._to_element_tree(nsmap=nspair), encoding="UTF-8")
 
     def __str__(self):
         # Yes this is confusing. http://bugs.python.org/issue10942

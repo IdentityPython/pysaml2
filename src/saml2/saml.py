@@ -154,6 +154,7 @@ class AttributeValueBase(SamlBase):
         SamlBase.__init__(
             self, text=None, extension_elements=extension_elements, extension_attributes=extension_attributes
         )
+        self.c_ns_prefix["xs"] = XS_NAMESPACE
         if self._extatt:
             self.extension_attributes = self._extatt
 
@@ -192,12 +193,16 @@ class AttributeValueBase(SamlBase):
             self._extatt[XSI_TYPE] = typ
 
         if typ.startswith("xs:"):
+            self.c_ns_prefix["xs"] = XS_NAMESPACE
+            if not self.extension_attributes:
+                self.extension_attributes = {}
             try:
                 self.extension_attributes["xmlns:xs"] = XS_NAMESPACE
             except AttributeError:
                 self._extatt["xmlns:xs"] = XS_NAMESPACE
 
         if typ.startswith("xsd:"):
+            self.c_ns_prefix["xsd"] = XS_NAMESPACE
             try:
                 self.extension_attributes["xmlns:xsd"] = XS_NAMESPACE
             except AttributeError:
@@ -351,6 +356,9 @@ class AttributeValueBase(SamlBase):
             self._convert_element_tree_to_member(child)
         for attribute, value in iter(tree.attrib.items()):
             self._convert_element_attribute_to_member(attribute, value)
+        if hasattr(tree, 'nsmap') and tree.nsmap:
+            self.c_ns_prefix = {**tree.nsmap, **self.c_ns_prefix}
+            #import ipdb; ipdb.set_trace()  # noqa XXX
 
         # if we have added children to this node
         # we consider whitespace insignificant
@@ -1119,7 +1127,8 @@ class AttributeType_(SamlBase):
 
     # when consuming such elements, default to NAME_FORMAT_UNSPECIFIED as NameFormat
     def harvest_element_tree(self, tree):
-        tree.attrib.setdefault("NameFormat", NAME_FORMAT_UNSPECIFIED)
+        name_format = tree.attrib.get("NameFormat", NAME_FORMAT_UNSPECIFIED)
+        tree.attrib["NameFormat"] = name_format
         SamlBase.harvest_element_tree(self, tree)
 
 
