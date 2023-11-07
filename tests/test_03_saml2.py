@@ -163,8 +163,7 @@ def test_create_class_from_xml_string_xxe():
     ]>
     <lolz>&lol1;</lolz>
     """
-    with raises(EntitiesForbidden):
-        create_class_from_xml_string(NameID, xml)
+    assert create_class_from_xml_string(NameID, xml) is None
 
 
 def test_ee_1():
@@ -458,8 +457,9 @@ def test_ee_xxe():
     ]>
     <lolz>&lol1;</lolz>
     """
-    with raises(EntitiesForbidden):
-        saml2.extension_element_from_string(xml)
+    x = saml2.extension_element_from_string(xml)
+    assert x.tag == "lolz"
+    assert x.text is None
 
 
 def test_extension_element_loadd():

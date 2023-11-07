@@ -18,9 +18,12 @@ except Exception:
 import logging
 from urllib.parse import urlencode
 from urllib.parse import urlparse
-from xml.etree import ElementTree as ElementTree
 
-import defusedxml.ElementTree
+from xml.etree.ElementTree import Element
+from lxml.etree import Element
+
+from saml2 import xml_from_string
+from saml2 import xml_to_string
 
 import saml2
 from saml2.s_utils import deflate_and_base64_encode
@@ -201,19 +204,19 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
     :param thingy: The SAML thingy
     :return: The SOAP envelope as a string
     """
-    envelope = ElementTree.Element("")
-    envelope.tag = "{%s}Envelope" % NAMESPACE
+    envelope_tag = "{%s}Envelope" % NAMESPACE
+    envelope = Element(envelope_tag)
 
     if header_parts:
-        header = ElementTree.Element("")
-        header.tag = "{%s}Header" % NAMESPACE
+        header_tag = "{%s}Header" % NAMESPACE
+        header = Element(header_tag)
         envelope.append(header)
         for part in header_parts:
             # This doesn't work if the headers are signed
             part.become_child_element_of(header)
 
-    body = ElementTree.Element("")
-    body.tag = "{%s}Body" % NAMESPACE
+    body_tag = "{%s}Body" % NAMESPACE
+    body = Element(body_tag)
     envelope.append(body)
 
     if isinstance(thingy, str):
@@ -224,10 +227,10 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
             thingy = "\n".join(_part[1:])
         thingy = thingy.replace(PREFIX, "")
         logger.debug("thingy: %s", thingy)
-        _child = ElementTree.Element("")
-        _child.tag = "{%s}FuddleMuddle" % DUMMY_NAMESPACE
+        _child_tag = "{%s}FuddleMuddle" % DUMMY_NAMESPACE
+        _child = Element(_child_tag)
         body.append(_child)
-        _str = ElementTree.tostring(envelope, encoding="UTF-8")
+        _str = xml_to_string(envelope, encoding="UTF-8")
         if isinstance(_str, bytes):
             _str = _str.decode("utf-8")
         logger.debug("SOAP precursor: %s", _str)
@@ -242,7 +245,7 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
         return _str.replace(cut2, thingy)
     else:
         thingy.become_child_element_of(body)
-        return ElementTree.tostring(envelope, encoding="UTF-8")
+        return xml_to_string(envelope, encoding="UTF-8")
 
 
 def http_soap_message(message):
@@ -267,7 +270,7 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
     :param text: The SOAP object as XML
     :return: header parts and body as saml.samlbase instances
     """
-    envelope = defusedxml.ElementTree.fromstring(text)
+    envelope = xml_to_string(text)
 
     envelope_tag = "{%s}Envelope" % NAMESPACE
     if envelope.tag != envelope_tag:

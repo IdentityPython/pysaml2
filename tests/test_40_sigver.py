@@ -161,8 +161,8 @@ class TestSecurity:
             signature=sigver.pre_signature_part("id-11111", self.sec.my_cert, 1),
             attribute_statement=do_attribute_statement(
                 {
-                    ("name:surName", "nameformat", "surName"): ("Foo", ""),
-                    ("name:givenName", "nameformat", "givenName"): ("Bar", ""),
+                    ("name:surName", "nameformat", "surName"): ("Foo", "xs:string"),
+                    ("name:givenName", "nameformat", "givenName"): ("Bar", "xs:string"),
                 }
             ),
         )

@@ -16,30 +16,10 @@ from saml2.saml import Subject
 
 XML_HEADER = "<?xml version='1.0' encoding='UTF-8'?>\n"
 
-SUCCESS_STATUS_NO_HEADER = (
-    '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0'
-    ":StatusCode "
-    'Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></ns0:Status>'
-)
+SUCCESS_STATUS_NO_HEADER = '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/></ns0:Status>'
 SUCCESS_STATUS = f"{XML_HEADER}{SUCCESS_STATUS_NO_HEADER}"
-
-ERROR_STATUS_NO_HEADER = (
-    '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0'
-    ":StatusCode "
-    'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode '
-    'Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" '
-    "/></ns0:StatusCode><ns0:StatusMessage>Error resolving "
-    "principal</ns0:StatusMessage></ns0:Status>"
-)
-
-ERROR_STATUS_NO_HEADER_EMPTY = (
-    '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0'
-    ":StatusCode "
-    'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode '
-    'Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" '
-    "/></ns0:StatusCode></ns0:Status>"
-)
-
+ERROR_STATUS_NO_HEADER = '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal"/></ns0:StatusCode><ns0:StatusMessage>Error resolving principal</ns0:StatusMessage></ns0:Status>'
+ERROR_STATUS_NO_HEADER_EMPTY = '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal"/></ns0:StatusCode></ns0:Status>'
 ERROR_STATUS = f"{XML_HEADER}{ERROR_STATUS_NO_HEADER}"
 ERROR_STATUS_EMPTY = f"{XML_HEADER}{ERROR_STATUS_NO_HEADER_EMPTY}"
 
@@ -172,10 +152,10 @@ def test_attribute_statement():
     assert statement.keyswv() == ["attribute"]
     assert len(statement.attribute) == 2
     attr0 = statement.attribute[0]
-    assert _eq(attr0.keyswv(), ["name", "attribute_value", "name_format"])
+    assert _eq(attr0.keyswv(), ["c_ns_prefix", "name", "attribute_value", "name_format"])
     assert len(attr0.attribute_value) == 1
     attr1 = statement.attribute[1]
-    assert _eq(attr1.keyswv(), ["name", "attribute_value", "name_format"])
+    assert _eq(attr1.keyswv(), ["c_ns_prefix", "name", "attribute_value", "name_format"])
     assert len(attr1.attribute_value) == 1
     if attr0.name == "givenName":
         assert attr0.attribute_value[0].text == "Derek"
@@ -264,7 +244,7 @@ def test_do_attribute_statement_0():
     assert statement.keyswv() == ["attribute"]
     assert len(statement.attribute) == 1
     attr0 = statement.attribute[0]
-    assert _eq(attr0.keyswv(), ["name", "attribute_value", "name_format"])
+    assert _eq(attr0.keyswv(), ["c_ns_prefix", "name", "attribute_value", "name_format"])
     assert attr0.name == "vo_attr"
     assert len(attr0.attribute_value) == 1
     assert attr0.attribute_value[0].text == "foobar"
@@ -276,9 +256,9 @@ def test_do_attribute_statement():
     assert statement.keyswv() == ["attribute"]
     assert len(statement.attribute) == 2
     attr0 = statement.attribute[0]
-    assert _eq(attr0.keyswv(), ["name", "attribute_value", "name_format"])
+    assert _eq(attr0.keyswv(), ["c_ns_prefix", "name", "attribute_value", "name_format"])
     attr1 = statement.attribute[1]
-    assert _eq(attr1.keyswv(), ["name", "attribute_value", "name_format"])
+    assert _eq(attr1.keyswv(), ["c_ns_prefix", "name", "attribute_value", "name_format"])
     if attr0.name == "givenName":
         assert len(attr0.attribute_value) == 2
         assert _eq([av.text for av in attr0.attribute_value], ["Derek", "Sanderson"])
@@ -307,7 +287,7 @@ def test_do_attribute_statement_multi():
 
     assert statement.keyswv() == ["attribute"]
     assert len(statement.attribute)
-    assert _eq(statement.attribute[0].keyswv(), ["name", "name_format", "friendly_name", "attribute_value"])
+    assert _eq(statement.attribute[0].keyswv(), ["c_ns_prefix", "name", "name_format", "friendly_name", "attribute_value"])
     attribute = statement.attribute[0]
     assert attribute.name == "urn:oid:1.3.6.1.4.1.5923.1.1.1.7"
     assert attribute.name_format == ("urn:oasis:names:tc:SAML:2.0:attrname-format:uri")

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-from xml.etree import ElementTree as ElementTree
+from saml2 import Element
+from saml2 import ElementTree
+from saml2 import xml_from_string
 
 from defusedxml.common import EntitiesForbidden
 from pytest import raises
@@ -14,8 +16,8 @@ NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
 example = """<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
     <Body>
-        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" 
-            xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" 
+        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+            xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
             ID="_6c3a4f8b9c2d" Version="2.0" IssueInstant="2004-03-27T08:42:00Z">
         <saml:Issuer>https://www.example.com/SAML</saml:Issuer>
         <Status>
@@ -32,7 +34,7 @@ example = """<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
 
 
 def test_parse_soap_envelope():
-    envelope = ElementTree.fromstring(example)
+    envelope = xml_from_string(example)
     assert envelope.tag == "{%s}Envelope" % NAMESPACE
     # How to check that it's the right type ?
     assert len(envelope) == 1
@@ -45,10 +47,10 @@ def test_parse_soap_envelope():
 
 
 def test_make_soap_envelope():
-    envelope = ElementTree.Element("")
-    envelope.tag = "{%s}Envelope" % NAMESPACE
-    body = ElementTree.Element("")
-    body.tag = "{%s}Body" % NAMESPACE
+    envelope_tag = "{%s}Envelope" % NAMESPACE
+    envelope = Element(envelope_tag)
+    body_tag = "{%s}Body" % NAMESPACE
+    body = Element(body_tag)
     envelope.append(body)
     request = samlp.AuthnRequest()
     request.become_child_element_of(body)
