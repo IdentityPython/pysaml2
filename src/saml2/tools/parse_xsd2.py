@@ -2,7 +2,7 @@
 
 import errno
 import getopt
-import imp
+import importlib
 import re
 import sys
 import time
@@ -2015,38 +2015,10 @@ def usage():
     print("Usage: parse_xsd [-i <module:as>] xsd.file > module.py")
 
 
-def recursive_find_module(name, path=None):
-    parts = name.split(".")
-
-    mod_a = None
-    for part in parts:
-        # print("$$", part, path)
-        try:
-            (fil, pathname, desc) = imp.find_module(part, path)
-        except ImportError:
-            raise
-
-        mod_a = imp.load_module(name, fil, pathname, desc)
-        sys.modules[name] = mod_a
-        path = mod_a.__path__
-
-    return mod_a
-
-
 def get_mod(name, path=None):
-    try:
-        mod_a = sys.modules[name]
-        if not isinstance(mod_a, types.ModuleType):
-            raise KeyError
-    except KeyError:
-        try:
-            (fil, pathname, desc) = imp.find_module(name, path)
-            mod_a = imp.load_module(name, fil, pathname, desc)
-        except ImportError:
-            if "." in name:
-                mod_a = recursive_find_module(name, path)
-            else:
-                raise
+    mod_a = sys.modules.get(name)
+    if not mod_a or not isinstance(mod_a, types.ModuleType):
+        mod_a = importlib.import_module(name, path)
         sys.modules[name] = mod_a
     return mod_a
 
