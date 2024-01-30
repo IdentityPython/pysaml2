@@ -6,7 +6,7 @@
 - Add support for errorURL to be exposed in metadata for IdP
 - Update logged message when the signature validation on the assertion fails
 - Replace imp with importlib
-* deps: restrict xmlschema version
+- deps: restrict xmlschema version
 - deps: remove utility from packaging
 - examples: update code and README to align with latest code
 - docs: update readme with info about xmlsec1 compatibility
