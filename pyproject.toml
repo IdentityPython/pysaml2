@@ -47,7 +47,7 @@ python-dateutil = "*"
 pytz = "*"
 "repoze.who" = {optional = true, version = "*"}
 requests = "^2"
-xmlschema = ">=1.2.1"
+xmlschema = "^2"
 "zope.interface" = {optional = true, version = "*"}
 
 [tool.poetry.extras]
