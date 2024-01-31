@@ -1,3 +1,4 @@
 mako
 cherrypy>14.0.2
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
+pydantic>=2.4.0 # not directly required, pinned by Snyk to avoid a vulnerability
