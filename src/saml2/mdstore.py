@@ -476,7 +476,7 @@ class MetaData:
 
         return True
 
-    def certs(self, entity_id, descriptor, use="signing"):
+    def certs(self, entity_id, descriptor, use="signing", get_with_usage_and_encryption_methods=False):
         """
         Returns certificates for the given Entity
         """
@@ -494,7 +494,10 @@ class MetaData:
                         for dat in key_info["x509_data"]:
                             cert = repack_cert(dat["x509_certificate"]["text"])
                             if cert not in res:
-                                res.append((key_name_txt, cert))
+                                if get_with_usage_and_encryption_methods:
+                                    res.append((key_name_txt, cert, key_use, key.get("encryption_method")))
+                                else:
+                                    res.append((key_name_txt, cert))
 
             return res
 
@@ -1327,7 +1330,7 @@ class MetadataStore(MetaData):
                     "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
                     "friendly_name": "subject-id",
                     "is_required": "true",
-                }
+                },
             ]
         elif subject_id_req == "pairwise-id":
             return [

@@ -18,7 +18,6 @@ from uuid import uuid4 as gen_random_key
 
 import dateutil
 
-
 # importlib.resources was introduced in python 3.7
 # files API from importlib.resources introduced in python 3.9
 if sys.version_info[:2] >= (3, 9):
@@ -61,12 +60,11 @@ from saml2.xmldsig import SIG_RSA_SHA512
 from saml2.xmldsig import TRANSFORM_C14N
 from saml2.xmldsig import TRANSFORM_ENVELOPED
 import saml2.xmldsig as ds
-from saml2.xmlenc import CipherData
+from saml2.xmlenc import CipherData, RsaOaepMgf
 from saml2.xmlenc import CipherValue
 from saml2.xmlenc import EncryptedData
 from saml2.xmlenc import EncryptedKey
 from saml2.xmlenc import EncryptionMethod
-
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +74,17 @@ SIG = f"{{{ds.NAMESPACE}#}}Signature"
 RSA_1_5 = "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
 TRIPLE_DES_CBC = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
 RSA_OAEP_MGF1P = "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
+RSA_OAEP = "http://www.w3.org/2009/xmlenc11#rsa-oaep"
+
+XMLSEC_SESSION_KEY_URI_TO_ALG = {
+    "http://www.w3.org/2001/04/xmlenc#tripledes-cbc": "des-192",
+    "http://www.w3.org/2001/04/xmlenc#aes128-cbc": "aes-128",
+    "http://www.w3.org/2001/04/xmlenc#aes192-cbc": "aes-192",
+    "http://www.w3.org/2001/04/xmlenc#aes256-cbc": "aes-256",
+    "http://www.w3.org/2009/xmlenc11#aes128-gcm": "aes-128",
+    "http://www.w3.org/2009/xmlenc11#aes192-gcm": "aes-192",
+    "http://www.w3.org/2009/xmlenc11#aes256-gcm": "aes-256",
+}
 
 
 class SigverError(SAMLError):
@@ -327,7 +336,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     if not isinstance(instance, str):
         signed_xml = instance.to_string()
 
-    for (node_name, nodeid) in elements_to_sign:
+    for node_name, nodeid in elements_to_sign:
         signed_xml = seccont.sign_statement(signed_xml, node_name=node_name, node_id=nodeid)
 
     return signed_xml
@@ -486,9 +495,9 @@ def parse_xmlsec_verify_output(output, version=None):
                 raise XmlsecError(output)
     else:
         for line in output.splitlines():
-            if line == 'Verification status: OK':
+            if line == "Verification status: OK":
                 return True
-            elif line == 'Verification status: FAILED':
+            elif line == "Verification status: FAILED":
                 raise XmlsecError(output)
     raise XmlsecError(output)
 
@@ -854,7 +863,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         with NamedTemporaryFile(suffix=".xml") as ntf:
             com_list.extend(["--output", ntf.name])
             if self.version_nums >= (1, 3):
-                com_list.extend(['--lax-key-search'])
+                com_list.extend(["--lax-key-search"])
             com_list += extra_args
 
             logger.debug("xmlsec command: %s", " ".join(com_list))
@@ -893,6 +902,7 @@ class CryptoBackendXMLSecurity(CryptoBackend):
     def version(self):
         try:
             import xmlsec
+
             return xmlsec.__version__
         except (ImportError, AttributeError):
             return "0.0.0"
@@ -1206,7 +1216,6 @@ class SecurityContext:
         sec_backend=None,
         delete_tmpfiles=True,
     ):
-
         if not isinstance(crypto, CryptoBackend):
             raise ValueError("crypto should be of type CryptoBackend")
         self.crypto = crypto
@@ -1733,7 +1742,7 @@ class SecurityContext:
         :param key_file: A file that contains the key to be used
         :return: A possibly multiple signed statement
         """
-        for (item, sid) in to_sign:
+        for item, sid in to_sign:
             if not sid:
                 if not item.id:
                     sid = item.id = sid()
@@ -1850,11 +1859,13 @@ def pre_encryption_part(
     encrypted_key_id=None,
     encrypted_data_id=None,
     encrypt_cert=None,
+    rsa_oaep_mgf_alg=None,
 ):
     ek_id = encrypted_key_id or f"EK_{gen_random_key()}"
     ed_id = encrypted_data_id or f"ED_{gen_random_key()}"
     msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
-    key_encryption_method = EncryptionMethod(algorithm=key_enc)
+    rsa_oaep_mgf_alg = RsaOaepMgf(rsa_oaep_mgf_alg) if rsa_oaep_mgf_alg else None
+    key_encryption_method = EncryptionMethod(algorithm=key_enc, mgf=rsa_oaep_mgf_alg)
 
     x509_data = ds.X509Data(x509_certificate=ds.X509Certificate(text=encrypt_cert)) if encrypt_cert else None
     key_name = ds.KeyName(text=key_name) if key_name else None
@@ -1874,6 +1885,7 @@ def pre_encryption_part(
         key_info=key_info,
         cipher_data=CipherData(cipher_value=CipherValue(text="")),
     )
+
     return encrypted_data
 
 
