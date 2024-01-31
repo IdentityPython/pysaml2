@@ -37,14 +37,14 @@
         <attribute name="ProviderName" type="string" use="optional"/>
         <attribute name="IsPassive" type="boolean" use="optional"/>
     </complexType>
-    
+
     <element name="Response" type="ecp:ResponseType"/>
     <complexType name="ResponseType">
         <attribute ref="S:mustUnderstand" use="required"/>
         <attribute ref="S:actor" use="required"/>
         <attribute name="AssertionConsumerServiceURL" type="anyURI" use="required"/>
     </complexType>
-    
+
     <element name="RelayState" type="ecp:RelayStateType"/>
     <complexType name="RelayStateType">
         <simpleContent>

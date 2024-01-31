@@ -26,4 +26,3 @@
     <attribute name="Realm" type="anyURI"/>
     <attribute name="FriendlyName" type="string"/>
 </schema>
-

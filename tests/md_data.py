@@ -101,7 +101,7 @@ TEST_ATTRIBUTE_PROFILE = """<?xml version="1.0" encoding="utf-8"?>
 """
 
 TEST_ORGANIZATION_NAME = """<?xml version="1.0" encoding="utf-8"?>
-<OrganizationName xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
+<OrganizationName xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
     xml:lang="se">
   Catalogix
 </OrganizationName>
@@ -114,7 +114,7 @@ Catalogix
 """
 
 TEST_ORGANIZATION_URL = """<?xml version="1.0" encoding="utf-8"?>
-<OrganizationURL xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
+<OrganizationURL xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
     xml:lang="no">
   http://www.example.com/
 </OrganizationURL>
@@ -125,14 +125,14 @@ TEST_ORGANIZATION = """<?xml version="1.0" encoding="utf-8"?>
   <Extensions>
     <hoge xmlns="http://hoge.example.com/">hogehoge</hoge>
   </Extensions>
-  <OrganizationName 
+  <OrganizationName
     xml:lang="se">
     Catalogix AB
   </OrganizationName>
   <OrganizationDisplayName xml:lang="no">
     Catalogix AS
   </OrganizationDisplayName>
-  <OrganizationURL 
+  <OrganizationURL
     xml:lang="en">
     http://www.example.com/
   </OrganizationURL>
@@ -234,7 +234,7 @@ TEST_KEY_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
     <SPKIData>
       <SPKISexp>spki sexp</SPKISexp>
       <SPKISexp>spki sexp2</SPKISexp>
-    </SPKIData>  
+    </SPKIData>
   </KeyInfo>
   <EncryptionMethod
     xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
@@ -330,7 +330,7 @@ TEST_ROLE_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
     <SPKIData>
       <SPKISexp>spki sexp</SPKISexp>
       <SPKISexp>spki sexp2</SPKISexp>
-    </SPKIData>  
+    </SPKIData>
   </KeyInfo>
   <Object Id="object_id" Encoding="http://www.w3.org/2000/09/xmldsig#base64">
     V2VkIEp1biAgNCAxMjoxMTowMyBFRFQgMjAwMwo
@@ -388,7 +388,7 @@ TEST_ROLE_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
     <SPKIData>
       <SPKISexp>spki sexp</SPKISexp>
       <SPKISexp>spki sexp2</SPKISexp>
-    </SPKIData>  
+    </SPKIData>
   </KeyInfo>
   <EncryptionMethod
     xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
@@ -510,7 +510,7 @@ TEST_SSO_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
     <SPKIData>
       <SPKISexp>spki sexp</SPKISexp>
       <SPKISexp>spki sexp2</SPKISexp>
-    </SPKIData>  
+    </SPKIData>
   </KeyInfo>
   <Object Id="object_id" Encoding="http://www.w3.org/2000/09/xmldsig#base64">
     V2VkIEp1biAgNCAxMjoxMTowMyBFRFQgMjAwMwo
@@ -568,7 +568,7 @@ TEST_SSO_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
     <SPKIData>
       <SPKISexp>spki sexp</SPKISexp>
       <SPKISexp>spki sexp2</SPKISexp>
-    </SPKIData>  
+    </SPKIData>
   </KeyInfo>
   <EncryptionMethod
     xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
@@ -711,7 +711,7 @@ TEST_IDP_SSO_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
     <SPKIData>
       <SPKISexp>spki sexp</SPKISexp>
       <SPKISexp>spki sexp2</SPKISexp>
-    </SPKIData>  
+    </SPKIData>
   </KeyInfo>
   <Object Id="object_id" Encoding="http://www.w3.org/2000/09/xmldsig#base64">
     V2VkIEp1biAgNCAxMjoxMTowMyBFRFQgMjAwMwo
@@ -769,7 +769,7 @@ TEST_IDP_SSO_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
     <SPKIData>
       <SPKISexp>spki sexp</SPKISexp>
       <SPKISexp>spki sexp2</SPKISexp>
-    </SPKIData>  
+    </SPKIData>
   </KeyInfo>
   <EncryptionMethod
     xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
@@ -871,14 +871,14 @@ TEST_REQUESTED_ATTRIBUTE = """<?xml version="1.0" encoding="utf-8"?>
 """
 
 TEST_SERVICE_NAME = """<?xml version="1.0" encoding="utf-8"?>
-<ServiceName xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
+<ServiceName xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
     xml:lang="en">
   Catalogix Whois
 </ServiceName>
 """
 
 TEST_SERVICE_DESCRIPTION = """<?xml version="1.0" encoding="utf-8"?>
-<ServiceDescription xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
+<ServiceDescription xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
     xml:lang="en">
 Catalogix Whois Service
 </ServiceDescription>
@@ -988,21 +988,21 @@ TEST_SP_SSO_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
     <SPKIData>
       <SPKISexp>spki sexp</SPKISexp>
       <SPKISexp>spki sexp2</SPKISexp>
-    </SPKIData>  
+    </SPKIData>
   </KeyInfo>
   <Object Id="object_id" Encoding="http://www.w3.org/2000/09/xmldsig#base64">
     V2VkIEp1biAgNCAxMjoxMTowMyBFRFQgMjAwMwo
   </Object>
 </Signature>
 <Extensions>
-  <idpdisc:DiscoveryResponse 
+  <idpdisc:DiscoveryResponse
     xmlns:idpdisc="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
     index="1"
     Binding="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
     Location="http://geneva.rutgers.edu/Shibboleth.sso/DS"/>
-  <idpdisc:DiscoveryResponse 
+  <idpdisc:DiscoveryResponse
     xmlns:idpdisc="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
-    index="2" 
+    index="2"
     Binding="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
     Location="https://geneva.rutgers.edu/Shibboleth.sso/DS"/>
 </Extensions>
@@ -1055,7 +1055,7 @@ TEST_SP_SSO_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
     <SPKIData>
       <SPKISexp>spki sexp</SPKISexp>
       <SPKISexp>spki sexp2</SPKISexp>
-    </SPKIData>  
+    </SPKIData>
   </KeyInfo>
   <EncryptionMethod
     xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
@@ -1220,7 +1220,7 @@ TEST_ENTITY_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
     <SPKIData>
       <SPKISexp>spki sexp</SPKISexp>
       <SPKISexp>spki sexp2</SPKISexp>
-    </SPKIData>  
+    </SPKIData>
   </KeyInfo>
   <Object Id="object_id" Encoding="http://www.w3.org/2000/09/xmldsig#base64">
     V2VkIEp1biAgNCAxMjoxMTowMyBFRFQgMjAwMwo
@@ -1343,7 +1343,7 @@ TEST_ENTITIES_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
     <SPKIData>
       <SPKISexp>spki sexp</SPKISexp>
       <SPKISexp>spki sexp2</SPKISexp>
-    </SPKIData>  
+    </SPKIData>
   </KeyInfo>
   <Object Id="object_id" Encoding="http://www.w3.org/2000/09/xmldsig#base64">
     V2VkIEp1biAgNCAxMjoxMTowMyBFRFQgMjAwMwo

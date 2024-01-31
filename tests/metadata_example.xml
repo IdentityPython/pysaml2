@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<EntitiesDescriptor 
-    xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
-    xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" 
-    xmlns:shibmeta="urn:mace:shibboleth:metadata:1.0" 
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-    xmlns:ds="http://www.w3.org/2000/09/xmldsig#" 
+<EntitiesDescriptor
+    xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
+    xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
+    xmlns:shibmeta="urn:mace:shibboleth:metadata:1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
     Name="urn:mace:example.com:test-1.0">
-  <EntityDescriptor 
-    entityID="http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php" 
+  <EntityDescriptor
+    entityID="http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
     xml:base="swamid-1.0/idp.umu.se-saml2.xml">
   <IDPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
     <KeyDescriptor>
@@ -33,8 +33,8 @@
       </ds:KeyInfo>
     </KeyDescriptor>
     <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-    <SingleSignOnService 
-        Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" 
+    <SingleSignOnService
+        Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
         Location="http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"/>
   </IDPSSODescriptor>
   <Organization>
