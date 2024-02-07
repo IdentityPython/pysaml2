@@ -420,6 +420,7 @@ def valid_instance(instance):
 
 
 def valid_domain_name(dns_name):
-    m = re.match(r"^[a-z0-9]+([-.]{ 1 }[a-z0-9]+).[a-z]{2,5}(:[0-9]{1,5})?(\/.)?$", dns_name, re.I)
+    m = re.match(r"^((?:[a-zA-Z](?:[a-zA-Z0-9\-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,5})(?::\d+)?$", dns_name, re.I)
     if not m:
         raise ValueError("Not a proper domain name")
+    return True

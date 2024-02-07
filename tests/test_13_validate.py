@@ -11,6 +11,7 @@ from saml2.validate import valid_address
 from saml2.validate import valid_any_uri
 from saml2.validate import valid_anytype
 from saml2.validate import valid_duration
+from saml2.validate import valid_domain_name
 from saml2.validate import valid_instance
 from saml2.validate import valid_non_negative_integer
 from saml2.validate import valid_string
@@ -146,3 +147,61 @@ def test_valid_address():
         assert valid_address("[2001:8003:5555:9999:555a:5555:c77:d5c5")
     with raises(NotValid):
         assert valid_address("[[2001:8003:5555:9999:555a:5555:c77:d5c5]")
+
+
+def test_valid_domain_name():
+    assert valid_domain_name("api.my-domain.com")
+    assert valid_domain_name("auth.admin.domain.com")
+    assert valid_domain_name("auth.domain.com")
+    assert valid_domain_name("auth.domain.com")
+    assert valid_domain_name("lk.domain.com:12")
+    assert valid_domain_name("lk.domain.com:12")
+    assert valid_domain_name("static.domain.xyz:12345")
+    assert valid_domain_name("domain.com")
+    assert valid_domain_name("domain.lu")
+    assert valid_domain_name("auth-domain.com")
+    assert valid_domain_name("domain.com:12345")
+    assert valid_domain_name("auth-admin.domain-uero.xyz")
+    assert valid_domain_name("auth.lk.d.sr.mydomain.com")
+
+    with raises(ValueError):
+        valid_domain_name("")
+
+    with raises(ValueError):
+        valid_domain_name("auth.domain.ljnjnfds")
+
+    with raises(ValueError):
+        valid_domain_name("123.123.123.123")
+
+    with raises(ValueError):
+        valid_domain_name("123.123.123.123:80")
+
+    with raises(ValueError):
+        valid_domain_name("123.123.123.123:8000")
+
+    with raises(ValueError):
+        valid_domain_name("auth_domain.com")
+
+    with raises(ValueError):
+        valid_domain_name("example-.com")
+
+    with raises(ValueError):
+        valid_domain_name("exa@ple.com")
+
+    with raises(ValueError):
+        valid_domain_name("exaple.c")
+
+    with raises(ValueError):
+        valid_domain_name("123example.com")
+
+    with raises(ValueError):
+        valid_domain_name("example.com:")
+
+    with raises(ValueError):
+        valid_domain_name("example..com")
+
+    with raises(ValueError):
+        valid_domain_name("example.com123")
+
+    with raises(ValueError):
+        valid_domain_name("example.com.")
