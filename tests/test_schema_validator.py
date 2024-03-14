@@ -1,7 +1,11 @@
 from pathutils import full_path as expand_full_path
+
 from pytest import mark
 from pytest import raises
 
+from saml2 import create_class_from_xml_string
+from saml2.saml import AttributeStatement
+from saml2.sigver import validate_doc_with_schema
 from saml2.xml.schema import XMLSchemaError
 from saml2.xml.schema import validate as validate_doc_with_schema
 
@@ -86,3 +90,20 @@ def test_valid_saml_partial_doc(doc):
 def test_valid_eidas_saml_response_doc(doc):
     result = validate_doc_with_schema(expand_full_path(doc))
     assert result == None
+
+
+def test_namespace_processing():
+    elem = create_class_from_xml_string(
+        AttributeStatement,
+        """
+        <saml:AttributeStatement xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+            <saml:Attribute Name="urn:mace:dir:attribute-def:uid" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+                <saml:AttributeValue xsi:type="xs:string">alum11</saml:AttributeValue>
+            </saml:Attribute>
+            <saml:Attribute Name="urn:mace:terena.org:attribute-def:schacHomeOrganization" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+                <saml:AttributeValue xsi:type="xs:string"/>
+            </saml:Attribute>
+        </saml:AttributeStatement>
+        """,
+    )
+    validate_doc_with_schema(str(elem))

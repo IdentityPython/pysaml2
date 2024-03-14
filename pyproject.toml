@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pysaml2"
-version = "7.4.2"
+version = "7.5.0"
 description = "Python implementation of SAML Version 2 Standard"
 license = "Apache-2.0"
 authors = ["IdentityPython <discuss@idpy.org>"]
@@ -47,7 +47,7 @@ python-dateutil = "*"
 pytz = "*"
 "repoze.who" = {optional = true, version = "*"}
 requests = "^2"
-xmlschema = ">=1.2.1"
+xmlschema = "^2"
 "zope.interface" = {optional = true, version = "*"}
 
 [tool.poetry.extras]
