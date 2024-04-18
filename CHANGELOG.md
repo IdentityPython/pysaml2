@@ -1,5 +1,17 @@
 # Changelog
 
+## 7.5.0 (2024-01-30)
+
+- Fix missing requested attributes from the ACS
+- Add support for errorURL to be exposed in metadata for IdP
+- Update logged message when the signature validation on the assertion fails
+- Replace imp with importlib
+- deps: restrict xmlschema version
+- deps: remove utility from packaging
+- examples: update code and README to align with latest code
+- docs: update readme with info about xmlsec1 compatibility
+
+
 ## 7.4.2 (2023-06-11)
 
 - Add support for xmlsec1 1.3.x
