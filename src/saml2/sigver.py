@@ -851,7 +851,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             key-value parameters
         :result: Whatever xmlsec wrote to an --output temporary file
         """
-        with NamedTemporaryFile(suffix=".xml") as ntf:
+        with NamedTemporaryFile(suffix=".xml", delete=self.delete_tmpfiles) as ntf:
             com_list.extend(["--output", ntf.name])
             if self.version_nums >= (1, 3):
                 com_list.extend(['--lax-key-search'])
