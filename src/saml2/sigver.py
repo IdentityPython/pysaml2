@@ -1081,6 +1081,7 @@ class CryptoBackendXMLSecurity(CryptoBackend):
             ctx.key = xmlsec.Key.from_file(cert_file, xmlsec.constants.KeyDataFormatCertDer)
         else:
             ctx.key = xmlsec.Key.from_file(cert_file, xmlsec.constants.KeyDataFormatUnknown)
+        ctx.set_enabled_key_data([xmlsec.constants.KeyDataX509])
 
         try:
             ctx.verify(signature_node)
