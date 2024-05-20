@@ -979,12 +979,11 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         
         template = lxml.etree.parse(template).getroot()
         enc_ctx = xmlsec.EncryptionContext(manager)
-        if key_type == "des-192": # TODO: Will need to be expanded when additional key type support is added
-            enc_ctx.key = xmlsec.Key.generate(
-                xmlsec.constants.KeyDataDes,
-                192,
-                xmlsec.constants.KeyDataTypeSession
-            )
+        enc_ctx.key = xmlsec.Key.generate(
+            xmlsec.constants.KeyDataAes if key_type.startswith("aes") else xmlsec.constants.KeyDataDes,
+            int(key_type[-3:]) if len(key_type) >= 3 and key_type[-3:].isdigit() else 192,
+            xmlsec.constants.KeyDataTypeSession
+        )
         data = lxml.etree.fromstring(statement).xpath(node_xpath)[0]
         enc_data = enc_ctx.encrypt_xml(template, data)
 
