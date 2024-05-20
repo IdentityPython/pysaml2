@@ -1031,7 +1031,7 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         Sign an XML statement.
 
         :param statement: The statement to be signed
-        :param node_name: string like 'urn:oasis:names:...:Assertion' (not needed given xmlsec.tree.find_node)
+        :param node_name: string like 'urn:oasis:names:...:Assertion'
         :param key_file: The file where the key can be found
         :param node_id: (not needed given xmlsec.tree.find_node)
         :return: The signed statement
@@ -1043,10 +1043,11 @@ class CryptoBackendXMLSecurity(CryptoBackend):
             statement = str(statement)
         template = lxml.etree.fromstring(statement)
         
-        signature_node = xmlsec.tree.find_node(template, xmlsec.constants.NodeSignature)
+        source_node = xmlsec.tree.find_node(template, node_name.split(':')[-1], ":".join(node_name.split(":")[:-1]))
+        signature_node = xmlsec.tree.find_node(source_node, xmlsec.constants.NodeSignature)
         ctx = xmlsec.SignatureContext()
         ctx.key = xmlsec.Key.from_file(key_file, xmlsec.constants.KeyDataFormatPem)
-        ctx.register_id(template, "ID")
+        ctx.register_id(source_node, "ID")
         
         ctx.sign(signature_node)
         signed_str = lxml.etree.tostring(template, xml_declaration=False, encoding="UTF-8")
@@ -1061,7 +1062,7 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         :param signedtext: The XML document as a string
         :param cert_file: The public key that was used to sign the document
         :param cert_type: The file type of the certificate
-        :param node_name: The name of the class that is signed (not needed given xmlsec.tree.find_node)
+        :param node_name: The name of the class that is signed
         :param node_id: The identifier of the node (not needed given xmlsec.tree.find_node)
         :return: Boolean True if the signature was correct otherwise False.
         """
@@ -1072,7 +1073,8 @@ class CryptoBackendXMLSecurity(CryptoBackend):
             signedtext = signedtext.encode("utf-8")
         template = lxml.etree.fromstring(signedtext)
         xmlsec.tree.add_ids(template, ["ID"])
-        signature_node = xmlsec.tree.find_node(template, xmlsec.constants.NodeSignature)
+        source_node = xmlsec.tree.find_node(template, node_name.split(':')[-1], ":".join(node_name.split(":")[:-1]))
+        signature_node = xmlsec.tree.find_node(source_node, xmlsec.constants.NodeSignature)
 
         ctx = xmlsec.SignatureContext()
         if cert_type == "pem":
