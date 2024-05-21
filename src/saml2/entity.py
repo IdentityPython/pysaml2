@@ -3,7 +3,6 @@ from binascii import hexlify
 import copy
 from hashlib import sha1
 import logging
-import zlib
 
 import requests
 
@@ -42,6 +41,7 @@ from saml2.s_utils import error_status_factory
 from saml2.s_utils import rndbytes
 from saml2.s_utils import sid
 from saml2.s_utils import success_status_factory
+from saml2.s_utils import zlib_error
 from saml2.saml import NAMEID_FORMAT_ENTITY
 from saml2.saml import EncryptedAssertion
 from saml2.saml import Issuer
@@ -447,7 +447,7 @@ class Entity(HTTPBase):
             elif binding == BINDING_HTTP_POST:
                 try:
                     xmlstr = decode_base64_and_inflate(txt)
-                except zlib.error:
+                except zlib_error:
                     xmlstr = base64.b64decode(txt)
             elif binding == BINDING_SOAP:
                 func = getattr(soap, f"parse_soap_enveloped_saml_{msgtype}")

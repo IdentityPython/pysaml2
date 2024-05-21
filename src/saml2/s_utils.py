@@ -75,6 +75,9 @@ class UnravelError(Exception):
     pass
 
 
+zlib_error = zlib.error
+
+
 EXCEPTION2STATUS = {
     VersionMismatch: samlp.STATUS_VERSION_MISMATCH,
     UnknownPrincipal: samlp.STATUS_UNKNOWN_PRINCIPAL,
