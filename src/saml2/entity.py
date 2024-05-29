@@ -663,16 +663,12 @@ class Entity(HTTPBase):
         for _cert_name, _cert in _certs:
             wrapped_cert, unwrapped_cert = get_pem_wrapped_unwrapped(_cert)
             try:
-                tmp = make_temp(
-                    wrapped_cert.encode("ascii"),
-                    decode=False,
-                    delete_tmpfiles=self.config.delete_tmpfiles,
-                )
                 response = self.sec.encrypt_assertion(
                     response,
-                    tmp.name,
+                    None,
                     pre_encryption_part(key_name=_cert_name, encrypt_cert=unwrapped_cert),
                     node_xpath=node_xpath,
+                    enc_key_data=wrapped_cert.encode("ascii")
                 )
                 return response
             except Exception as ex:

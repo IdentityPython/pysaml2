@@ -16,8 +16,10 @@ from saml2 import BINDING_URI
 from saml2 import SAMLError
 from saml2.assertion import Policy
 from saml2.attribute_converter import ac_factory
+from saml2.cert import read_cert_from_file
 from saml2.mdstore import MetadataStore
 from saml2.saml import NAME_FORMAT_URI
+from saml2.sigver import make_temp
 from saml2.virtual_org import VirtualOrg
 
 
@@ -76,6 +78,8 @@ COMMON_ARGS = [
     "signing_algorithm",
     "digest_algorithm",
     "http_client_timeout",
+    "key_data",
+    "cert_data",
 ]
 
 SP_ARGS = [
@@ -230,6 +234,8 @@ class Config:
         self.signing_algorithm = None
         self.digest_algorithm = None
         self.http_client_timeout = None
+        self.key_data = None
+        self.cert_data = None
 
     def setattr(self, context, attr, val):
         if context == "":
@@ -293,6 +299,8 @@ class Config:
             logger.warning(warn_msg)
             _warn(warn_msg, DeprecationWarning)
 
+        key_set = False
+        cert_set = False
         for arg in COMMON_ARGS:
             if arg == "virtual_organization":
                 if "virtual_organization" in cnf:
@@ -305,6 +313,28 @@ class Config:
                     for mod_file in cnf["extension_schemas"]:
                         _mod = self._load(mod_file)
                         self.extension_schema[_mod.NAMESPACE] = _mod
+            elif arg == "key_file":
+                if key_set: continue
+                if "key_data" not in cnf or not cnf["key_data"]:
+                    with open(cnf[arg]) as kf: setattr(self, "key_data", kf.read())
+                    key_set = True
+            elif arg == "key_data":
+                if key_set: continue
+                if "key_file" not in cnf or not cnf["key_file"]:
+                    key_file_tmp = make_temp(cnf[arg], suffix=".key", decode=False)
+                    setattr(self, "key_file", key_file_tmp.name)
+                    key_set = True
+            elif arg == "cert_file":
+                if cert_set: continue
+                if "cert_data" not in cnf or not cnf["cert_data"]:
+                    setattr(self, "cert_data", read_cert_from_file(cnf[arg]))
+                    cert_set = True
+            elif arg == "cert_data":
+                if cert_set: continue
+                if "cert_file" not in cnf or not cnf["cert_file"]:
+                    cert_file_tmp = make_temp(cnf[arg], suffix=".crt", decode=False)
+                    setattr(self, "cert_file", cert_file_tmp.name)
+                    cert_set = True
 
             try:
                 setattr(self, arg, cnf[arg])

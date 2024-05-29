@@ -3,12 +3,13 @@ import argparse
 import os
 import sys
 
+from saml2.cert import read_cert_from_file
 from saml2.config import Config
 from saml2.metadata import entities_descriptor
 from saml2.metadata import entity_descriptor
 from saml2.metadata import metadata_tostring_fix
 from saml2.metadata import sign_entity_descriptor
-from saml2.sigver import security_context
+from saml2.sigver import make_temp, security_context
 from saml2.validate import valid_instance
 
 
@@ -21,10 +22,12 @@ from saml2.validate import valid_instance
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", dest="valid", help="How long, in days, the metadata is valid from the time of creation")
-    parser.add_argument("-c", dest="cert", help="certificate")
+    parser.add_argument("-c", dest="certfile", help="certificate as a file")
+    parser.add_argument("-d", dest="certdata", help="certificate as a string")
     parser.add_argument("-e", dest="ed", action="store_true", help="Wrap the whole thing in an EntitiesDescriptor")
     parser.add_argument("-i", dest="id", help="The ID of the entities descriptor")
     parser.add_argument("-k", dest="keyfile", help="A file with a key to sign the metadata with")
+    parser.add_argument("-y", dest="keydata", help="A string key to sign the metadata with")
     parser.add_argument("-n", dest="name", default="")
     parser.add_argument("-p", dest="path", help="path to the configuration file")
     parser.add_argument("-s", dest="sign", action="store_true", help="sign the metadata")
@@ -54,8 +57,26 @@ def main():
         eds.append(entity_descriptor(cnf))
 
     conf = Config()
-    conf.key_file = args.keyfile
-    conf.cert_file = args.cert
+    if args.keyfile and not args.keydata:
+        conf.key_file = args.keyfile
+        with open(args.keyfile) as kf: conf.key_data = kf.read()
+    elif args.keydata and not args.keyfile:
+        conf.key_data = args.keydata
+        key_file_tmp = make_temp(args.keydata, suffix=".key", decode=False)
+        conf.key_file = key_file_tmp.name
+    else:
+        conf.key_file = args.keyfile
+        conf.key_data = args.keydata
+    if args.certfile and not args.certdata:
+        conf.cert_file = args.certfile
+        conf.cert_data = read_cert_from_file(args.certfile)
+    elif args.certdata and not args.certfile:
+        conf.cert_data = args.certdata
+        cert_file_tmp = make_temp(args.certdata, suffix=".crt", decode=False)
+        conf.cert_file = cert_file_tmp.name
+    else:
+        conf.cert_file = args.certfile
+        conf.cert_data = args.certdata
     conf.debug = 1
     conf.xmlsec_binary = args.xmlsec
     secc = security_context(conf)

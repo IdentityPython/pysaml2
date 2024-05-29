@@ -14,6 +14,7 @@ from saml2 import SAMLError
 from saml2 import saml
 from saml2 import samlp
 from saml2 import soap
+from saml2.cert import read_cert_from_file
 from saml2.client_base import MIME_PAOS
 from saml2.config import Config
 from saml2.entity import Entity
@@ -23,6 +24,7 @@ from saml2.mdstore import MetadataStore
 from saml2.profile import ecp
 from saml2.profile import paos
 from saml2.s_utils import BadRequest
+from saml2.sigver import make_temp
 
 
 SERVICE = "urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp"
@@ -52,6 +54,8 @@ class Client(Entity):
         key_file=None,
         cert_file=None,
         config=None,
+        key_data=None,
+        cert_data=None
     ):
         """
         :param user: user name
@@ -74,10 +78,29 @@ class Client(Entity):
         if not config:
             config = Config()
             config.disable_ssl_certificate_validation = disable_ssl_certificate_validation
-            config.key_file = key_file
-            config.cert_file = cert_file
             config.ca_certs = ca_certs
             config.xmlsec_binary = xmlsec_binary
+
+            if key_file and not key_data:
+                config.key_file = key_file
+                with open(key_file) as kf: config.key_data = kf.read()
+            elif key_data and not key_file:
+                config.key_data = key_data
+                key_file_tmp = make_temp(key_data, suffix=".key", decode=False)
+                config.key_file = key_file_tmp.name
+            else:
+                config.key_file = key_file
+                config.key_data = key_data
+            if cert_file and not cert_data:
+                config.cert_file = cert_file
+                config.cert_data = read_cert_from_file(cert_file)
+            elif cert_data and not cert_file:
+                config.cert_data = cert_data
+                cert_file_tmp = make_temp(cert_data, suffix=".crt", decode=False)
+                config.cert_file = cert_file_tmp.name
+            else:
+                config.cert_file = cert_file
+                config.cert_data = cert_data
 
         Entity.__init__(self, "sp", config)
         self._idp = idp
