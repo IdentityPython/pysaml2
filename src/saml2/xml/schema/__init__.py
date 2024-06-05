@@ -23,6 +23,7 @@ def _create_xml_schema_validator(source=None, **kwargs):
     path_schema_xml = str(schema_resources.joinpath("xml.xsd"))
     path_schema_envelope = str(schema_resources.joinpath("envelope.xsd"))
     path_schema_xenc = str(schema_resources.joinpath("xenc-schema.xsd"))
+    path_schema_xenc_11 = str(schema_resources.joinpath("xenc-schema-11.xsd"))
     path_schema_xmldsig_core = str(schema_resources.joinpath("xmldsig-core-schema.xsd"))
     path_schema_saml_assertion = str(schema_resources.joinpath("saml-schema-assertion-2.0.xsd"))
     path_schema_saml_metadata = str(schema_resources.joinpath("saml-schema-metadata-2.0.xsd"))
@@ -39,6 +40,7 @@ def _create_xml_schema_validator(source=None, **kwargs):
         "http://www.w3.org/XML/1998/namespace": path_schema_xml,
         "http://schemas.xmlsoap.org/soap/envelope/": path_schema_envelope,
         "http://www.w3.org/2001/04/xmlenc#": path_schema_xenc,
+        "http://www.w3.org/2009/xmlenc11#": path_schema_xenc_11,
         "http://www.w3.org/2000/09/xmldsig#": path_schema_xmldsig_core,
         "urn:oasis:names:tc:SAML:2.0:assertion": path_schema_saml_assertion,
         "urn:oasis:names:tc:SAML:2.0:metadata": path_schema_saml_metadata,
