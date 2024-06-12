@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- SAML response with multiple 'holder-of-key' subject confirmations. -->
-<ns0:Response xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol" 
-    xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion" 
-    xmlns:ns2="http://www.w3.org/2000/09/xmldsig#" 
+<ns0:Response xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"
+    xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"
+    xmlns:ns2="http://www.w3.org/2000/09/xmldsig#"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Destination="https://sp:443/.auth/saml/login" ID="_df9a1eadc90519252694519504a13dfb8dd67a1bb4" InResponseTo="id-KHlas49TtW2VdC8WN" IssueInstant="2019-05-14T20:35:13Z" Version="2.0">
     <ns1:Issuer>https://idp:8443</ns1:Issuer>
     <ns0:Status>

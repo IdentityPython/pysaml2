@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 
-      This file was automatically generated - do not edit 
+      This file was automatically generated - do not edit
 
     -->
 <md:EntitiesDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:shibmd="urn:mace:shibboleth:metadata:1.0" Name="http://md.swamid.se/md/swamid-1.0.xml"><ds:Signature><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><ds:Reference URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#WithComments"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><ds:DigestValue>UwN8jiLxhTQtHuuIN5oif0Qr3cg=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>h61jhhYjHAiinGbGQhu/wNApcGcrTsGgy09wCmnJIsTqe1fY4gOrpo4OUp/UeCMJ
@@ -694,7 +694,7 @@ o+LC6bPdPjC9YKujSKF34Au0s7y9bfXspClfCmyuviYVOrpVUze2h2MfHUVsKEUo
     </IDPSSODescriptor>
 
     <AttributeAuthorityDescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:1.1:protocol urn:oasis:names:tc:SAML:2.0:protocol">
-	
+
         <Extensions>
             <shibmd:Scope regexp="false">idp.protectnetwork.org</shibmd:Scope>
         </Extensions>
@@ -731,14 +731,14 @@ o+LC6bPdPjC9YKujSKF34Au0s7y9bfXspClfCmyuviYVOrpVUze2h2MfHUVsKEUo
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
     </AttributeAuthorityDescriptor>
-  <Organization>                                                                                                                                                                                                           
-    <OrganizationName xml:lang="en">ProtectNetwork</OrganizationName>                                                                                                                                                      
-    <OrganizationDisplayName xml:lang="en">ProtectNetwork</OrganizationDisplayName>                                                                                                                                        
-    <OrganizationURL xml:lang="en">http://www.protectnetwork.com/</OrganizationURL>                                                                                                                                        
-  </Organization>                                                                                                                                                                                                          
-  <ContactPerson contactType="technical">                                                                                                                                                                                  
-    <SurName>Technical Contact</SurName>                                                                                                                                                                                   
-    <EmailAddress>support@protectnetwork.org</EmailAddress>                                                                                                                                                                
+  <Organization>
+    <OrganizationName xml:lang="en">ProtectNetwork</OrganizationName>
+    <OrganizationDisplayName xml:lang="en">ProtectNetwork</OrganizationDisplayName>
+    <OrganizationURL xml:lang="en">http://www.protectnetwork.com/</OrganizationURL>
+  </Organization>
+  <ContactPerson contactType="technical">
+    <SurName>Technical Contact</SurName>
+    <EmailAddress>support@protectnetwork.org</EmailAddress>
   </ContactPerson>
 </EntityDescriptor>
   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://lab03.lab.it.su.se" xml:base="swamid-1.0/lab03.lab.it.su.se.xml">
@@ -964,20 +964,20 @@ Cyr54IEx7Zg6UOLaa23i3CX0H2PXTNuik1WN2qPcPo4REEkK7wNP60vYXt7TgJXq
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.hig.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.hig.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp.hig.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.hig.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp.hig.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.hig.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -1012,12 +1012,12 @@ Cyr54IEx7Zg6UOLaa23i3CX0H2PXTNuik1WN2qPcPo4REEkK7wNP60vYXt7TgJXq
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.hig.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.hig.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
   <Organization>
     <OrganizationName xml:lang="en">HIG</OrganizationName>
@@ -1028,7 +1028,7 @@ Cyr54IEx7Zg6UOLaa23i3CX0H2PXTNuik1WN2qPcPo4REEkK7wNP60vYXt7TgJXq
     <Company>Högskolan i Gävle</Company>
     <EmailAddress>anders.lordal@hig.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://sp1.lab.it.su.se" xml:base="swamid-1.0/sp1.lab.it.su.se.xml">
   <SPSSODescriptor WantAssertionsSigned="false" AuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:1.1:protocol">
@@ -1185,27 +1185,27 @@ uvAr3mL1jb5HpBLWvrI+MwwCcA==</ds:X509Certificate>
     <KeyDescriptor use="signing">
       <ds:KeyInfo>
         <ds:X509Data>
-          <ds:X509Certificate>MIIEZDCCA82gAwIBAgIQNTUPNPvSFFOtVKGg5okawzANBgkqhkiG9w0BAQUFADCB                                                                                                    
-ujEfMB0GA1UEChMWVmVyaVNpZ24gVHJ1c3QgTmV0d29yazEXMBUGA1UECxMOVmVy                                                                                                    
-aVNpZ24sIEluYy4xMzAxBgNVBAsTKlZlcmlTaWduIEludGVybmF0aW9uYWwgU2Vy                                                                                                    
-dmVyIENBIC0gQ2xhc3MgMzFJMEcGA1UECxNAd3d3LnZlcmlzaWduLmNvbS9DUFMg                                                                                                    
-SW5jb3JwLmJ5IFJlZi4gTElBQklMSVRZIExURC4oYyk5NyBWZXJpU2lnbjAeFw0w                                                                                                    
-OTAzMTcwMDAwMDBaFw0xMTA0MDQyMzU5NTlaMIGbMQswCQYDVQQGEwJVUzEWMBQG                                                                                                    
-A1UECBMNTWFzc2FjaHVzZXR0czEQMA4GA1UEBxQHSXBzd2ljaDEfMB0GA1UEChQW                                                                                                    
-RUJTQ08gSW5kdXN0cmllcywgSW5jLjEeMBwGA1UECxQVc2hpYmJvbGV0aDEuZXBu                                                                                                    
-ZXQuY29tMSEwHwYDVQQDFBhzaGliYm9sZXRoLmVic2NvaG9zdC5jb20wgZ8wDQYJ                                                                                                    
-KoZIhvcNAQEBBQADgY0AMIGJAoGBAKKCiIggktHn3Hhixq/YiEVnIccwPsfbvtNM                                                                                                    
-fjfdoAhRFHAmD9MsOOBKjCURLuZ6gXPTUpNUa/C1aP9+4UaIT1ipSndKPhxsMCgg                                                                                                    
-86o2msG1v6K5V/pGiya1aMR5s1HhmodB1ZryA+untXRV56sD2FnKjk2lwS4psAlo                                                                                                    
-IlXW9hFLAgMBAAGjggGGMIIBgjAJBgNVHRMEAjAAMAsGA1UdDwQEAwIFoDBGBgNV                                                                                                    
-HR8EPzA9MDugOaA3hjVodHRwOi8vY3JsLnZlcmlzaWduLmNvbS9DbGFzczNJbnRl                                                                                                    
-cm5hdGlvbmFsU2VydmVyLmNybDBEBgNVHSAEPTA7MDkGC2CGSAGG+EUBBxcDMCow                                                                                                    
-KAYIKwYBBQUHAgEWHGh0dHBzOi8vd3d3LnZlcmlzaWduLmNvbS9ycGEwNAYDVR0l                                                                                                    
-BC0wKwYJYIZIAYb4QgQBBgorBgEEAYI3CgMDBggrBgEFBQcDAQYIKwYBBQUHAwIw                                                                                                    
-NAYIKwYBBQUHAQEEKDAmMCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC52ZXJpc2ln                                                                                                    
-bi5jb20wbgYIKwYBBQUHAQwEYjBgoV6gXDBaMFgwVhYJaW1hZ2UvZ2lmMCEwHzAH                                                                                                    
-BgUrDgMCGgQUS2u5KJYGDLvQUjibKaxLB4shBRgwJhYkaHR0cDovL2xvZ28udmVy                                                                                                    
-aXNpZ24uY29tL3ZzbG9nbzEuZ2lmMA0GCSqGSIb3DQEBBQUAA4GBAKFh9LRKkCh1                                                                                                    
+          <ds:X509Certificate>MIIEZDCCA82gAwIBAgIQNTUPNPvSFFOtVKGg5okawzANBgkqhkiG9w0BAQUFADCB
+ujEfMB0GA1UEChMWVmVyaVNpZ24gVHJ1c3QgTmV0d29yazEXMBUGA1UECxMOVmVy
+aVNpZ24sIEluYy4xMzAxBgNVBAsTKlZlcmlTaWduIEludGVybmF0aW9uYWwgU2Vy
+dmVyIENBIC0gQ2xhc3MgMzFJMEcGA1UECxNAd3d3LnZlcmlzaWduLmNvbS9DUFMg
+SW5jb3JwLmJ5IFJlZi4gTElBQklMSVRZIExURC4oYyk5NyBWZXJpU2lnbjAeFw0w
+OTAzMTcwMDAwMDBaFw0xMTA0MDQyMzU5NTlaMIGbMQswCQYDVQQGEwJVUzEWMBQG
+A1UECBMNTWFzc2FjaHVzZXR0czEQMA4GA1UEBxQHSXBzd2ljaDEfMB0GA1UEChQW
+RUJTQ08gSW5kdXN0cmllcywgSW5jLjEeMBwGA1UECxQVc2hpYmJvbGV0aDEuZXBu
+ZXQuY29tMSEwHwYDVQQDFBhzaGliYm9sZXRoLmVic2NvaG9zdC5jb20wgZ8wDQYJ
+KoZIhvcNAQEBBQADgY0AMIGJAoGBAKKCiIggktHn3Hhixq/YiEVnIccwPsfbvtNM
+fjfdoAhRFHAmD9MsOOBKjCURLuZ6gXPTUpNUa/C1aP9+4UaIT1ipSndKPhxsMCgg
+86o2msG1v6K5V/pGiya1aMR5s1HhmodB1ZryA+untXRV56sD2FnKjk2lwS4psAlo
+IlXW9hFLAgMBAAGjggGGMIIBgjAJBgNVHRMEAjAAMAsGA1UdDwQEAwIFoDBGBgNV
+HR8EPzA9MDugOaA3hjVodHRwOi8vY3JsLnZlcmlzaWduLmNvbS9DbGFzczNJbnRl
+cm5hdGlvbmFsU2VydmVyLmNybDBEBgNVHSAEPTA7MDkGC2CGSAGG+EUBBxcDMCow
+KAYIKwYBBQUHAgEWHGh0dHBzOi8vd3d3LnZlcmlzaWduLmNvbS9ycGEwNAYDVR0l
+BC0wKwYJYIZIAYb4QgQBBgorBgEEAYI3CgMDBggrBgEFBQcDAQYIKwYBBQUHAwIw
+NAYIKwYBBQUHAQEEKDAmMCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC52ZXJpc2ln
+bi5jb20wbgYIKwYBBQUHAQwEYjBgoV6gXDBaMFgwVhYJaW1hZ2UvZ2lmMCEwHzAH
+BgUrDgMCGgQUS2u5KJYGDLvQUjibKaxLB4shBRgwJhYkaHR0cDovL2xvZ28udmVy
+aXNpZ24uY29tL3ZzbG9nbzEuZ2lmMA0GCSqGSIb3DQEBBQUAA4GBAKFh9LRKkCh1
 rZ/hhSaA8kQwoM4TV2QkBhU5BXcl1RZ5gmp3N5ZQJl3BlhfZQXSxSSGFWP3YGFW7
 jKRBlmOyRaP9tGXkuCqTu34Jwbjg+7n1TYnCyQV8NR5YO3Ir6Z+qUCkq5ZsVsonR
 oWySqfgtWSMHeY1vWcbPbprL6ZhRtzGl</ds:X509Certificate>
@@ -2403,7 +2403,7 @@ iMkYL+yQK1JqNXDJwr+eW3+iWptUXnyRCnGBrYMAvqw=
 
 </md:EntityDescriptor>
   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://login.liu.se/idp/shibboleth" xml:base="swamid-1.0/login.liu.se.xml">
- 
+
   <IDPSSODescriptor protocolSupportEnumeration="urn:mace:shibboleth:1.0 urn:oasis:names:tc:SAML:1.1:protocol urn:oasis:names:tc:SAML:2.0:protocol">
 
         <Extensions>
@@ -2436,20 +2436,20 @@ dE1S/LL5o/3BCZXOh9Fuvm6ND4e+jSkCizMQNgm4iw==
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://login.liu.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://login.liu.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://login.liu.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://login.liu.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://login.liu.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://login.liu.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -2487,14 +2487,14 @@ dE1S/LL5o/3BCZXOh9Fuvm6ND4e+jSkCizMQNgm4iw==
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://login.liu.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://login.liu.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
-   
+
   <Organization>
     <OrganizationName xml:lang="en">LiU</OrganizationName>
     <OrganizationDisplayName xml:lang="en">Linköping University</OrganizationDisplayName>
@@ -2506,7 +2506,7 @@ dE1S/LL5o/3BCZXOh9Fuvm6ND4e+jSkCizMQNgm4iw==
     <SurName>Olausson</SurName>
     <EmailAddress>markus.olausson@liu.se</EmailAddress>
   </ContactPerson>
-     
+
 </EntityDescriptor>
   <md:EntityDescriptor entityID="https://converis.info/shibboleth" xml:base="swamid-1.0/converis.info.xml">
 
@@ -2606,20 +2606,20 @@ KgetXg7iTjcWRVve8lVZNG2foRZdbmOXow95IEKdfewtfiYR
                 </ds:X509Data>
             </ds:KeyInfo>
         </md:KeyDescriptor>
-        
+
         <md:ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://samlidp.ki.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <md:ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://samlidp.ki.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <md:NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</md:NameIDFormat>
         <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</md:NameIDFormat>
 
         <md:SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://samlidp.ki.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://samlidp.ki.se/idp/profile/SAML2/POST/SSO"/>
 
         <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://samlidp.ki.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://samlidp.ki.se/idp/profile/SAML2/Redirect/SSO"/>
     </md:IDPSSODescriptor>
 
@@ -2657,12 +2657,12 @@ KgetXg7iTjcWRVve8lVZNG2foRZdbmOXow95IEKdfewtfiYR
         </md:KeyDescriptor>
 
         <md:AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://samlidp.ki.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <md:AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://samlidp.ki.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <md:NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</md:NameIDFormat>
         <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</md:NameIDFormat>
-        
+
     </md:AttributeAuthorityDescriptor>
 
   <md:Organization>
@@ -2674,7 +2674,7 @@ KgetXg7iTjcWRVve8lVZNG2foRZdbmOXow95IEKdfewtfiYR
     <md:Company>Karolinska Institutet</md:Company>
     <md:EmailAddress>it-support@ki.se</md:EmailAddress>
   </md:ContactPerson>
-    
+
 </md:EntityDescriptor>
   <md:EntityDescriptor entityID="https://sp.wavelan.su.se/Shibboleth.sso" xml:base="swamid-1.0/sp.wavelan.su.se.xml">
 
@@ -3107,20 +3107,20 @@ JiNCTXH29oP8kWBEBVaDxrDIrfDv53VjURS+KXqpBLjsuVE=
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.nordu.net:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.nordu.net:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp.nordu.net/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.nordu.net/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp.nordu.net/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.nordu.net/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -3158,12 +3158,12 @@ JiNCTXH29oP8kWBEBVaDxrDIrfDv53VjURS+KXqpBLjsuVE=
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.nordu.net:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.nordu.net:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
 
   <Organization>
@@ -3175,7 +3175,7 @@ JiNCTXH29oP8kWBEBVaDxrDIrfDv53VjURS+KXqpBLjsuVE=
     <Company>NORDUnet NOC</Company>
     <EmailAddress>noc@nordu.net</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://idp.it.gu.se/idp/shibboleth" xml:base="swamid-1.0/idp.it.gu.se.xml">
 
@@ -3211,20 +3211,20 @@ MoX9SCDPBh2j39QZupTaPkylXDshurod7B2XtXdHPg==
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.it.gu.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.it.gu.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp.it.gu.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.it.gu.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp.it.gu.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.it.gu.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -3262,12 +3262,12 @@ MoX9SCDPBh2j39QZupTaPkylXDshurod7B2XtXdHPg==
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.it.gu.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.it.gu.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
 
   <Organization>
@@ -3279,7 +3279,7 @@ MoX9SCDPBh2j39QZupTaPkylXDshurod7B2XtXdHPg==
     <Company>Göteborgs universitet</Company>
     <EmailAddress>pablo.millet@gu.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <md:EntityDescriptor entityID="https://tcs-test.sunet.se/shibboleth" xml:base="swamid-1.0/tcs-test.sunet.se.xml">
 
@@ -3385,20 +3385,20 @@ P7nZB2+XoE3sf8xqd2a9xO7vy1r17Q7bx8PzwklL9GdFppuRnimioYoF3atEQM6R
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://identity.mdh.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://identity.mdh.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://identity.mdh.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://identity.mdh.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://identity.mdh.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://identity.mdh.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -3436,12 +3436,12 @@ P7nZB2+XoE3sf8xqd2a9xO7vy1r17Q7bx8PzwklL9GdFppuRnimioYoF3atEQM6R
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://identity.mdh.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://identity.mdh.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
 
   <Organization>
@@ -3453,7 +3453,7 @@ P7nZB2+XoE3sf8xqd2a9xO7vy1r17Q7bx8PzwklL9GdFppuRnimioYoF3atEQM6R
     <Company>Mälardalen University</Company>
     <EmailAddress>peter.falck@mdh.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://signon.hh.se/idp/shibboleth" xml:base="swamid-1.0/signon.hh.se.xml">
 
@@ -3489,20 +3489,20 @@ CXwK7XzaaZnKkk8K3Hgodpmh+2CIkt0nGwYXAFyb6RE=
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://signon.hh.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://signon.hh.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://signon.hh.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://signon.hh.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://signon.hh.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://signon.hh.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -3540,12 +3540,12 @@ CXwK7XzaaZnKkk8K3Hgodpmh+2CIkt0nGwYXAFyb6RE=
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://signon.hh.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://signon.hh.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
 
   <Organization>
@@ -3557,7 +3557,7 @@ CXwK7XzaaZnKkk8K3Hgodpmh+2CIkt0nGwYXAFyb6RE=
     <Company>Högskolan i Halmstad</Company>
     <EmailAddress>Magnus.Moren@hh.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://shibboleth.net.lu.se/idp/shibboleth" xml:base="swamid-1.0/shibboleth.net.lu.se.xml">
 
@@ -3594,20 +3594,20 @@ ADE1bHKRi4qX9DYfBN7g
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://shibboleth.net.lu.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://shibboleth.net.lu.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://shibboleth.net.lu.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://shibboleth.net.lu.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://shibboleth.net.lu.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://shibboleth.net.lu.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -3646,14 +3646,14 @@ ADE1bHKRi4qX9DYfBN7g
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://shibboleth.net.lu.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://shibboleth.net.lu.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
-    
+
 
   <Organization>
     <OrganizationName xml:lang="en">LU</OrganizationName>
@@ -3707,20 +3707,20 @@ nsANXWIYSHmsKeMX/1M+TqMOmUCOExgqTr4yHou54m2SdxcMGJgJp2jcmdF6gbjo
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.lnu.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.lnu.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp.lnu.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.lnu.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp.lnu.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.lnu.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -3766,12 +3766,12 @@ nsANXWIYSHmsKeMX/1M+TqMOmUCOExgqTr4yHou54m2SdxcMGJgJp2jcmdF6gbjo
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.lnu.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.lnu.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
 
   <Organization>
@@ -3783,7 +3783,7 @@ nsANXWIYSHmsKeMX/1M+TqMOmUCOExgqTr4yHou54m2SdxcMGJgJp2jcmdF6gbjo
     <Company>Linnéuniversitetet</Company>
     <EmailAddress>tomas.hautala@vxu.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://hbidp.hb.se/idp/shibboleth" xml:base="swamid-1.0/hbidp.hb.se.xml">
 
@@ -3827,20 +3827,20 @@ NtlzTU8oxWfErMa+Y2BMXWIALruQgeQrFxbO/k4RoPBHRvCul0uUsxak1IFtfT0x
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://hbidp.hb.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://hbidp.hb.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://hbidp.hb.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://hbidp.hb.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://hbidp.hb.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://hbidp.hb.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -3886,14 +3886,14 @@ NtlzTU8oxWfErMa+Y2BMXWIALruQgeQrFxbO/k4RoPBHRvCul0uUsxak1IFtfT0x
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://hbidp.hb.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://hbidp.hb.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
-    
+
   <Organization>
     <OrganizationName xml:lang="en">HB</OrganizationName>
     <OrganizationDisplayName xml:lang="en">Högskolan i Borås</OrganizationDisplayName>
@@ -3903,7 +3903,7 @@ NtlzTU8oxWfErMa+Y2BMXWIALruQgeQrFxbO/k4RoPBHRvCul0uUsxak1IFtfT0x
     <Company>Högskolan i Borås</Company>
     <EmailAddress>mikael.furth@hb.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://shib-idp-1.oru.se/idp/shibboleth" xml:base="swamid-1.0/shib-idp-1.oru.se.xml">
   <IDPSSODescriptor protocolSupportEnumeration="urn:mace:shibboleth:1.0 urn:oasis:names:tc:SAML:1.1:protocol urn:oasis:names:tc:SAML:2.0:protocol">
@@ -4138,20 +4138,20 @@ nh4O/8qRXaXavKrASZvA1gmVGaA90C6rtK+zuVkU3g==
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://shibb1.hj.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://shibb1.hj.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://shibb1.hj.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://shibb1.hj.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://shibb1.hj.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://shibb1.hj.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -4189,12 +4189,12 @@ nh4O/8qRXaXavKrASZvA1gmVGaA90C6rtK+zuVkU3g==
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://shibb1.hj.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://shibb1.hj.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
 
   <Organization>
@@ -4206,7 +4206,7 @@ nh4O/8qRXaXavKrASZvA1gmVGaA90C6rtK+zuVkU3g==
     <Company>Högskolan i Jönköping</Company>
     <EmailAddress>Stefan.Kindh@hj.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://shibbo.ltu.se/idp/shibboleth" xml:base="swamid-1.0/shibbo.ltu.se.xml">
 
@@ -4242,20 +4242,20 @@ B2BEejurB8CAdtQkwfCKCSFl7spaJzSGPq/dt4yO4qSslJA=
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://shibbo.ltu.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://shibbo.ltu.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://shibbo.ltu.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://shibbo.ltu.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://shibbo.ltu.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://shibbo.ltu.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -4293,14 +4293,14 @@ B2BEejurB8CAdtQkwfCKCSFl7spaJzSGPq/dt4yO4qSslJA=
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://shibbo.ltu.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://shibbo.ltu.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
- 
+
   <Organization>
     <OrganizationName xml:lang="en">LTU</OrganizationName>
     <OrganizationDisplayName xml:lang="en">Luleå tekniska universitet</OrganizationDisplayName>
@@ -4310,7 +4310,7 @@ B2BEejurB8CAdtQkwfCKCSFl7spaJzSGPq/dt4yO4qSslJA=
     <Company>Luleå tekniska universitet</Company>
     <EmailAddress>Magnus.Jacobsson@ltu.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <md:EntityDescriptor entityID="https://akino.hh.se/shibboleth" xml:base="swamid-1.0/akino.hh.se.xml">
 
@@ -4417,20 +4417,20 @@ EwQmOmY1IlHM1SSucXdJpfVc1epYD/s2fOyy+orDvK8Gh1wO7nYByGrS14Vl/gkx
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://vmidgw.miun.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://vmidgw.miun.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://vmidgw.miun.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://vmidgw.miun.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://vmidgw.miun.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://vmidgw.miun.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -4468,14 +4468,14 @@ EwQmOmY1IlHM1SSucXdJpfVc1epYD/s2fOyy+orDvK8Gh1wO7nYByGrS14Vl/gkx
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://vmidgw.miun.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://vmidgw.miun.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
- 
+
   <Organization>
     <OrganizationName xml:lang="en">MIUN</OrganizationName>
     <OrganizationDisplayName xml:lang="en">Mittuniversitetet</OrganizationDisplayName>
@@ -4485,7 +4485,7 @@ EwQmOmY1IlHM1SSucXdJpfVc1epYD/s2fOyy+orDvK8Gh1wO7nYByGrS14Vl/gkx
     <Company>Mittuniversitetet</Company>
     <EmailAddress>Ove.Olander@miun.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <md:EntityDescriptor entityID="https://bibliometrics.ki.se/shibboleth" xml:base="swamid-1.0/bibliometrics.ki.se.xml">
 
@@ -4674,20 +4674,20 @@ n9Phr4P3FEL3YKQK+xQiKCJXUb5WgRI=
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.bth.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.bth.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp.bth.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.bth.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp.bth.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.bth.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -4725,14 +4725,14 @@ n9Phr4P3FEL3YKQK+xQiKCJXUb5WgRI=
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.bth.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.bth.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
-  
+
   <Organization>
     <OrganizationName xml:lang="en">BTH</OrganizationName>
     <OrganizationDisplayName xml:lang="en">Blekinge Tekniska Högskola (Personal)</OrganizationDisplayName>
@@ -4743,7 +4743,7 @@ n9Phr4P3FEL3YKQK+xQiKCJXUb5WgRI=
     <SurName>Martinsson</SurName>
     <EmailAddress>tom.martinsson@bth.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://idp.student.bth.se/idp/shibboleth" xml:base="swamid-1.0/idp.student.bth.se.xml">
 
@@ -4777,20 +4777,20 @@ nH4GzdNBUhBostxPfU/hk7XiQOMXNvgHzG2y53Vaa+RZPC45VHuFmyixxGFxktsF
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.student.bth.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.student.bth.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp.student.bth.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.student.bth.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp.student.bth.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.student.bth.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -4826,12 +4826,12 @@ nH4GzdNBUhBostxPfU/hk7XiQOMXNvgHzG2y53Vaa+RZPC45VHuFmyixxGFxktsF
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.student.bth.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.student.bth.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
     <Organization>
     <OrganizationName xml:lang="en">STUDENTS-BTH</OrganizationName>
@@ -4843,7 +4843,7 @@ nH4GzdNBUhBostxPfU/hk7XiQOMXNvgHzG2y53Vaa+RZPC45VHuFmyixxGFxktsF
     <SurName>Martinsson</SurName>
     <EmailAddress>tom.martinsson@bth.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <md:EntityDescriptor entityID="https://account-test.unit.liu.se/shibboleth-sp" xml:base="swamid-1.0/account-test.unit.liu.se.xml">
 
@@ -5422,20 +5422,20 @@ UTU+mTp7woVtJsWWGJRG1iDB7UxpIHdPwDBDPEfxlw11kdJ+HIyaYCrQL4A=
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.hgo.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.hgo.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp.hgo.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.hgo.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp.hgo.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.hgo.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -5474,12 +5474,12 @@ UTU+mTp7woVtJsWWGJRG1iDB7UxpIHdPwDBDPEfxlw11kdJ+HIyaYCrQL4A=
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.hgo.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.hgo.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
     <Organization>
     <OrganizationName xml:lang="en">HGO</OrganizationName>
@@ -5491,7 +5491,7 @@ UTU+mTp7woVtJsWWGJRG1iDB7UxpIHdPwDBDPEfxlw11kdJ+HIyaYCrQL4A=
     <SurName>Breiler</SurName>
     <EmailAddress>joacim.breiler@hgo.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <md:EntityDescriptor entityID="https://www.diva-portal.org/shibboleth" xml:base="swamid-1.0/www.diva-portal.org.xml">
 
@@ -6345,20 +6345,20 @@ L+FrdTBecYrIv0m4n8mAdQeJPBH7G/4mg+FFHS8gqf97m3JPwtGlF10V5KVt5jhl
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://swamid.user.uu.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://swamid.user.uu.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://swamid.user.uu.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://swamid.user.uu.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://swamid.user.uu.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://swamid.user.uu.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -6397,22 +6397,22 @@ L+FrdTBecYrIv0m4n8mAdQeJPBH7G/4mg+FFHS8gqf97m3JPwtGlF10V5KVt5jhl
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://swamid.user.uu.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://swamid.user.uu.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
     <Organization>
-        <OrganizationName xml:lang="en">UU</OrganizationName> 
-        <OrganizationDisplayName xml:lang="en">Uppsala universitet</OrganizationDisplayName> 
-        <OrganizationURL xml:lang="en">http://www.uu.se</OrganizationURL> 
+        <OrganizationName xml:lang="en">UU</OrganizationName>
+        <OrganizationDisplayName xml:lang="en">Uppsala universitet</OrganizationDisplayName>
+        <OrganizationURL xml:lang="en">http://www.uu.se</OrganizationURL>
     </Organization>
     <ContactPerson contactType="technical">
-        <Company>Uppsala universitet</Company> 
-        <SurName>AKKA SAML2</SurName> 
-        <EmailAddress>akka-datordrift@its.uu.se</EmailAddress> 
+        <Company>Uppsala universitet</Company>
+        <SurName>AKKA SAML2</SurName>
+        <EmailAddress>akka-datordrift@its.uu.se</EmailAddress>
     </ContactPerson>
 </EntityDescriptor>
   <md:EntityDescriptor entityID="https://webmail-dev-srv2.it.su.se/Shibboleth.sso" xml:base="swamid-1.0/webmail-dev-srv2.it.su.se.xml">
@@ -6751,20 +6751,20 @@ xpmbgA==
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://shibboleth.slu.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://shibboleth.slu.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://shibboleth.slu.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://shibboleth.slu.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://shibboleth.slu.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://shibboleth.slu.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -6803,14 +6803,14 @@ xpmbgA==
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://shibboleth.slu.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://shibboleth.slu.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
- 
+
    <Organization>
     <OrganizationName xml:lang="en">SLU</OrganizationName>
     <OrganizationDisplayName xml:lang="en">Sveriges Lantbruksuniversitet</OrganizationDisplayName>
@@ -7349,20 +7349,20 @@ drVlFNv2EtdNX1C9u3EJYqslqtyXv2nZ
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.his.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.his.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp.his.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.his.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp.his.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.his.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -7400,12 +7400,12 @@ drVlFNv2EtdNX1C9u3EJYqslqtyXv2nZ
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.his.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.his.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
   <Organization>
     <OrganizationName xml:lang="en">HIS</OrganizationName>
@@ -7416,7 +7416,7 @@ drVlFNv2EtdNX1C9u3EJYqslqtyXv2nZ
     <Company>Högskolan i Skövde</Company>
     <EmailAddress>netadmin@his.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://users.hv.se/login/shib13/idp/metadata.php" xml:base="swamid-1.0/users.hv.se-shib1.xml">
   <IDPSSODescriptor protocolSupportEnumeration="urn:mace:shibboleth:1.0 urn:oasis:names:tc:SAML:1.1:protocol">
@@ -8860,20 +8860,20 @@ GOv94FinTmMj7OUnqdHESZ1zpL6NB5KXFAtRXatuzFYE+g8gO1AQg83/kjlbNeM7
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://swamid.shh.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://swamid.shh.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://swamid.shh.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://swamid.shh.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://swamid.shh.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://swamid.shh.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -8912,12 +8912,12 @@ GOv94FinTmMj7OUnqdHESZ1zpL6NB5KXFAtRXatuzFYE+g8gO1AQg83/kjlbNeM7
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://swamid.shh.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://swamid.shh.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
   </AttributeAuthorityDescriptor>
   <Organization>
     <OrganizationName xml:lang="en">SOPHIA</OrganizationName>
@@ -9041,20 +9041,20 @@ dXq/XDc8QAGFHMyk/P0r1H6pT5HJQfH7
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.mah.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.mah.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp.mah.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.mah.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp.mah.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.mah.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -9092,12 +9092,12 @@ dXq/XDc8QAGFHMyk/P0r1H6pT5HJQfH7
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.mah.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.mah.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
 
     <Organization>
@@ -9110,7 +9110,7 @@ dXq/XDc8QAGFHMyk/P0r1H6pT5HJQfH7
     <SurName>Faling</SurName>
     <EmailAddress>robert.faling@mah.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <md:EntityDescriptor entityID="https://connect.uninett.no/shibboleth" xml:base="swamid-1.0/connect.uninett.no.xml">
 
@@ -9384,20 +9384,20 @@ GLzVTSRgddMNMJEIMmpc6L9XAwW1IObqe3HcLewUmWZgtGKnq1Dd1XPtTRjvQPg9
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp2.kau.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp2.kau.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp2.kau.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp2.kau.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp2.kau.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp2.kau.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -9435,14 +9435,14 @@ GLzVTSRgddMNMJEIMmpc6L9XAwW1IObqe3HcLewUmWZgtGKnq1Dd1XPtTRjvQPg9
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp2.kau.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp2.kau.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
-    
+
   <Organization>
     <OrganizationName xml:lang="en">KAU</OrganizationName>
     <OrganizationDisplayName xml:lang="en">Karlstad University (SAML2)</OrganizationDisplayName>
@@ -9642,20 +9642,20 @@ uKycjtOvYOwcvABc1u3WpxJ+CdtbbcHrnYCWXg==
                 </ds:X509Data>
             </ds:KeyInfo>
         </md:KeyDescriptor>
-        
+
         <md:ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://kiidp.ki.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <md:ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://kiidp.ki.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <md:NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</md:NameIDFormat>
         <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</md:NameIDFormat>
 
         <md:SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://kiidp.ki.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://kiidp.ki.se/idp/profile/SAML2/POST/SSO"/>
 
         <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://kiidp.ki.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://kiidp.ki.se/idp/profile/SAML2/Redirect/SSO"/>
     </md:IDPSSODescriptor>
 
@@ -9693,12 +9693,12 @@ uKycjtOvYOwcvABc1u3WpxJ+CdtbbcHrnYCWXg==
         </md:KeyDescriptor>
 
         <md:AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://kiidp.ki.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <md:AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://kiidp.ki.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <md:NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</md:NameIDFormat>
         <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</md:NameIDFormat>
-        
+
     </md:AttributeAuthorityDescriptor>
 
   <md:Organization>
@@ -9710,7 +9710,7 @@ uKycjtOvYOwcvABc1u3WpxJ+CdtbbcHrnYCWXg==
     <md:Company>Karolinska Institutet</md:Company>
     <md:EmailAddress>it-support@ki.se</md:EmailAddress>
   </md:ContactPerson>
-    
+
 </md:EntityDescriptor>
   <md:EntityDescriptor entityID="https://ws3.bmc.uu.se/shibboleth" xml:base="swamid-1.0/www.bmcmediatek.uu.se.xml">
 
@@ -9818,20 +9818,20 @@ sdhdXg==
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://saml-1.sys.kth.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://saml-1.sys.kth.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://saml-1.sys.kth.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://saml-1.sys.kth.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://saml-1.sys.kth.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://saml-1.sys.kth.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -9870,12 +9870,12 @@ sdhdXg==
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://saml-1.sys.kth.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://saml-1.sys.kth.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
 <Organization>
     <OrganizationName xml:lang="en">KTH</OrganizationName>
@@ -9885,7 +9885,7 @@ sdhdXg==
   <ContactPerson contactType="technical">
     <Company>Royal Institute of Technology (KTH)</Company>
     <EmailAddress>itesc@kth.se</EmailAddress>
-  </ContactPerson>    
+  </ContactPerson>
 </EntityDescriptor>
   <md:EntityDescriptor entityID="https://sp-test.it.su.se/Shibboleth.sso" xml:base="swamid-1.0/sp-test.it.su.se.xml">
 
@@ -10461,20 +10461,20 @@ kgLpO4NuqQRRqV5FxbnmTvt25NApGY5k
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.hkr.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.hkr.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp.hkr.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.hkr.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp.hkr.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.hkr.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -10513,12 +10513,12 @@ kgLpO4NuqQRRqV5FxbnmTvt25NApGY5k
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.hkr.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.hkr.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
     <Organization>
     <OrganizationName xml:lang="en">HKR</OrganizationName>
@@ -10529,7 +10529,7 @@ kgLpO4NuqQRRqV5FxbnmTvt25NApGY5k
     <Company>Högskolan Kristianstad</Company>
     <EmailAddress>roland.svedman@hkr.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <md:EntityDescriptor entityID="https://betafoo.nordu.net/shibboleth" xml:base="swamid-1.0/betafoo.nordu.net.xml">
 
@@ -11091,20 +11091,20 @@ aaB0gTNGMOhF/MSYfiM8SNzVxiYnaE8rwQZK
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp2.hig.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp2.hig.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp2.hig.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp2.hig.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp2.hig.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp2.hig.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -11142,12 +11142,12 @@ aaB0gTNGMOhF/MSYfiM8SNzVxiYnaE8rwQZK
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp2.hig.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp2.hig.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
     <Organization>
     <OrganizationName xml:lang="en">HIGALUMNI</OrganizationName>
@@ -11158,7 +11158,7 @@ aaB0gTNGMOhF/MSYfiM8SNzVxiYnaE8rwQZK
     <Company>Högskolan i Gävle</Company>
     <EmailAddress>anders.lordal@hig.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://login.du.se/idp/shibboleth" xml:base="swamid-1.0/login.du.se.xml">
 
@@ -11194,20 +11194,20 @@ GqI848rh0Iif5MpxnsYQ/mxwDirbsler7jpF0Q==
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://login.du.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://login.du.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://login.du.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://login.du.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://login.du.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://login.du.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -11245,12 +11245,12 @@ GqI848rh0Iif5MpxnsYQ/mxwDirbsler7jpF0Q==
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://login.du.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://login.du.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
   <Organization>
     <OrganizationName xml:lang="en">DU</OrganizationName>
@@ -11261,7 +11261,7 @@ GqI848rh0Iif5MpxnsYQ/mxwDirbsler7jpF0Q==
     <Company>Högskolan Dalarna</Company>
     <EmailAddress>dempa@du.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <md:EntityDescriptor entityID="https://www.antagning.se/ecs-sp" xml:base="nya-1.0/www.antagning.se.xml">
 
@@ -11372,20 +11372,20 @@ dJt1/U0DjbFQsA/iA4d9R6U7wKQ6rbi2
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.irf.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.irf.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp.irf.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.irf.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp.irf.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.irf.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -11423,12 +11423,12 @@ dJt1/U0DjbFQsA/iA4d9R6U7wKQ6rbi2
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.irf.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.irf.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
   <Organization>
     <OrganizationName xml:lang="en">IRF</OrganizationName>
@@ -11440,7 +11440,7 @@ dJt1/U0DjbFQsA/iA4d9R6U7wKQ6rbi2
     <SurName>Luspa</SurName>
     <EmailAddress>matsl@irf.se</EmailAddress>
   </ContactPerson>
-    
+
 </EntityDescriptor>
   <md:EntityDescriptor entityID="http://crowdtest.nordu.net/shibboleth" xml:base="swamid-1.0/crowdtest.nordu.net.xml">
 
@@ -11783,20 +11783,20 @@ FRFEGQ==
                 </ds:X509Data>
             </ds:KeyInfo>
         </KeyDescriptor>
-        
+
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://shibboleth.vhs.se:8443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
 
         <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://shibboleth.vhs.se:8443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
-                                   
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://shibboleth.vhs.se/idp/profile/Shibboleth/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://shibboleth.vhs.se/idp/profile/SAML2/POST/SSO"/>
 
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://shibboleth.vhs.se/idp/profile/SAML2/POST-SimpleSign/SSO"/>
-        
+
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://shibboleth.vhs.se/idp/profile/SAML2/Redirect/SSO"/>
     </IDPSSODescriptor>
 
@@ -11836,12 +11836,12 @@ FRFEGQ==
         </KeyDescriptor>
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://shibboleth.vhs.se:8443/idp/profile/SAML1/SOAP/AttributeQuery"/>
-        
+
         <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://shibboleth.vhs.se:8443/idp/profile/SAML2/SOAP/AttributeQuery"/>
-        
+
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
-        
+
     </AttributeAuthorityDescriptor>
     <Organization>
     <OrganizationName xml:lang="en">VHS</OrganizationName>

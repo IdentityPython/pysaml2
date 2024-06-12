@@ -22,8 +22,8 @@ def test_1():
 
 
 data2 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:EncryptedData 
-    Type="http://www.w3.org/2001/04/xmlenc#Element" 
+<ns0:EncryptedData
+    Type="http://www.w3.org/2001/04/xmlenc#Element"
     xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">
     <ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc" />
     <ns1:KeyInfo xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">
@@ -63,8 +63,8 @@ def test_2():
 
 
 data3 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:EncryptedData 
-    Id="ED" 
+<ns0:EncryptedData
+    Id="ED"
     xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">
     <ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc" />
     <ns1:KeyInfo xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">
@@ -99,8 +99,8 @@ def test_3():
 
 
 data4 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:EncryptedKey 
-    Id="EK" 
+<ns0:EncryptedKey
+    Id="EK"
     xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">
     <ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5" />
     <ns1:KeyInfo xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">
@@ -154,7 +154,7 @@ def test_4():
 data5 = """<CipherReference URI="http://www.example.com/CipherValues.xml"
     xmlns="http://www.w3.org/2001/04/xmlenc#">
     <Transforms xmlns:ds='http://www.w3.org/2000/09/xmldsig#'>
-        <ds:Transform 
+        <ds:Transform
            Algorithm="http://www.w3.org/TR/1999/REC-xpath-19991116">
            <ds:XPath xmlns:rep="http://www.example.org/repository">
              self::text()[parent::rep:CipherValue[@Id="example1"]]

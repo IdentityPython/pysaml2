@@ -14,8 +14,8 @@ NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
 example = """<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
     <Body>
-        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" 
-            xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" 
+        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+            xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
             ID="_6c3a4f8b9c2d" Version="2.0" IssueInstant="2004-03-27T08:42:00Z">
         <saml:Issuer>https://www.example.com/SAML</saml:Issuer>
         <Status>
