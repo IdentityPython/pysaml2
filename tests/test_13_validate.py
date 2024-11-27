@@ -154,21 +154,16 @@ def test_valid_domain_name():
     assert valid_domain_name("auth.admin.domain.com")
     assert valid_domain_name("auth.domain.com")
     assert valid_domain_name("auth.domain.com")
-    assert valid_domain_name("lk.domain.com:12")
-    assert valid_domain_name("lk.domain.com:12")
-    assert valid_domain_name("static.domain.xyz:12345")
+    assert valid_domain_name("lk.domain.com")
     assert valid_domain_name("domain.com")
     assert valid_domain_name("domain.lu")
     assert valid_domain_name("auth-domain.com")
-    assert valid_domain_name("domain.com:12345")
     assert valid_domain_name("auth-admin.domain-uero.xyz")
     assert valid_domain_name("auth.lk.d.sr.mydomain.com")
+    assert valid_domain_name("123example.com")
 
     with raises(ValueError):
         valid_domain_name("")
-
-    with raises(ValueError):
-        valid_domain_name("auth.domain.ljnjnfds")
 
     with raises(ValueError):
         valid_domain_name("123.123.123.123")
@@ -190,9 +185,6 @@ def test_valid_domain_name():
 
     with raises(ValueError):
         valid_domain_name("exaple.c")
-
-    with raises(ValueError):
-        valid_domain_name("123example.com")
 
     with raises(ValueError):
         valid_domain_name("example.com:")

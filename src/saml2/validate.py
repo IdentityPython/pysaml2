@@ -8,6 +8,8 @@ import struct
 import time
 from urllib.parse import urlparse
 
+import validators
+
 from saml2 import time_util
 
 
@@ -420,7 +422,7 @@ def valid_instance(instance):
 
 
 def valid_domain_name(dns_name):
-    m = re.match(r"^((?:[a-zA-Z](?:[a-zA-Z0-9\-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,5})(?::\d+)?$", dns_name, re.I)
-    if not m:
+    value = validators.domain(dns_name)
+    if not value:
         raise ValueError("Not a proper domain name")
-    return True
+    return value
