@@ -144,8 +144,8 @@ class Saml2Client(Base):
             # XXX   ^through self.create_authn_request(...)
             # XXX - sign_redirect will add the signature to the query params
             # XXX   ^through self.apply_binding(...)
-            sign_redirect = sign and binding == BINDING_HTTP_REDIRECT
-            sign_post = sign and not sign_redirect
+            sign_redirect = sign if binding == BINDING_HTTP_REDIRECT else False
+            sign_post = sign if binding != BINDING_HTTP_REDIRECT else False
 
             reqid, request = self.create_authn_request(
                 destination=destination,
