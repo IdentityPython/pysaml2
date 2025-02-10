@@ -45,6 +45,7 @@ paste = {optional = true, version = "*"}
 pyopenssl = "<24.3.0"
 python-dateutil = "*"
 pytz = "*"
+pydantic = {version = ">=1.7.4"}
 "repoze.who" = {optional = true, version = "*"}
 requests = "^2"
 xmlschema = "^2"
