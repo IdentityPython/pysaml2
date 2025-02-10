@@ -1,5 +1,10 @@
 # Changelog
 
+## 7.5.2 (2025-02-10)
+
+- Include the XSD of the XML Encryption Syntax and Processing Version 1.1 to the schema validator
+
+
 ## 7.5.1 (2025-02-10)
 
 - deps: restrict pyOpenSSL up to v24.2.1 until it is replaced
