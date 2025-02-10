@@ -42,7 +42,7 @@ defusedxml = "*"
 importlib-metadata = {version = ">=1.7.0", python = "<3.8"}
 importlib-resources = {python = "<3.9", version = "*"}
 paste = {optional = true, version = "*"}
-pyopenssl = "*"
+pyopenssl = "<24.3.0"
 python-dateutil = "*"
 pytz = "*"
 "repoze.who" = {optional = true, version = "*"}
