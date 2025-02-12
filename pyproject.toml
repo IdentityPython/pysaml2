@@ -37,12 +37,11 @@ parse_xsd2 = "saml2.tools.parse_xsd2:main"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-cryptography = ">=3.1"
+cryptography = ">=40.0"
 defusedxml = "*"
 importlib-metadata = {version = ">=1.7.0", python = "<3.8"}
 importlib-resources = {python = "<3.9", version = "*"}
 paste = {optional = true, version = "*"}
-pyopenssl = "<24.3.0"
 python-dateutil = "*"
 pytz = "*"
 "repoze.who" = {optional = true, version = "*"}
