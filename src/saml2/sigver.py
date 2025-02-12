@@ -28,7 +28,7 @@ else:
 
 from urllib import parse
 
-from OpenSSL import crypto
+from cryptography import x509
 import pytz
 
 from saml2 import ExtensionElement
@@ -383,14 +383,14 @@ def active_cert(key):
     """
     try:
         cert_str = pem_format(key)
-        cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_str)
+        cert = x509.load_pem_x509_certificate(cert_str)
     except AttributeError:
         return False
 
-    now = pytz.UTC.localize(datetime.datetime.utcnow())
-    valid_from = dateutil.parser.parse(cert.get_notBefore())
-    valid_to = dateutil.parser.parse(cert.get_notAfter())
-    active = not cert.has_expired() and valid_from <= now < valid_to
+    now = datetime.datetime.now(datetime.UTC)
+    valid_from = cert.not_valid_before_utc
+    valid_to = cert.not_valid_after_utc
+    active = valid_from <= now < valid_to
     return active
 
 
