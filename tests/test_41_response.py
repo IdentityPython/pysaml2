@@ -127,7 +127,7 @@ class TestResponse:
     @patch("saml2.time_util.datetime")
     def test_false_sign(self, mock_datetime, caplog):
         caplog.set_level(logging.ERROR)
-        mock_datetime.utcnow = Mock(return_value=datetime.datetime(2016, 9, 4, 9, 59, 39))
+        mock_datetime.now = Mock(return_value=datetime.datetime(2016, 9, 4, 9, 59, 39))
         with open(FALSE_ASSERT_SIGNED) as fp:
             xml_response = fp.read()
 
