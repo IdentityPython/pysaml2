@@ -4,11 +4,11 @@
 """Contains classes and functions that a SAML2.0 Identity provider (IdP)
 or attribute authority (AA) may use to conclude its tasks.
 """
-import dbm
 import importlib
 import logging
 import shelve
 import threading
+from dbm import error as DbmError
 
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import class_name
@@ -58,13 +58,8 @@ AUTHN_DICT_MAP = {
 def _shelve_compat(name, *args, **kwargs):
     try:
         return shelve.open(name, *args, **kwargs)
-    except dbm.error[0]:
-        # Python 3 whichdb needs to try .db to determine type
-        if name.endswith(".db"):
-            name = name.rsplit(".db", 1)[0]
-            return shelve.open(name, *args, **kwargs)
-        else:
-            raise
+    except DbmError:
+        return shelve.open(name.removesuffix(".db"), *args, **kwargs)
 
 
 class Server(Entity):
