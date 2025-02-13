@@ -55,7 +55,18 @@ AUTHN_DICT_MAP = {
 }
 
 
+def _avoid_dbm_sqlite():
+    """
+    Force dbm.gnu to be used instead of dbm.sqlite because of threading issues when
+    running idp_server.py. The dbm.sqlite is the default dbm module used by Python >= 3.13
+    """
+    import dbm.gnu
+    import dbm
+    dbm._defaultmod = dbm.gnu
+
+
 def _shelve_compat(name, *args, **kwargs):
+    _avoid_dbm_sqlite()
     try:
         return shelve.open(name, *args, **kwargs)
     except dbm.error[0]:
