@@ -161,7 +161,7 @@ TEST_AUTHN_REQUEST = """<?xml version="1.0" encoding="utf-8"?>
       <SPKIData>
         <SPKISexp>spki sexp</SPKISexp>
         <SPKISexp>spki sexp2</SPKISexp>
-      </SPKIData>  
+      </SPKIData>
     </KeyInfo>
     <Object Id="object_id" Encoding="http://www.w3.org/2000/09/xmldsig#base64">
       V2VkIEp1biAgNCAxMjoxMTowMyBFRFQgMjAwMwo
@@ -316,7 +316,7 @@ TEST_LOGOUT_REQUEST = """<?xml version="1.0" encoding="utf-8"?>
       <SPKIData>
         <SPKISexp>spki sexp</SPKISexp>
         <SPKISexp>spki sexp2</SPKISexp>
-      </SPKIData>  
+      </SPKIData>
     </KeyInfo>
     <Object Id="object_id" Encoding="http://www.w3.org/2000/09/xmldsig#base64">
       V2VkIEp1biAgNCAxMjoxMTowMyBFRFQgMjAwMwo
@@ -422,7 +422,7 @@ TEST_LOGOUT_RESPONSE = """<?xml version="1.0" encoding="utf-8"?>
       <SPKIData>
         <SPKISexp>spki sexp</SPKISexp>
         <SPKISexp>spki sexp2</SPKISexp>
-      </SPKIData>  
+      </SPKIData>
     </KeyInfo>
     <Object Id="object_id" Encoding="http://www.w3.org/2000/09/xmldsig#base64">
       V2VkIEp1biAgNCAxMjoxMTowMyBFRFQgMjAwMwo

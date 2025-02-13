@@ -6,10 +6,10 @@
      Copyright (c) OASIS Open 2019. All Rights Reserved.
      Source: https://docs.oasis-open.org/security/saml-subject-id-attr/v1.0/cs01/schema/saml-subject-id-attr-v1.0.xsd
      Latest version of narrative specification: https://docs.oasis-open.org/security/saml-subject-id-attr/v1.0/saml-subject-id-attr-v1.0.html
-     TC IPR Statement: https://www.oasis-open.org/committees/security/ipr.php 
+     TC IPR Statement: https://www.oasis-open.org/committees/security/ipr.php
      Initial version contributed to OASIS, (c) The Ohio State University
 -->
-<schema 
+<schema
   targetNamespace="urn:mace:shibboleth:metadata:1.0"
   xmlns="http://www.w3.org/2001/XMLSchema"
   xmlns:shibmd="urn:mace:shibboleth:metadata:1.0"

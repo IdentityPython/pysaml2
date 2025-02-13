@@ -2,7 +2,7 @@
 
 <xs:schema
   targetNamespace="urn:oasis:names:tc:SAML:2.0:ac:classes:InternetProtocol"
-  xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns="urn:oasis:names:tc:SAML:2.0:ac:classes:InternetProtocol"
   finalDefault="extension"
   blockDefault="substitution"
@@ -11,13 +11,13 @@
   <xs:redefine schemaLocation="saml-schema-authn-context-types-2.0.xsd">
 
     <xs:annotation>
-      <xs:documentation> 
+      <xs:documentation>
         Class identifier: urn:oasis:names:tc:SAML:2.0:ac:classes:InternetProtocol
         Document identifier: saml-schema-authn-context-ip-2.0
         Location: http://docs.oasis-open.org/security/saml/v2.0/
         Revision history:
           V2.0 (March, 2005):
-            New authentication context class schema for SAML V2.0. 
+            New authentication context class schema for SAML V2.0.
       </xs:documentation>
     </xs:annotation>
 

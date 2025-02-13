@@ -1,4 +1,7 @@
-from mako import runtime, filters, cache
+from mako import cache
+from mako import filters
+from mako import runtime
+
 
 UNDEFINED = runtime.UNDEFINED
 __M_dict_builtin = dict

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 
-      This file was automatically generated - do not edit 
+      This file was automatically generated - do not edit
 
       NOTE WELL
 
@@ -1588,8 +1588,8 @@ eEW5lxwrxpzVESmLHCr+HpdOsZqG6B4Nrt6UjjI9jB1rguPXKBjfUw7YAeCwx7jT
   <ContactPerson contactType="technical">
     <GivenName>DreamSpark Engineering Team</GivenName>
     <EmailAddress>dsengt@microsoft.com</EmailAddress>
-  </ContactPerson><ContactPerson contactType="administrative"><GivenName>Scott Blackwell</GivenName> 
-  <EmailAddress>Scott.Blackwell@microsoft.com</EmailAddress> 
+  </ContactPerson><ContactPerson contactType="administrative"><GivenName>Scott Blackwell</GivenName>
+  <EmailAddress>Scott.Blackwell@microsoft.com</EmailAddress>
   </ContactPerson>
 </EntityDescriptor>
   <EntityDescriptor entityID="https://sakai-utv1.umdc.umu.se/shibboleth" xml:base="swamid-1.0/sakai-utv1.umdc.umu.se.xml">
