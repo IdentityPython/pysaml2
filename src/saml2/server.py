@@ -457,7 +457,11 @@ class Server(Entity):
         best_effort=False,
         encrypt_assertion=False,
         encrypt_cert_advice=None,
+        encrypt_cert_advice_cert_key_alg=None,
+        encrypt_cert_advice_session_key_alg=None,
         encrypt_cert_assertion=None,
+        encrypt_cert_assertion_cert_key_alg=None,
+        encrypt_cert_assertion_session_key_alg=None,
         authn_statement=None,
         encrypt_assertion_self_contained=False,
         encrypted_advice_attributes=False,
@@ -492,8 +496,16 @@ class Server(Entity):
         element should be encrypted.
         :param encrypt_cert_advice: Certificate to be used for encryption of
         assertions in the advice element.
+        :param encrypt_cert_advice_cert_key_alg: algorithm used for encrypting session key
+        by encrypt_cert_advice
+        :param encrypt_cert_advice_session_key_alg: algorithm used for encrypting assertion
+        when using encrypt_cert_advice
         :param encrypt_cert_assertion: Certificate to be used for encryption
         of assertions.
+        :param encrypt_cert_assertion_cert_key_alg: algorithm used for encrypting session key
+        by encrypt_cert_assertion
+        :param encrypt_cert_assertion_session_key_alg: algorithm used for encrypting assertion when
+        using encrypt_cert_assertion
         :param authn_statement: Authentication statement.
         :param pefim: True if a response according to the PEFIM profile
         should be created.
@@ -598,7 +610,11 @@ class Server(Entity):
             sp_entity_id=sp_entity_id,
             encrypt_assertion=encrypt_assertion,
             encrypt_cert_advice=encrypt_cert_advice,
+            encrypt_cert_advice_cert_key_alg=encrypt_cert_advice_cert_key_alg,
+            encrypt_cert_advice_session_key_alg=encrypt_cert_advice_session_key_alg,
             encrypt_cert_assertion=encrypt_cert_assertion,
+            encrypt_cert_assertion_cert_key_alg=encrypt_cert_assertion_cert_key_alg,
+            encrypt_cert_assertion_session_key_alg=encrypt_cert_assertion_session_key_alg,
             encrypt_assertion_self_contained=encrypt_assertion_self_contained,
             encrypted_advice_attributes=encrypted_advice_attributes,
             sign_assertion=sign_assertion,
@@ -724,7 +740,6 @@ class Server(Entity):
             ("encrypted_advice_attributes", "verify_encrypt_cert_advice", "encrypt_cert_advice", kwargs["pefim"]),
             ("encrypt_assertion", "verify_encrypt_cert_assertion", "encrypt_cert_assertion", False),
         ]:
-
             if args[arg] or pefim:
                 _enc_cert = self.config.getattr(attr, "idp")
 
@@ -789,7 +804,11 @@ class Server(Entity):
         sign_response=None,
         sign_assertion=None,
         encrypt_cert_advice=None,
+        encrypt_cert_advice_cert_key_alg=None,
+        encrypt_cert_advice_session_key_alg=None,
         encrypt_cert_assertion=None,
+        encrypt_cert_assertion_cert_key_alg=None,
+        encrypt_cert_assertion_session_key_alg=None,
         encrypt_assertion=None,
         encrypt_assertion_self_contained=True,
         encrypted_advice_attributes=False,
@@ -822,8 +841,16 @@ class Server(Entity):
         element should be encrypted.
         :param encrypt_cert_advice: Certificate to be used for encryption of
         assertions in the advice element.
+        :param encrypt_cert_advice_cert_key_alg: algorithm used for encrypting session key
+        by encrypt_cert_advice
+        :param encrypt_cert_advice_session_key_alg: algorithm used for encrypting assertion
+        when using encrypt_cert_advice
         :param encrypt_cert_assertion: Certificate to be used for encryption
         of assertions.
+        :param encrypt_cert_assertion_cert_key_alg: algorithm used for encrypting session key
+        by encrypt_cert_assertion
+        :param encrypt_cert_assertion_session_key_alg: algorithm used for encrypting assertion when
+        using encrypt_cert_assertion
         :param pefim: True if a response according to the PEFIM profile
         should be created.
         :return: A response instance
@@ -869,6 +896,10 @@ class Server(Entity):
                 sign_alg=sign_alg,
                 digest_alg=digest_alg,
                 session_not_on_or_after=session_not_on_or_after,
+                encrypt_cert_advice_cert_key_alg=encrypt_cert_advice_cert_key_alg,
+                encrypt_cert_advice_session_key_alg=encrypt_cert_advice_session_key_alg,
+                encrypt_cert_assertion_cert_key_alg=encrypt_cert_assertion_cert_key_alg,
+                encrypt_cert_assertion_session_key_alg=encrypt_cert_assertion_session_key_alg,
                 **args,
             )
         except MissingValue as exc:
@@ -1054,7 +1085,6 @@ class Server(Entity):
         digest_alg=None,
         **kwargs,
     ):
-
         # ----------------------------------------
         # <ecp:Response
         # ----------------------------------------

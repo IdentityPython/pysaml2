@@ -8,7 +8,6 @@ import saml2
 from saml2 import SamlBase
 from saml2 import xmldsig as ds
 
-
 NAMESPACE = "http://www.w3.org/2001/04/xmlenc#"
 
 
@@ -29,7 +28,6 @@ def key_size_type__from_string(xml_string):
 
 
 class CipherValue(SamlBase):
-
     c_tag = "CipherValue"
     c_namespace = NAMESPACE
     c_value_type = {"base": "base64Binary"}
@@ -77,7 +75,6 @@ def transforms_type__from_string(xml_string):
 
 
 class KA_Nonce(SamlBase):
-
     c_tag = "KA_Nonce"
     c_namespace = NAMESPACE
     c_value_type = {"base": "base64Binary"}
@@ -92,7 +89,6 @@ def k_a__nonce_from_string(xml_string):
 
 
 class OriginatorKeyInfo(ds.KeyInfo):
-
     c_tag = "OriginatorKeyInfo"
     c_namespace = NAMESPACE
     c_children = ds.KeyInfo.c_children.copy()
@@ -106,7 +102,6 @@ def originator_key_info_from_string(xml_string):
 
 
 class RecipientKeyInfo(ds.KeyInfo):
-
     c_tag = "RecipientKeyInfo"
     c_namespace = NAMESPACE
     c_children = ds.KeyInfo.c_children.copy()
@@ -229,7 +224,6 @@ def encryption_property_type__from_string(xml_string):
 
 
 class KeySize(KeySizeType_):
-
     c_tag = "KeySize"
     c_namespace = NAMESPACE
     c_children = KeySizeType_.c_children.copy()
@@ -243,7 +237,6 @@ def key_size_from_string(xml_string):
 
 
 class OAEPparams(SamlBase):
-
     c_tag = "OAEPparams"
     c_namespace = NAMESPACE
     c_value_type = {"base": "base64Binary"}
@@ -255,6 +248,27 @@ class OAEPparams(SamlBase):
 
 def oae_pparams_from_string(xml_string):
     return saml2.create_class_from_xml_string(OAEPparams, xml_string)
+
+
+class RsaOaepMgf(SamlBase):
+    c_tag = "MGF"
+    c_namespace = "http://www.w3.org/2009/xmlenc11#"
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
+    c_attributes["Algorithm"] = ("algorithm", "anyURI", True)
+
+    def __init__(
+        self,
+        algorithm=None,
+    ):
+        SamlBase.__init__(self)
+        self.algorithm = algorithm
+
+
+def mgf_name_from_string(xml_string):
+    return saml2.create_class_from_xml_string(RsaOaepMgf, xml_string)
 
 
 class EncryptionMethodType_(SamlBase):
@@ -270,8 +284,10 @@ class EncryptionMethodType_(SamlBase):
     c_cardinality["key_size"] = {"min": 0, "max": 1}
     c_children["{http://www.w3.org/2001/04/xmlenc#}OAEPparams"] = ("oae_pparams", OAEPparams)
     c_cardinality["oae_pparams"] = {"min": 0, "max": 1}
+    c_children["{http://www.w3.org/2009/xmlenc11#}MGF"] = ("mgf", RsaOaepMgf)
+    c_cardinality["mgf"] = {"min": 0, "max": 1}
     c_attributes["Algorithm"] = ("algorithm", "anyURI", True)
-    c_child_order.extend(["key_size", "oae_pparams"])
+    c_child_order.extend(["key_size", "oae_pparams", "mgf"])
 
     def __init__(
         self,
@@ -281,6 +297,7 @@ class EncryptionMethodType_(SamlBase):
         text=None,
         extension_elements=None,
         extension_attributes=None,
+        mgf=None,
     ):
         SamlBase.__init__(
             self,
@@ -291,6 +308,7 @@ class EncryptionMethodType_(SamlBase):
         self.key_size = key_size
         self.oae_pparams = oae_pparams
         self.algorithm = algorithm
+        self.mgf = mgf
 
 
 def encryption_method_type__from_string(xml_string):
@@ -298,7 +316,6 @@ def encryption_method_type__from_string(xml_string):
 
 
 class Transforms(TransformsType_):
-
     c_tag = "Transforms"
     c_namespace = NAMESPACE
     c_children = TransformsType_.c_children.copy()
@@ -348,7 +365,6 @@ def cipher_reference_type__from_string(xml_string):
 
 
 class EncryptionMethod(EncryptionMethodType_):
-
     c_tag = "EncryptionMethod"
     c_namespace = NAMESPACE
     c_children = EncryptionMethodType_.c_children.copy()
@@ -377,7 +393,6 @@ def agreement_method_from_string(xml_string):
 
 
 class DataReference(ReferenceType_):
-
     c_tag = "DataReference"
     c_namespace = NAMESPACE
     c_children = ReferenceType_.c_children.copy()
@@ -391,7 +406,6 @@ def data_reference_from_string(xml_string):
 
 
 class KeyReference(ReferenceType_):
-
     c_tag = "KeyReference"
     c_namespace = NAMESPACE
     c_children = ReferenceType_.c_children.copy()
@@ -645,7 +659,6 @@ def encrypted_data_type__from_string(xml_string):
 
 
 class CarriedKeyName(SamlBase):
-
     c_tag = "CarriedKeyName"
     c_namespace = NAMESPACE
     c_value_type = {"base": "string"}
@@ -747,7 +760,6 @@ def encrypted_key_from_string(xml_string):
 
 ds.KeyInfo.c_children["{http://www.w3.org/2000/09/xmlenc#}EncryptedKey"] = ("encrypted_key", EncryptedKey)
 
-
 ELEMENT_FROM_STRING = {
     EncryptionMethodType_.c_tag: encryption_method_type__from_string,
     KeySizeType_.c_tag: key_size_type__from_string,
@@ -779,6 +791,7 @@ ELEMENT_FROM_STRING = {
     DataReference.c_tag: data_reference_from_string,
     KeyReference.c_tag: key_reference_from_string,
     CarriedKeyName.c_tag: carried_key_name_from_string,
+    RsaOaepMgf.c_tag: mgf_name_from_string,
 }
 
 ELEMENT_BY_TAG = {
@@ -813,6 +826,7 @@ ELEMENT_BY_TAG = {
     "KeyReference": KeyReference,
     "CarriedKeyName": CarriedKeyName,
     "EncryptedType": EncryptedType_,
+    "MGF": RsaOaepMgf,
 }
 
 
