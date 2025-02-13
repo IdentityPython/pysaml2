@@ -1,4 +1,3 @@
-import cgi
 import hashlib
 import hmac
 from http.cookies import SimpleCookie
@@ -182,7 +181,10 @@ def extract(environ, empty=False, err=False):
     :param empty: Stops on empty fields (default: Fault)
     :param err: Stops on errors in fields (default: Fault)
     """
-    formdata = cgi.parse(environ["wsgi.input"], environ, empty, err)
+    input_stream = environ["wsgi.input"]
+    content_length = int(environ.get("CONTENT_LENGTH", 0))
+    formdata_bytes = input_stream.read(content_length)
+    formdata = parse_qs(formdata_bytes.decode('utf-8'))
     # Remove single entries from lists
     for key, value in iter(formdata.items()):
         if len(value) == 1:
