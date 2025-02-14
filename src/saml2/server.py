@@ -4,6 +4,7 @@
 """Contains classes and functions that a SAML2.0 Identity provider (IdP)
 or attribute authority (AA) may use to conclude its tasks.
 """
+import sys
 import dbm
 import importlib
 import logging
@@ -55,20 +56,14 @@ AUTHN_DICT_MAP = {
 }
 
 
-def _avoid_dbm_sqlite():
-    """
-    Force dbm.gnu to be used instead of dbm.sqlite because of threading issues when
-    running idp_server.py. The dbm.sqlite is the default dbm module used by Python >= 3.13
-    """
-    import dbm.gnu
-    import dbm
-    dbm._defaultmod = dbm.gnu
-
-
 def _shelve_compat(name, *args, **kwargs):
-    _avoid_dbm_sqlite()
     try:
-        return shelve.open(name, *args, **kwargs)
+        if sys.version_info < (3, 13):
+            return shelve.open(name, *args, **kwargs)
+        else:
+            # Python 3.13 and later uses dbm.sqlite3 as default which is not compatible
+            # with cheroot using threading. So, we need to use dbm.dumb instead.
+            return shelve.Shelf(dbm.dumb.open(name), *args, **kwargs)
     except dbm.error[0]:
         # Python 3 whichdb needs to try .db to determine type
         if name.endswith(".db"):
