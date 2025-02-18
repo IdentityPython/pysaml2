@@ -183,8 +183,8 @@ def extract(environ, empty=False, err=False):
     """
     input_stream = environ["wsgi.input"]
     content_length = int(environ.get("CONTENT_LENGTH", 0))
-    formdata_bytes = input_stream.read(content_length)
-    formdata = parse_qs(formdata_bytes.decode('utf-8'))
+    input_data = input_stream.read(content_length).decode('utf-8')
+    formdata = parse_qs(input_data)
     # Remove single entries from lists
     for key, value in iter(formdata.items()):
         if len(value) == 1:
