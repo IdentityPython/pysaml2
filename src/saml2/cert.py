@@ -1,13 +1,13 @@
 __author__ = "haho0032"
 
 import base64
-import datetime
 from os import remove
 from os.path import join
+from datetime import datetime
+from datetime import timezone
 
 from OpenSSL import crypto
 import dateutil.parser
-import pytz
 
 import saml2.cryptography.pki
 
@@ -278,7 +278,7 @@ class OpenSSLWrapper:
 
     def certificate_not_valid_yet(self, cert):
         starts_to_be_valid = dateutil.parser.parse(cert.get_notBefore())
-        now = pytz.UTC.localize(datetime.datetime.utcnow())
+        now = datetime.now(timezone.utc)
         if starts_to_be_valid < now:
             return False
         return True

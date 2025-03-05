@@ -3,13 +3,14 @@ Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
 
 import base64
-import datetime
-from importlib.resources import files as _resource_files
 import hashlib
 import itertools
 import logging
 import os
 import re
+from datetime import datetime
+from datetime import timezone
+from importlib.resources import files as _resource_files
 from subprocess import PIPE
 from subprocess import Popen
 from tempfile import NamedTemporaryFile
@@ -19,7 +20,6 @@ from uuid import uuid4 as gen_random_key
 
 from OpenSSL import crypto
 import dateutil
-import pytz
 
 from saml2 import ExtensionElement
 from saml2 import SamlBase
@@ -377,7 +377,7 @@ def active_cert(key):
     except AttributeError:
         return False
 
-    now = pytz.UTC.localize(datetime.datetime.utcnow())
+    now = datetime.now(timezone.utc)
     valid_from = dateutil.parser.parse(cert.get_notBefore())
     valid_to = dateutil.parser.parse(cert.get_notAfter())
     active = not cert.has_expired() and valid_from <= now < valid_to

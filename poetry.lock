@@ -1408,18 +1408,6 @@ files = [
 six = ">=1.5"
 
 [[package]]
-name = "pytz"
-version = "2025.1"
-description = "World timezone definitions, modern and historical"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "pytz-2025.1-py2.py3-none-any.whl", hash = "sha256:89dd22dca55b46eac6eda23b2d72721bf1bdfef212645d81513ef5d03038de57"},
-    {file = "pytz-2025.1.tar.gz", hash = "sha256:c2db42be2a2518b28e65f9207c4d05e6ff547d1efa4086469ef855e4ab70178e"},
-]
-
-[[package]]
 name = "pyyaml"
 version = "6.0.2"
 description = "YAML parser and emitter for Python"
@@ -1861,18 +1849,6 @@ files = [
 ]
 
 [[package]]
-name = "types-pytz"
-version = "2022.7.1.2"
-description = "Typing stubs for pytz"
-optional = false
-python-versions = "*"
-groups = ["dev"]
-files = [
-    {file = "types-pytz-2022.7.1.2.tar.gz", hash = "sha256:487d3e8e9f4071eec8081746d53fa982bbc05812e719dcbf2ebf3d55a1a4cd28"},
-    {file = "types_pytz-2022.7.1.2-py3-none-any.whl", hash = "sha256:40ca448a928d566f7d44ddfde0066e384f7ffbd4da2778e42a4570eaca572446"},
-]
-
-[[package]]
 name = "types-requests"
 version = "2.32.0.20241016"
 description = "Typing stubs for requests"
@@ -2097,4 +2073,4 @@ s2repoze = ["paste", "repoze.who", "zope.interface"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "51de515b9091282bd147073bbeb38b175a32fe3850f926ba860ee411f3a2b70f"
+content-hash = "08eae4c86f73876517dfd1574f6766406c3a70f1d5bc656eabcf7e34e5b6b52e"

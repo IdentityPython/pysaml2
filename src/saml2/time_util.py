@@ -6,11 +6,12 @@ different types of information.
 """
 
 import calendar
-from datetime import datetime
-from datetime import timedelta
 import re
 import sys
 import time
+from datetime import datetime
+from datetime import timezone
+from datetime import timedelta
 
 
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
@@ -175,7 +176,7 @@ def time_in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0, minutes=0
     :return: UTC time
     """
     delta = timedelta(days, seconds, microseconds, milliseconds, minutes, hours, weeks)
-    return datetime.utcnow() + delta
+    return datetime.now(timezone.utc) + delta
 
 
 def time_a_while_ago(days=0, seconds=0, microseconds=0, milliseconds=0, minutes=0, hours=0, weeks=0):
@@ -185,7 +186,7 @@ def time_a_while_ago(days=0, seconds=0, microseconds=0, milliseconds=0, minutes=
                     minutes[, hours[, weeks]]]]]]])
     """
     delta = timedelta(days, seconds, microseconds, milliseconds, minutes, hours, weeks)
-    return datetime.utcnow() - delta
+    return datetime.now(timezone.utc) - delta
 
 
 def in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0, minutes=0, hours=0, weeks=0, format=TIME_FORMAT):
