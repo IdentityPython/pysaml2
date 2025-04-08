@@ -1,7 +1,4 @@
-try:
-    from importlib.metadata import version as _resolve_package_version
-except ImportError:
-    from importlib_metadata import version as _resolve_package_version  # type: ignore[no-redef]
+from importlib.metadata import version as _resolve_package_version
 
 
 def _parse_version():
