@@ -4,6 +4,7 @@ Based on the use of xmlsec1 binaries and not the python xmlsec module.
 
 import base64
 import datetime
+from importlib.resources import files as _resource_files
 import hashlib
 import itertools
 import logging
@@ -11,24 +12,13 @@ import os
 import re
 from subprocess import PIPE
 from subprocess import Popen
-import sys
 from tempfile import NamedTemporaryFile
 from time import mktime
+from urllib import parse
 from uuid import uuid4 as gen_random_key
 
-import dateutil
-
-
-# importlib.resources was introduced in python 3.7
-# files API from importlib.resources introduced in python 3.9
-if sys.version_info[:2] >= (3, 9):
-    from importlib.resources import files as _resource_files
-else:
-    from importlib_resources import files as _resource_files
-
-from urllib import parse
-
 from OpenSSL import crypto
+import dateutil
 import pytz
 
 from saml2 import ExtensionElement

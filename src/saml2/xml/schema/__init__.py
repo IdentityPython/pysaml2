@@ -1,12 +1,4 @@
-import sys
-
-
-# importlib.resources was introduced in python 3.7
-# files API from importlib.resources introduced in python 3.9
-if sys.version_info[:2] >= (3, 9):
-    from importlib.resources import files as _resource_files
-else:
-    from importlib_resources import files as _resource_files
+from importlib.resources import files as _resource_files
 
 from xmlschema import XMLSchema as _XMLSchema
 from xmlschema.exceptions import XMLSchemaException as _XMLSchemaException
