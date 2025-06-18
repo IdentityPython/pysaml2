@@ -1,5 +1,7 @@
 # Changelog
 
+- Correct documentation for `signing_algorithm` and `digest_algorithm` configuration options.
+
 ## 7.5.2 (2025-02-10)
 
 - Include the XSD of the XML Encryption Syntax and Processing Version 1.1 to the schema validator

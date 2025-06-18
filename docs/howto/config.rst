@@ -1369,12 +1369,7 @@ signing_algorithm
 
 Default algorithm to be used. Example::
 
-    "service": {
-        "sp": {
-            "signing_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512",
-            "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha512",
-        }
-    }
+    "signing_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512",
 
 
 digest_algorithm
@@ -1382,12 +1377,24 @@ digest_algorithm
 
 Default algorithm to be used. Example::
 
-    "service": {
-        "idp": {
-            "signing_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512",
-            "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha512",
-        }
+    "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha512",
+
+Note that previously the documentation suggested `signing_algorithm` and
+`digest_algorithm` configuration belong in the `service.idp` or `service.sp` section
+which was not correct.
+
+There are constants for the identifiers of the algorithms in the `saml2.xmldsig` module.
+For example::
+
+
+    from saml2 import xmldsig
+
+    {
+        "signing_algorithm": xmldsig.SIG_RSA_SHA256,
+        "digest_algorithm": xmldsig.DIGEST_SHA256,
+        ...
     }
+
 
 
 logout_responses_signed
