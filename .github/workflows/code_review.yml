@@ -1,0 +1,16 @@
+# This file is part of the central configuration in github-workflows. Manual changes to this file will be overwritten.
+name: Automated PR Review
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write
+  issues: read
+  pull-requests: write
+
+jobs:
+  Code-Review:
+    uses: tophatmonocle/github-workflows/.github/workflows/code-review.yml@main
+    secrets: inherit
