@@ -167,6 +167,8 @@ class Base(Entity):
             "want_assertions_signed": False,
             "want_response_signed": True,
             "want_assertions_or_response_signed": False,
+            "signing_algorithm": "http://www.w3.org/2000/09/xmldsig#rsa-sha1",
+            "digest_algorithm": "http://www.w3.org/2000/09/xmldsig#sha1",
         }
         for attr, val_default in attribute_defaults.items():
             val_config = self.config.getattr(attr, "sp")
