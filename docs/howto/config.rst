@@ -522,7 +522,7 @@ accepted_time_diff
 
 If your computer and another computer that you are communicating with are not
 in sync regarding the computer clock, then here you can state how big a
-difference you are prepared to accept.
+difference in seconds you are prepared to accept.
 
 .. note:: This will indiscriminately affect all time comparisons.
     Hence your server may accept a statement that in fact is too old.
