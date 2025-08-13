@@ -404,7 +404,7 @@ file system.
 When the parameter *check_validity* is set to False metadata that have expired
 will be accepted as valid.
 
-When the paramenter *disable_ssl_certificate_validation* is set to True the
+When the parameter *disable_ssl_certificate_validation* is set to True the
 validity of ssl certificate will be skipped.
 
 When using a remote metadata source, the `node_name` option can be set to

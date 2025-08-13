@@ -24,7 +24,7 @@ $ pyenv versions --bare | xargs pyenv local
 This project uses [`poetry`] to manage dependencies and virtual environments.
 See `poetry`'s [installation instructions] on how to install `poetry` on your system.
 
-I have opted to use [`pipx`] to install and manage `poerty` itself.
+I have opted to use [`pipx`] to install and manage `poetry` itself.
 I also use `pipx` to manage other python executables that I want readily available on my system.
 
 Once `poetry` is available on your system, install the development dependencies:
