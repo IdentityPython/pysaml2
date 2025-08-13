@@ -100,7 +100,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
 5. Create your patch, **including appropriate test cases**.
    Remember to follow the [Coding Rules](#coding-rules).
 
-6. Run the full test suite, as described in the [developer documentation][dev-doc],
+6. Run the full test suite, as described in the [DEVELOPERS.md](DEVELOPERS.md),
    and ensure that all tests pass.
 
 7. Commit your changes using a descriptive commit message.
