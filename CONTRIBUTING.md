@@ -146,4 +146,4 @@ keep these rules in mind as you are working:
 * All public API methods **must be documented**.
 * We follow [Black's style guide](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html),
   and wrap all code at **120 characters**.
-  Pre-configured tools to automatically lint and format code are available, see [DEVELOPER.md](DEVELOPERS.md).
+  Pre-configured tools to automatically lint and format code are available, see [DEVELOPERS.md](DEVELOPERS.md).
