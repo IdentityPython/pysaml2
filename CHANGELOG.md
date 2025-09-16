@@ -1,5 +1,10 @@
 # Changelog
 
+## 7.5.3 (2025-09-17)
+
+- Update python version to `>=3.9.2` to leverage newer language feature and maintain support for dependencies
+- deps: update dependencies `cryptography@45.0.7` and `pyopenssl@^25.3.0`
+
 ## 7.5.2 (2025-02-10)
 
 - Include the XSD of the XML Encryption Syntax and Processing Version 1.1 to the schema validator
