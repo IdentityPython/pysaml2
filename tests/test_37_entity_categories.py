@@ -400,3 +400,39 @@ def test_filter_ava_refeds_personalized_access():
     assert _eq(ava["eduPersonScopedAffiliation"], ["student@example.com"])
     assert _eq(ava["eduPersonAssurance"], ["http://www.swamid.se/policy/assurance/al1"])
     assert _eq(ava["schacHomeOrganization"], ["example.com"])
+
+
+def test_filter_subject_id_or_pairwise_id():
+    entity_id = "https://esi-coco.example.edu/saml2/metadata/"
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    mds.imp([{"class": "saml2.mdstore.MetaDataFile", "metadata": [(full_path("entity_esi_and_coco_sp.xml"),)]}])
+
+    policy_conf = {"default": {"lifetime": {"minutes": 15}, "entity_categories": ["swamid"]}}
+
+    policy = Policy(policy_conf, mds)
+
+    ava = {
+        "subject-id": ["subject-id"],
+        "pairwise-id": ["pairwise-id"],
+    }
+
+    required_attributes = [
+        {
+            "__class__": "urn:oasis:names:tc:SAML:2.0:metadata&RequestedAttribute",
+            "name": "urn:oasis:names:tc:SAML:attribute:pairwise-id",
+            "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+            "friendly_name": "pairwise-id",
+            "is_required": "true",
+        },
+        {
+            "__class__": "urn:oasis:names:tc:SAML:2.0:metadata&RequestedAttribute",
+            "name": "urn:oasis:names:tc:SAML:attribute:subject-id",
+            "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+            "friendly_name": "subject-id",
+            "is_required": "true",
+        },
+    ]
+
+    ava = policy.filter(ava, entity_id, required=required_attributes)
+
+    assert _eq(list(ava.keys()), ["pairwise-id"])
