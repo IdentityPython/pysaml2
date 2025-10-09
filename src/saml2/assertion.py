@@ -32,10 +32,10 @@ def _filter_values(vals, vlist=None, must=False):
     """
 
     if not vlist:  # No value specified equals any value
-        return vals
+        return vals or []
 
     if vals is None:  # cannot iterate over None, return early
-        return vals
+        return []
 
     if isinstance(vlist, str):
         vlist = [vlist]
