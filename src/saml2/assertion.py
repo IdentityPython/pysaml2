@@ -20,8 +20,9 @@ from typing import Union
 from warnings import warn as _warn
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import ValidationError
-from pydantic import validator
+from pydantic import field_validator
 
 from saml2 import saml
 from saml2 import xmlenc
@@ -79,7 +80,8 @@ class EntityCategoryRule(BaseModel):
     attributes: List[str]  # attributes to release if this rule matches (friendly names)
     only_required: bool = False  # If this rule matches, only include the required attributes for the SP
 
-    @validator("attributes")
+    @field_validator("attributes")
+    @classmethod
     def lowercase_attribute_names(cls, v: List[str]):
         """Make sure all attribute names are lower case, for easier comparison later."""
         return [x.lower() for x in v]
@@ -504,9 +506,8 @@ class PolicyConfigValue(BaseModel):
     entity_categories: EntityCategoryPolicy
     sign: Optional[Union[Literal["response"], Literal["assertion"], Literal["on_demand"]]]
     fail_on_missing_requested: Optional[bool]
-
-    class Config:
-        arbitrary_types_allowed = True  # allow re.Pattern as type in AttributeRestrictions
+    
+    model_config = ConfigDict(arbitrary_types_allowed=True)  # allow re.Pattern as type in AttributeRestrictions
 
 
 PolicyConfig = dict[PolicyConfigKey, PolicyConfigValue]
