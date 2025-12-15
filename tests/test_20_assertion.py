@@ -33,6 +33,7 @@ from saml2.saml import Attribute
 from saml2.saml import AttributeValue
 from saml2.saml import Issuer
 from saml2.saml import NameID
+from saml2.typing import AttributeValues
 
 
 ONTS = [saml, mdui, mdattr, dri, idpdisc, md, xmldsig, xmlenc]
@@ -181,6 +182,29 @@ def test_filter_on_attributes_with_missing_name_format():
     assert ava["eduPersonTargetedID"] == "test@example.com"
 
 
+def test_filter_on_attributes_with_not_allowed_value():
+
+    a = to_dict(
+        Attribute(
+            friendly_name="surName",
+            name="urn:oid:2.5.4.4",
+            name_format=NAME_FORMAT_URI,
+            attribute_value=[{"text": "A value"}],
+        ),
+        ONTS,
+    )
+    attributes = [a]
+    ava = {"sn": ["Not the allowed value"]}
+
+    ava = filter_on_attributes(ava, optional=attributes, acs=ac_factory())
+    assert list(ava.keys()) == []
+
+    ava = {"sn": ["Not the allowed value"]}
+
+    with raises(MissingValue):
+        filter_on_attributes(ava, required=attributes, acs=ac_factory())
+
+
 # ----------------------------------------------------------------------
 
 
@@ -301,7 +325,7 @@ def test_ava_filter_dont_fail():
 
     policy = Policy(conf)
 
-    ava = {"givenName": "Derek", "surName": "Jeter", "mail": "derek@example.com"}
+    ava = AttributeValues({"givenName": "Derek", "surName": "Jeter", "mail": "derek@example.com"})
 
     # mail removed because it doesn't match the regular expression
     # So it should fail if the 'fail_on_ ...' flag wasn't set
@@ -309,7 +333,7 @@ def test_ava_filter_dont_fail():
 
     assert _ava
 
-    ava = {"givenName": "Derek", "surName": "Jeter"}
+    ava = AttributeValues({"givenName": "Derek", "surName": "Jeter"})
 
     # it wasn't there to begin with
     _ava = policy.filter(ava, "urn:mace:umu.se:saml:roland:sp", required=[gn, sn, mail])

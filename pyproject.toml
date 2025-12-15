@@ -25,7 +25,8 @@ dependencies = [
   "pyopenssl <24.3.0",
   "python-dateutil",
   "requests >=2.0.0,<3.0.0",  # ^2 means compatible with 2.x
-  "xmlschema >=2.0.0,<3.0.0"
+  "xmlschema >=2.0.0,<3.0.0",
+  "pydantic >=2.0.0,<3.0.0"
 ]
 
 [project.optional-dependencies]
