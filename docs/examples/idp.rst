@@ -1,6 +1,6 @@
 .. _example_idp:
 
-An extremly simple example of a SAML2 identity provider.
+An extremely simple example of a SAML2 identity provider.
 ========================================================
 
 There are 2 example IDPs in the project's example directory:

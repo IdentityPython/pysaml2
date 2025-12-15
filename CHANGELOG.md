@@ -1,5 +1,55 @@
 # Changelog
 
+
+## v7.5.4 (2025-10-07)
+
+- Minor refactor to handle `shelve.open` and `dbm` errors
+- Remove import of deprecated `cgi` module
+- Replace deprecated `datetime.utcnow()` by `datetime.now(timezone.utc)`
+- deps: Remove the `importlib_metadata` dependency
+- deps: Remove the `importlib_resources` dependency
+- deps: Update dependency versions and lockfile
+- build: Update pyproject and lockfile to be compatible with PEP 621
+- docs: Correct spelling mistakes
+- docs: Fix interal references/links
+- docs: Clarify units for accepted_time_diff config param
+- docs: Correct documentation for contact_person
+
+
+## 7.5.3 (2025-10-04)
+
+- #973 Fix prepare_for_negotiated_authenticate to avoid double signing redirect requests
+
+
+## 7.5.2 (2025-02-10)
+
+- Include the XSD of the XML Encryption Syntax and Processing Version 1.1 to the schema validator
+
+
+## 7.5.1 (2025-02-10)
+
+- deps: restrict pyOpenSSL up to v24.2.1 until it is replaced
+- deps: update dependencies for the lockfile and examples
+
+
+## 7.5.0 (2024-01-30)
+
+- Fix missing requested attributes from the ACS
+- Add support for errorURL to be exposed in metadata for IdP
+- Update logged message when the signature validation on the assertion fails
+- Replace imp with importlib
+- deps: restrict xmlschema version
+- deps: remove utility from packaging
+- examples: update code and README to align with latest code
+- docs: update readme with info about xmlsec1 compatibility
+
+
+## 7.4.2 (2023-06-11)
+
+- Add support for xmlsec1 1.3.x
+- Use the set crypto_backend when creating the entity metadata
+
+
 ## 7.4.1 (2023-02-24)
 
 - Fix subject-id requirements processing
@@ -17,9 +67,9 @@
 ## 7.3.0 (2023-02-14)
 
 - During metadata generation, render extensions both for EntityDescriptor and IdPSSODescriptor
-- Fix compatibility with certain SAML implementation that inflate messasges on the POST binding
+- Fix compatibility with certain SAML implementation that inflate messages on the POST binding
 - Update the SWAMID entity category requirements
-- Fix check for NameID when it originates from an encrypted asssertion
+- Fix check for NameID when it originates from an encrypted assertion
 - Add support for pymongo `>=3.5` and `<5`
 - Update README with supported specifications
 - Remove dependency on the six package
@@ -102,7 +152,7 @@
 - Refactor AuthnResponse::authn_info to consider DeclRef equivalent to ClassRef.
 - Ensure creation of multiple ePTIDs is handled correctly.
 - Improve signature checks by ensuring the Object element is absent, enforcing allowed
-  transform aglorithms, enforcing allowed canonicalization methods and requiring the
+  transform algorithms, enforcing allowed canonicalization methods and requiring the
   enveloped-signature transform to be present.
 - mdstore: Make unknown metadata extensions available through the internal metadata.
 - mdstore: Fix the exception handler of the InMemoryMetaData object.
@@ -199,7 +249,7 @@
   part of its metadata.
 - CI/CD: Use Ubuntu bionic as the host to run the CI/CD process.
 - CI/CD: Pre-releases are now available on [test.pypi.org][pypi.test.pysaml2]. Each
-  commit/merge on the master branch autotically creates a new pre-release. To install a
+  commit/merge on the master branch automatically creates a new pre-release. To install a
   prelease, run:
 
   ```sh
@@ -220,7 +270,7 @@
 - Fix wrong identifiers for ecdsa algos
 - Fix automatic inversion of attribute map files
 - Factor out common codepaths in attribute_converter
-- Remove uneeded exception logging
+- Remove unneeded exception logging
 - Docs: Update configuration options documentation
 - Examples: Support both str and bytes in SAML requests on the example idp
 - Examples: Update to key generation to 2048 bits

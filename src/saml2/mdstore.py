@@ -207,7 +207,7 @@ def attribute_requirement(entity_descriptor, index=None):
         if index is not None and acs["index"] != index:
             continue
 
-        for attr in acs["requested_attribute"]:
+        for attr in (acs.get("requested_attribute") or []):
             if attr.get("is_required") == "true":
                 res["required"].append(attr)
             else:

@@ -440,24 +440,24 @@ class Entity(HTTPBase):
             None,
         ]:
             raise UnknownBinding(f"Don't know how to handle '{binding}'")
-        else:
-            try:
-                if binding == BINDING_HTTP_REDIRECT:
+
+        try:
+            if binding == BINDING_HTTP_REDIRECT:
+                xmlstr = decode_base64_and_inflate(txt)
+            elif binding == BINDING_HTTP_POST:
+                try:
                     xmlstr = decode_base64_and_inflate(txt)
-                elif binding == BINDING_HTTP_POST:
-                    try:
-                        xmlstr = decode_base64_and_inflate(txt)
-                    except zlib.error:
-                        xmlstr = base64.b64decode(txt)
-                elif binding == BINDING_SOAP:
-                    func = getattr(soap, f"parse_soap_enveloped_saml_{msgtype}")
-                    xmlstr = func(txt)
-                elif binding == BINDING_HTTP_ARTIFACT:
+                except zlib.error:
                     xmlstr = base64.b64decode(txt)
-                else:
-                    xmlstr = txt
-            except Exception:
-                raise UnravelError(f"Unravelling binding '{binding}' failed")
+            elif binding == BINDING_SOAP:
+                func = getattr(soap, f"parse_soap_enveloped_saml_{msgtype}")
+                xmlstr = func(txt)
+            elif binding == BINDING_HTTP_ARTIFACT:
+                xmlstr = base64.b64decode(txt)
+            else:
+                xmlstr = txt
+        except Exception:
+            raise UnravelError(f"Unravelling binding '{binding}' failed")
 
         return xmlstr
 

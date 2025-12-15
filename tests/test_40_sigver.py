@@ -192,7 +192,7 @@ class TestSecurity:
         assert sass.id == "id-11111"
         assert time_util.str_to_time(sass.issue_instant)
 
-        print(f"Crypto version : {self.sec.crypto.version()}")
+        print(f"Crypto version : {self.sec.crypto.version}")
 
         item = self.sec.check_signature(sass, class_name(sass), sign_ass)
 
@@ -209,7 +209,7 @@ class TestSecurity:
         assert sass.id == "id-11111"
         assert time_util.str_to_time(sass.issue_instant)
 
-        print(f"Crypto version : {self.sec.crypto.version()}")
+        print(f"Crypto version : {self.sec.crypto.version}")
 
         item = self.sec.check_signature(sass, class_name(sass), sign_ass, must=True)
 
@@ -498,7 +498,7 @@ class TestSecurityNonAsciiAva:
         assert sass.id == "id-11111"
         assert time_util.str_to_time(sass.issue_instant)
 
-        print(f"Crypto version : {self.sec.crypto.version()}")
+        print(f"Crypto version : {self.sec.crypto.version}")
 
         item = self.sec.check_signature(sass, class_name(sass), sign_ass)
 
@@ -515,7 +515,7 @@ class TestSecurityNonAsciiAva:
         assert sass.id == "id-11111"
         assert time_util.str_to_time(sass.issue_instant)
 
-        print(f"Crypto version : {self.sec.crypto.version()}")
+        print(f"Crypto version : {self.sec.crypto.version}")
 
         item = self.sec.check_signature(sass, class_name(sass), sign_ass, must=True)
 
@@ -1079,18 +1079,34 @@ def test_sha256_signing_non_ascii_ava():
 
 def test_xmlsec_output_line_parsing():
     output1 = "prefix\nOK\npostfix"
-    assert sigver.parse_xmlsec_output(output1)
+    assert sigver.parse_xmlsec_verify_output(output1)
 
     output2 = "prefix\nFAIL\npostfix"
     with raises(sigver.XmlsecError):
-        sigver.parse_xmlsec_output(output2)
+        sigver.parse_xmlsec_verify_output(output2)
 
     output3 = "prefix\r\nOK\r\npostfix"
-    assert sigver.parse_xmlsec_output(output3)
+    assert sigver.parse_xmlsec_verify_output(output3)
 
     output4 = "prefix\r\nFAIL\r\npostfix"
     with raises(sigver.XmlsecError):
-        sigver.parse_xmlsec_output(output4)
+        sigver.parse_xmlsec_verify_output(output4)
+
+
+def test_xmlsec_v1_3_x_output_line_parsing():
+    output1 = "prefix\nVerification status: OK\npostfix"
+    assert sigver.parse_xmlsec_verify_output(output1, version=(1, 3))
+
+    output2 = "prefix\nVerification status: FAILED\npostfix"
+    with raises(sigver.XmlsecError):
+        sigver.parse_xmlsec_verify_output(output2, version=(1, 3))
+
+    output3 = "prefix\r\nVerification status: OK\r\npostfix"
+    assert sigver.parse_xmlsec_verify_output(output3, version=(1, 3))
+
+    output4 = "prefix\r\nVerification status: FAILED\r\npostfix"
+    with raises(sigver.XmlsecError):
+        sigver.parse_xmlsec_verify_output(output4, version=(1, 3))
 
 
 def test_cert_trailing_newlines_ignored():

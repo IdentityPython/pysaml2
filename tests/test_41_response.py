@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-
+import logging
 from contextlib import closing
-import datetime
+from datetime import datetime
+from datetime import timezone
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -125,8 +126,9 @@ class TestResponse:
         assert resp.issuer() == ""
 
     @patch("saml2.time_util.datetime")
-    def test_false_sign(self, mock_datetime):
-        mock_datetime.utcnow = Mock(return_value=datetime.datetime(2016, 9, 4, 9, 59, 39))
+    def test_false_sign(self, mock_datetime, caplog):
+        caplog.set_level(logging.ERROR)
+        mock_datetime.now = Mock(return_value=datetime(2016, 9, 4, 9, 59, 39, tzinfo=timezone.utc))
         with open(FALSE_ASSERT_SIGNED) as fp:
             xml_response = fp.read()
 
@@ -145,6 +147,7 @@ class TestResponse:
         assert isinstance(resp, AuthnResponse)
         with raises(SignatureError):
             resp.verify()
+        assert 'The signature on the assertion cannot be verified.' in caplog.text
 
     def test_other_response(self):
         with open(full_path("attribute_response.xml")) as fp:

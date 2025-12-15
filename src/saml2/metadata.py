@@ -106,6 +106,7 @@ def create_metadata_string(
     conf.key_file = config.key_file or keyfile
     conf.cert_file = config.cert_file or cert
     conf.xmlsec_binary = config.xmlsec_binary
+    conf.crypto_backend = config.crypto_backend
     secc = security_context(conf)
 
     sign_alg = sign_alg or config.signing_algorithm
@@ -581,6 +582,10 @@ def do_idpsso_descriptor(conf, cert=None, enc_cert=None):
                 setattr(idpsso, key, (f"{val}").lower())
         except KeyError:
             setattr(idpsso, key, DEFAULTS[key])
+
+    error_url = conf.getattr("error_url", "idp")
+    if error_url:
+        idpsso.error_url = error_url
 
     return idpsso
 

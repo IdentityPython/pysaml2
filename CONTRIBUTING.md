@@ -100,7 +100,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
 5. Create your patch, **including appropriate test cases**.
    Remember to follow the [Coding Rules](#coding-rules).
 
-6. Run the full test suite, as described in the [developer documentation][dev-doc],
+6. Run the full test suite, as described in the [DEVELOPERS.md](DEVELOPERS.md),
    and ensure that all tests pass.
 
 7. Commit your changes using a descriptive commit message.
@@ -146,4 +146,4 @@ keep these rules in mind as you are working:
 * All public API methods **must be documented**.
 * We follow [Black's style guide](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html),
   and wrap all code at **120 characters**.
-  Pre-configured tools to automatically lint and format code are available, see [DEVELOPER.md](DEVELOPER.md).
+  Pre-configured tools to automatically lint and format code are available, see [DEVELOPERS.md](DEVELOPERS.md).
