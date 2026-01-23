@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 from contextlib import closing
-from datetime import datetime
-from datetime import timezone
+from datetime import datetime, timezone
 
-from dateutil import parser
 from pathutils import dotname
 from pathutils import full_path
 
@@ -133,7 +131,7 @@ class TestAuthnResponse:
         assert authn_info[0][0] == INTERNETPROTOCOLPASSWORD
         assert authn_info[0][1] == ["http://www.example.com/login"]
         now = datetime.now(timezone.utc)
-        dt = parser.parse(authn_info[0][2])
+        dt = datetime.strptime(authn_info[0][2], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
         assert now.year == dt.year and now.month == dt.month and now.day == dt.day
         session_info = self.ar.session_info()
         assert session_info["authn_info"] == authn_info
