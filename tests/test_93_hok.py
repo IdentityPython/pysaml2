@@ -23,7 +23,7 @@ class TestHolderOfKeyResponse:
         assert len(resp.assertion.subject.subject_confirmation) == 2
 
         actual_hok_certs = [
-            ki.x509_data[0].x509_certificate.text.strip()
+            ki.x509_data[0].x509_certificate[0].text.strip()
             for sc in resp.assertion.subject.subject_confirmation
             for ki in sc.subject_confirmation_data.extensions_as_elements(ds.KeyInfo.c_tag, ds)
         ]

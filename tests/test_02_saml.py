@@ -870,7 +870,7 @@ class TestSubjectConfirmation:
             "Vx/jWjX2g5SDbjItH6VGy6C9GCGf1A07VxFRCfJn5tA9HuJjPKiE+g/BmrV5N4Ce"
             "alzFxPHWYkNOzoRU8qI7OqUai1kL"
         )
-        xcert = key_info[0].x509_data[0].x509_certificate
+        xcert = key_info[0].x509_data[0].x509_certificate[0]
         assert xcert.text.strip().replace("\n", "") == expected_cert
 
 
