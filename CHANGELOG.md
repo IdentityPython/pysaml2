@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased (2026-XX-XX)
+
+- ci: Migrate from Travis CI to GitHub Actions
+- ci: Add `tests` workflow with a Python 3.9–3.14 matrix
+- ci: Add `lint` workflow (black, isort, flake8) and `checks` workflow (`poetry check` + lockfile validation)
+- ci: Publish to PyPI/TestPyPI via Trusted Publishing with attestations
+- ci: Attach build artifacts and provenance attestations to GitHub releases
+- docs: Update RELEASE.md with the `gh release create` flow
 
 ## v7.5.4 (2025-10-07)
 
