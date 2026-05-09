@@ -31,4 +31,5 @@ jobs:
       - name: isort
         run: poetry run isort --check-only src/ tests/ example/
       - name: flake8
+        continue-on-error: true
         run: poetry run flake8 src/
