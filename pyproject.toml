@@ -1,6 +1,6 @@
 [project]
 name = "jmsmtn-pysaml2"
-version = "7.5.4"
+version = "7.5.5rc2"
 description = "Python implementation of SAML Version 2 Standard"
 license = "Apache-2.0"
 authors = [{name = "IdentityPython", email = "discuss@idpy.org"}]
