@@ -1,7 +1,7 @@
-import logging
-from hashlib import sha1
 from datetime import datetime
 from datetime import timezone
+from hashlib import sha1
+import logging
 
 from pymongo import MongoClient
 import pymongo.errors

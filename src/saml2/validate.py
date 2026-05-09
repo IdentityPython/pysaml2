@@ -354,7 +354,7 @@ def valid_instance(instance):
         except NotValid as exc:
             raise NotValid(f"Class '{class_name}' instance: {exc.args[0]}")
 
-    for (name, typ, required) in instclass.c_attributes.values():
+    for name, typ, required in instclass.c_attributes.values():
         value = getattr(instance, name, "")
         if required and not value:
             txt = f"Required value on property '{name}' missing"
@@ -375,7 +375,7 @@ def valid_instance(instance):
                 txt = ERROR_TEXT % (value, name, exc.args[0])
                 raise NotValid(f"Class '{class_name}' instance: {txt}")
 
-    for (name, _spec) in instclass.c_children.values():
+    for name, _spec in instclass.c_children.values():
         value = getattr(instance, name, "")
 
         try:

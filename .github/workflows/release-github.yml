@@ -1,0 +1,43 @@
+name: Attach artifacts to GitHub release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  attach:
+    name: Build, attest, and attach to release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write       # upload assets to the GitHub release
+      id-token: write       # required by attest-build-provenance
+      attestations: write   # write to GitHub Attestations API
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Install Poetry
+        run: pipx install poetry==2.4.0
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+        with:
+          python-version: '3.x'
+          cache: poetry
+      - name: Build sdist and wheel
+        run: poetry build
+      - name: Generate build provenance attestation
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32  # v4.1.0
+        with:
+          subject-path: 'dist/*'
+      - name: Upload distributions to GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" dist/*

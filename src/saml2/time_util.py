@@ -6,12 +6,12 @@ different types of information.
 """
 
 import calendar
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 import re
 import sys
 import time
-from datetime import datetime
-from datetime import timezone
-from datetime import timedelta
 
 
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"

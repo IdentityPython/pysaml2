@@ -1908,7 +1908,7 @@ class Schema(Complex):
             ignore = [p.name for (p, _l, _s) in tups]
             done = output(objekt, self.target_namespace, eldict, ignore)
             if done:
-                for (prop, lines, _) in tups:
+                for prop, lines, _ in tups:
                     exceptions.extend(lines)
                 block = []
             else:

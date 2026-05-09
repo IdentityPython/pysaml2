@@ -1,16 +1,16 @@
-""" Functions connected to signing and verifying.
+"""Functions connected to signing and verifying.
 Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
 
 import base64
+from datetime import datetime
+from datetime import timezone
+from importlib.resources import files as _resource_files
 import hashlib
 import itertools
 import logging
 import os
 import re
-from datetime import datetime
-from datetime import timezone
-from importlib.resources import files as _resource_files
 from subprocess import PIPE
 from subprocess import Popen
 from tempfile import NamedTemporaryFile
@@ -317,7 +317,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     if not isinstance(instance, str):
         signed_xml = instance.to_string()
 
-    for (node_name, nodeid) in elements_to_sign:
+    for node_name, nodeid in elements_to_sign:
         signed_xml = seccont.sign_statement(signed_xml, node_name=node_name, node_id=nodeid)
 
     return signed_xml
@@ -476,9 +476,9 @@ def parse_xmlsec_verify_output(output, version=None):
                 raise XmlsecError(output)
     else:
         for line in output.splitlines():
-            if line == 'Verification status: OK':
+            if line == "Verification status: OK":
                 return True
-            elif line == 'Verification status: FAILED':
+            elif line == "Verification status: FAILED":
                 raise XmlsecError(output)
     raise XmlsecError(output)
 
@@ -844,7 +844,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         with NamedTemporaryFile(suffix=".xml") as ntf:
             com_list.extend(["--output", ntf.name])
             if self.version_nums >= (1, 3):
-                com_list.extend(['--lax-key-search'])
+                com_list.extend(["--lax-key-search"])
             com_list += extra_args
 
             logger.debug("xmlsec command: %s", " ".join(com_list))
@@ -883,6 +883,7 @@ class CryptoBackendXMLSecurity(CryptoBackend):
     def version(self):
         try:
             import xmlsec
+
             return xmlsec.__version__
         except (ImportError, AttributeError):
             return "0.0.0"
@@ -1723,7 +1724,7 @@ class SecurityContext:
         :param key_file: A file that contains the key to be used
         :return: A possibly multiple signed statement
         """
-        for (item, sid) in to_sign:
+        for item, sid in to_sign:
             if not sid:
                 if not item.id:
                     sid = item.id = sid()

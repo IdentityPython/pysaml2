@@ -493,7 +493,7 @@ def do_spsso_descriptor(conf, cert=None, enc_cert=None):
 
     endps = conf.getattr("endpoints", "sp")
     if endps:
-        for (endpoint, instlist) in do_endpoints(endps, ENDPOINTS["sp"]).items():
+        for endpoint, instlist in do_endpoints(endps, ENDPOINTS["sp"]).items():
             setattr(spsso, endpoint, instlist)
 
     ext = do_endpoints(endps, ENDPOINT_EXT["sp"])
@@ -547,7 +547,7 @@ def do_idpsso_descriptor(conf, cert=None, enc_cert=None):
 
     endps = conf.getattr("endpoints", "idp")
     if endps:
-        for (endpoint, instlist) in do_endpoints(endps, ENDPOINTS["idp"]).items():
+        for endpoint, instlist in do_endpoints(endps, ENDPOINTS["idp"]).items():
             setattr(idpsso, endpoint, instlist)
 
     _do_nameid_format(idpsso, conf, "idp")
@@ -608,7 +608,7 @@ def do_aa_descriptor(conf, cert=None, enc_cert=None):
     endps = conf.getattr("endpoints", "aa")
 
     if endps:
-        for (endpoint, instlist) in do_endpoints(endps, ENDPOINTS["aa"]).items():
+        for endpoint, instlist in do_endpoints(endps, ENDPOINTS["aa"]).items():
             setattr(aad, endpoint, instlist)
 
     _do_nameid_format(aad, conf, "aa")
@@ -647,7 +647,7 @@ def do_aq_descriptor(conf, cert=None, enc_cert=None):
     endps = conf.getattr("endpoints", "aq")
 
     if endps:
-        for (endpoint, instlist) in do_endpoints(endps, ENDPOINTS["aq"]).items():
+        for endpoint, instlist in do_endpoints(endps, ENDPOINTS["aq"]).items():
             setattr(aqs, endpoint, instlist)
 
     _do_nameid_format(aqs, conf, "aq")
@@ -678,7 +678,7 @@ def do_pdp_descriptor(conf, cert=None, enc_cert=None):
     endps = conf.getattr("endpoints", "pdp")
 
     if endps:
-        for (endpoint, instlist) in do_endpoints(endps, ENDPOINTS["pdp"]).items():
+        for endpoint, instlist in do_endpoints(endps, ENDPOINTS["pdp"]).items():
             setattr(pdp, endpoint, instlist)
 
     _do_nameid_format(pdp, conf, "pdp")

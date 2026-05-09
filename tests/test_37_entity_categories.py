@@ -1,8 +1,7 @@
 from contextlib import closing
 
-import pytest
-
 from pathutils import full_path
+import pytest
 
 from saml2 import config
 from saml2 import sigver

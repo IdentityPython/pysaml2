@@ -2,18 +2,18 @@
 
 """Contains base classes representing SAML elements.
 
-    These codes were originally written by Jeffrey Scudder for
-    representing Saml elements. Takashi Matsuo had added some codes, and
-    changed some. Roland Hedberg rewrote the whole thing from bottom up so
-    barely anything but the original structures remained.
+These codes were originally written by Jeffrey Scudder for
+representing Saml elements. Takashi Matsuo had added some codes, and
+changed some. Roland Hedberg rewrote the whole thing from bottom up so
+barely anything but the original structures remained.
 
-    Module objective: provide data classes for SAML constructs. These
-    classes hide the XML-ness of SAML and provide a set of native Python
-    classes to interact with.
+Module objective: provide data classes for SAML constructs. These
+classes hide the XML-ness of SAML and provide a set of native Python
+classes to interact with.
 
-    Conversions to and from XML should only be necessary when the SAML classes
-    "touch the wire" and are sent over HTTP. For this reason this module
-    provides methods and functions to convert SAML classes to and from strings.
+Conversions to and from XML should only be necessary when the SAML classes
+"touch the wire" and are sent over HTTP. For this reason this module
+provides methods and functions to convert SAML classes to and from strings.
 """
 
 import logging

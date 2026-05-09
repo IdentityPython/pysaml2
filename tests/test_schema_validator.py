@@ -1,5 +1,4 @@
 from pathutils import full_path as expand_full_path
-
 from pytest import mark
 from pytest import raises
 

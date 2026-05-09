@@ -391,17 +391,17 @@ class Base(Entity):
             None
             # SAML 2.0 errata says AllowCreate MUST NOT be used for transient ids
             if nameid_policy_format == NAMEID_FORMAT_TRANSIENT
-            else allow_create
-            if allow_create
-            else str(bool(allow_create_config)).lower()
+            else allow_create if allow_create else str(bool(allow_create_config)).lower()
         )
 
         name_id_policy = (
             kwargs.pop("name_id_policy", None)
             if "name_id_policy" in kwargs
-            else None
-            if not nameid_policy_format
-            else samlp.NameIDPolicy(allow_create=allow_create, format=nameid_policy_format)
+            else (
+                None
+                if not nameid_policy_format
+                else samlp.NameIDPolicy(allow_create=allow_create, format=nameid_policy_format)
+            )
         )
 
         if name_id_policy and vorg:
