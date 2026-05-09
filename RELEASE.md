@@ -63,8 +63,5 @@ When releasing a new version, the following steps should be taken:
 
 9. Send an email to the pysaml2 list announcing this release
 
-[VERSION]: https://github.com/IdentityPython/pysaml2/blob/master/VERSION
 [CHANGELOG.md]: https://github.com/IdentityPython/pysaml2/blob/master/CHANGELOG.md
-[docutils]: http://docutils.sourceforge.net/
-[branch]: https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell
 [tag]: https://git-scm.com/book/en/v2/Git-Basics-Tagging#_annotated_tags
