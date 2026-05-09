@@ -46,6 +46,8 @@ When releasing a new version, the following steps should be taken:
    which build the distributions, generate PEP 740 attestations, and
    upload to PyPI/TestPyPI via Trusted Publishing.
 
+   Install the [GitHub CLI] if you don't already have it (`brew install gh` on macOS).
+
    Pre-release path (publishes to TestPyPI):
 
     ```shell
@@ -64,4 +66,5 @@ When releasing a new version, the following steps should be taken:
 9. Send an email to the pysaml2 list announcing this release
 
 [CHANGELOG.md]: https://github.com/IdentityPython/pysaml2/blob/master/CHANGELOG.md
+[GitHub CLI]: https://cli.github.com/
 [tag]: https://git-scm.com/book/en/v2/Git-Basics-Tagging#_annotated_tags
