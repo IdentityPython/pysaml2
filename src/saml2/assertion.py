@@ -343,11 +343,11 @@ class Policy:
         restrictions = (
             sp_restrictions
             if sp_restrictions is not None
-            else ra_restrictions
-            if ra_restrictions is not None
-            else default_restrictions
-            if default_restrictions is not None
-            else {}
+            else (
+                ra_restrictions
+                if ra_restrictions is not None
+                else default_restrictions if default_restrictions is not None else {}
+            )
         )
 
         attribute_restriction = restrictions.get(attribute)

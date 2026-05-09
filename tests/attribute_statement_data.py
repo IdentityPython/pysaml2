@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Testdata for attribute converters """
+"""Testdata for attribute converters"""
 
 STATEMENT1 = """<?xml version="1.0" encoding="utf-8"?>
 <ns1:AttributeStatement xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion">

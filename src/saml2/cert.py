@@ -204,7 +204,6 @@ class OpenSSLWrapper:
         sn=1,
         passphrase=None,
     ):
-
         """
         Will sign a certificate request with a give certificate.
         :param sign_cert_str:     This certificate will be used to sign with.

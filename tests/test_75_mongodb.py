@@ -48,7 +48,7 @@ def test_flow():
                     },
                     userid="jeter",
                     authn=AUTHN,
-                    **rinfo
+                    **rinfo,
                 )
 
                 # What's stored away is the assertion

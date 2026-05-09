@@ -207,7 +207,7 @@ def attribute_requirement(entity_descriptor, index=None):
         if index is not None and acs["index"] != index:
             continue
 
-        for attr in (acs.get("requested_attribute") or []):
+        for attr in acs.get("requested_attribute") or []:
             if attr.get("is_required") == "true":
                 res["required"].append(attr)
             else:
@@ -607,9 +607,7 @@ class InMemoryMetaData(MetaData):
             _md_desc = (
                 f"metadata file: {self.filename}"
                 if isinstance(self, MetaDataFile)
-                else f"remote metadata: {self.url}"
-                if isinstance(self, MetaDataExtern)
-                else "metadata"
+                else f"remote metadata: {self.url}" if isinstance(self, MetaDataExtern) else "metadata"
             )
             raise SAMLError(f"Failed to parse {_md_desc}") from e
 
@@ -1327,7 +1325,7 @@ class MetadataStore(MetaData):
                     "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
                     "friendly_name": "subject-id",
                     "is_required": "true",
-                }
+                },
             ]
         elif subject_id_req == "pairwise-id":
             return [
