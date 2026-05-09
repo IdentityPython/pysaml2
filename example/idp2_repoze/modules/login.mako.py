@@ -1,4 +1,6 @@
-from mako import cache, runtime
+from mako import cache
+from mako import runtime
+
 
 UNDEFINED = runtime.UNDEFINED
 __M_dict_builtin = dict

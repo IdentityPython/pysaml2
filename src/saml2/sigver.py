@@ -3,14 +3,14 @@ Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
 
 import base64
+from datetime import datetime
+from datetime import timezone
+from importlib.resources import files as _resource_files
 import hashlib
 import itertools
 import logging
 import os
 import re
-from datetime import datetime
-from datetime import timezone
-from importlib.resources import files as _resource_files
 from subprocess import PIPE
 from subprocess import Popen
 from tempfile import NamedTemporaryFile

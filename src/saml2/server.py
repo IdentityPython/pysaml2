@@ -4,11 +4,11 @@
 """Contains classes and functions that a SAML2.0 Identity provider (IdP)
 or attribute authority (AA) may use to conclude its tasks.
 """
+from dbm import error as DbmError
 import importlib
 import logging
 import shelve
 import threading
-from dbm import error as DbmError
 
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import class_name

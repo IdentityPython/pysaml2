@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import logging
 from contextlib import closing
 from datetime import datetime
 from datetime import timezone
+import logging
 from unittest.mock import Mock
 from unittest.mock import patch
 

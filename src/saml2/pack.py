@@ -10,7 +10,6 @@ Bindings normally consists of three parts:
 import base64
 import html
 import logging
-
 from urllib.parse import urlencode
 from urllib.parse import urlparse
 from xml.etree import ElementTree as ElementTree
