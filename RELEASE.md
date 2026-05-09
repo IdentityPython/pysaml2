@@ -41,11 +41,25 @@ When releasing a new version, the following steps should be taken:
     git push --follow-tags
     ```
 
-8. Publish the release on PyPI:
+8. Publish the release. Creating the GitHub release fires the
+   `Publish to PyPI` and `Attach artifacts to GitHub release` workflows,
+   which build the distributions, generate PEP 740 attestations, and
+   upload to PyPI/TestPyPI via Trusted Publishing.
+
+   Pre-release path (publishes to TestPyPI):
 
     ```shell
-    poetry publish --build
+    gh release create v7.5.5rc1 --prerelease --title "v7.5.5rc1" --notes "Pre-release for CI" --target <target-branch>
     ```
+
+   Full release path (publishes to PyPI):
+
+    ```shell
+    gh release create v7.5.5 --title "v7.5.5" --notes "Release" --target master
+    ```
+
+   Or via the UI: Releases -> Draft a new release ->  choose/create tag ->
+   tick (or untick) "Set as a pre-release" -> Publish release.
 
 9. Send an email to the pysaml2 list announcing this release
 
