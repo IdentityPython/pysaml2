@@ -6,6 +6,13 @@
 [![Weekly downloads](https://pepy.tech/badge/pysaml2/week)](https://pepy.tech/project/pysaml2)
 [![License](https://img.shields.io/github/license/IdentityPython/pysaml2)](https://github.com/IdentityPython/pysaml2/blob/master/LICENSE)
 
+About the fork
+--------------
+
+Forked from the original https://github.com/IdentityPython/pysaml2 to provide bugfixes and upgrades to python and django support.
+
+Description
+============
 PySAML2 is a pure python implementation of SAML Version 2 Standard.
 It contains all necessary pieces for building a SAML2 service provider
 or an identity provider. The distribution contains examples of both.
