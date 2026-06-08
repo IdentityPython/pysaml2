@@ -1,0 +1,70 @@
+# .github/workflows/test.yml
+name: Test
+on: 
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env: 
+  PYTHON_VERSION: "3.12"
+  POETRY_VERSION: "2.0.1"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports: 
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  ## v6.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 ## v6.1.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+        id: setup-python
+
+      - name: Install
+        working-directory: 
+        run: |
+          sudo apt-get install xmlsec1 -y
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov
+          pip install poetry
+          poetry env use python
+          poetry lock
+          poetry install --with test
+
+      - name: Test and Coverage
+        run: |
+          set -o pipefail
+          poetry run pytest --junitxml=pytest.xml --cov --cov-report=term-missing:skip-covered | tee pytest-coverage.txt
+
+      - name: Pytest Coverage Comment
+        if: github.event_name == 'pull_request'
+        id: coverage
+        uses: MishaKav/pytest-coverage-comment@dd5b80bde6d16941f336518e92929e89069d8451 ## v1.7.2
+        with:
+          pytest-coverage-path: pytest-coverage.txt
+          junitxml-path: pytest.xml

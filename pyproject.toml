@@ -1,6 +1,6 @@
 [project]
 name = "pysaml2"
-version = "7.5.4"
+version = "7.6.0"
 description = "Python implementation of SAML Version 2 Standard"
 license = "Apache-2.0"
 authors = [{name = "IdentityPython", email = "discuss@idpy.org"}]
@@ -79,7 +79,7 @@ optional = true
 [tool.poetry.group.test.dependencies]
 pyasn1 = "*"
 pymongo = ">=3.5, <5"
-pytest = ">=6.0"
+pytest = ">=9.0"
 responses = "*"
 
 [tool.poetry.group.coverage]

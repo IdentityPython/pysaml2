@@ -12,7 +12,7 @@ tests/*.dat
 tests/*.bak
 
 
-eptid
+eptid*
 
 
 ### Python.gitignore

@@ -1,5 +1,8 @@
 # Changelog
 
+## v7.6.0 (2026-05-08)
+
+- Major vulnerability patching for `cryptography` and `pyopenssl` packages
 
 ## v7.5.4 (2025-10-07)
 
