@@ -7,6 +7,8 @@ from datetime import datetime
 from datetime import timezone
 
 from OpenSSL import crypto
+from cryptography.exceptions import InvalidSignature
+from cryptography.x509 import NameOID
 import dateutil.parser
 
 import saml2.cryptography.pki
@@ -27,6 +29,19 @@ class PayloadError(Exception):
 class OpenSSLWrapper:
     def __init__(self):
         pass
+
+    @staticmethod
+    def _pem_bytes(cert_str):
+        if isinstance(cert_str, bytes):
+            return cert_str
+        return cert_str.encode("ascii")
+
+    @staticmethod
+    def _common_name(cert):
+        attributes = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
+        if attributes:
+            return attributes[0].value
+        return None
 
     def create_certificate(
         self,
@@ -303,34 +318,29 @@ class OpenSSLWrapper:
                                  Message = Why the validation failed.
         """
         try:
-            ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, signing_cert_str)
-            cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_str)
+            ca_cert = saml2.cryptography.pki.load_pem_x509_certificate(self._pem_bytes(signing_cert_str))
+            cert = saml2.cryptography.pki.load_pem_x509_certificate(self._pem_bytes(cert_str))
+            now = datetime.now(timezone.utc)
 
-            if self.certificate_not_valid_yet(ca_cert):
+            if now < ca_cert.not_valid_before_utc:
                 return False, "CA certificate is not valid yet."
 
-            if ca_cert.has_expired() == 1:
+            if now >= ca_cert.not_valid_after_utc:
                 return False, "CA certificate is expired."
 
-            if cert.has_expired() == 1:
+            if now >= cert.not_valid_after_utc:
                 return False, "The signed certificate is expired."
 
-            if self.certificate_not_valid_yet(cert):
+            if now < cert.not_valid_before_utc:
                 return False, "The signed certificate is not valid yet."
 
-            if ca_cert.get_subject().CN == cert.get_subject().CN:
+            if self._common_name(ca_cert) == self._common_name(cert):
                 return False, ("CN may not be equal for CA certificate and the " "signed certificate.")
 
-            cert_algorithm = cert.get_signature_algorithm()
-            cert_algorithm = cert_algorithm.decode("ascii")
-            cert_str = cert_str.encode("ascii")
-
-            cert_crypto = saml2.cryptography.pki.load_pem_x509_certificate(cert_str)
-
             try:
-                crypto.verify(ca_cert, cert_crypto.signature, cert_crypto.tbs_certificate_bytes, cert_algorithm)
+                cert.verify_directly_issued_by(ca_cert)
                 return True, "Signed certificate is valid and correctly signed by CA certificate."
-            except crypto.Error as e:
+            except (InvalidSignature, TypeError, ValueError) as e:
                 return False, f"Certificate is incorrectly signed: {str(e)}"
         except Exception as e:
             return False, f"Certificate is not valid for an unknown reason. {str(e)}"

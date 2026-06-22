@@ -1,12 +1,43 @@
 import os
 from os import remove
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 import time
+
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
 
 
 __author__ = "haho0032"
 import unittest
 
 from saml2.cert import OpenSSLWrapper
+
+
+def _cert_pem(cert):
+    return cert.public_bytes(serialization.Encoding.PEM)
+
+
+def _private_key():
+    return rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+
+def _certificate(subject, issuer, public_key, signing_key):
+    now = datetime.now(timezone.utc)
+    return (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(public_key)
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(days=1))
+        .not_valid_after(now + timedelta(days=1))
+        .sign(signing_key, hashes.SHA256())
+    )
 
 
 class TestGenerateCertificates(unittest.TestCase):
@@ -47,6 +78,8 @@ class TestGenerateCertificates(unittest.TestCase):
         cert_str = osw.create_cert_signed_certificate(ca_cert_str, ca_key_str, req_cert_str)
 
         valid, mess = osw.verify(ca_cert_str, cert_str)
+        self.assertTrue(valid)
+        valid, mess = osw.verify(ca_cert_str.decode("ascii"), cert_str.encode("ascii"))
         self.assertTrue(valid)
 
         false_ca_cert, false_ca_key = osw.create_certificate(cert_info_ca, request=False, write_to_file=False)
@@ -225,3 +258,27 @@ class TestGenerateCertificates(unittest.TestCase):
         time.sleep(2)
         valid, mess = osw.verify(ca_cert_str, cert_str)
         self.assertFalse(valid)
+
+    def test_validate_rejects_certificates_when_both_common_names_are_missing(self):
+        osw = OpenSSLWrapper()
+        ca_key = _private_key()
+        cert_key = _private_key()
+        ca_subject = x509.Name(
+            [
+                x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, "CA Organization"),
+            ]
+        )
+        cert_subject = x509.Name(
+            [
+                x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Leaf Organization"),
+            ]
+        )
+        ca_cert = _certificate(ca_subject, ca_subject, ca_key.public_key(), ca_key)
+        cert = _certificate(cert_subject, ca_subject, cert_key.public_key(), ca_key)
+
+        valid, mess = osw.verify(_cert_pem(ca_cert), _cert_pem(cert))
+
+        self.assertFalse(valid)
+        self.assertEqual(mess, "CN may not be equal for CA certificate and the signed certificate.")

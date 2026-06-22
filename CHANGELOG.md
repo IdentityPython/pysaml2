@@ -1,5 +1,10 @@
 # Changelog
 
+## 7.5.5 (2026-06-22)
+- pyproject.toml: raised Python floor to >=3.10, bumped/capped cryptography, pyOpenSSL, and audit-related dependency floors.
+- poetry.lock: regenerated with secure resolved versions.
+- src/saml2/cert.py: replaced removed OpenSSL.crypto.verify usage with cryptography.x509 verification.
+- tests/test_81_certificates.py: added regression coverage for bytes/string PEM input and missing-CN behavior.
 
 ## v7.5.4 (2025-10-07)
 
