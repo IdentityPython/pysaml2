@@ -48,6 +48,9 @@ packages = [
     { include = "saml2", from = "src" },
     { include = "saml2test", from = "src" },
 ]
+include = [
+    { path = "tests", format = "sdist" },
+]
 
 [project.scripts]
 make_metadata = "saml2.tools.make_metadata:main"
