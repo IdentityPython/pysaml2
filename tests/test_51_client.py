@@ -21,6 +21,7 @@ from saml2 import s_utils
 from saml2 import saml
 from saml2 import samlp
 from saml2 import sigver
+from saml2 import xmlenc
 from saml2.argtree import add_path
 from saml2.assertion import Assertion
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
@@ -441,6 +442,55 @@ class TestClient:
 
         # Signature not found
         assert xml.decode("UTF-8").find(r"Signature") < 0
+
+    def test_logout_request_with_encrypted_name_id(self):
+        # A Shibboleth IdP encrypts the NameID of a LogoutRequest whenever the
+        # SP publishes an encryption key, so this is what an SP in an identity
+        # federation receives. Without decryption the SP answers "Wrong user".
+        req_id, req = self.server.create_logout_request(
+            "http://localhost:8088/slo",
+            "urn:mace:example.com:saml:roland:sp",
+            name_id=nid,
+            reason="Tired",
+            expire=in_a_while(minutes=15),
+            session_indexes=["_foo"],
+        )
+
+        template = pre_encryption_part(msg_enc="http://www.w3.org/2001/04/xmlenc#aes128-cbc")
+        encrypted = self.server.sec.crypto.encrypt_assertion(
+            str(req.name_id),
+            full_path("test_1.crt"),
+            template,
+            key_type="aes-128",
+            node_xpath="/*[local-name()='NameID']",
+        )
+        req.encrypted_id = saml.EncryptedID(encrypted_data=xmlenc.encrypted_data_from_string(rm_xmltag(encrypted)))
+        req.name_id = None
+        assert "EncryptedID" in str(req)
+        assert "NameID" not in str(req).replace("EncryptedID", "")
+
+        info = self.client.apply_binding(BINDING_HTTP_POST, req, destination="", relay_state="relay2")
+        _dic_info = unpack_form(info["data"], "SAMLRequest")
+        samlreq = _dic_info["SAMLRequest"]
+
+        parsed = self.client.parse_logout_request(samlreq, BINDING_HTTP_POST)
+        assert parsed.message.name_id == nid
+        assert parsed.subject_id() == nid
+
+        # the session the SP stored at login, which the logout has to find
+        self.client.users.add_information_about_person(
+            {
+                "name_id": nid,
+                "issuer": self.server.config.entityid,
+                "not_on_or_after": in_a_while(minutes=15),
+                "ava": {},
+            }
+        )
+        resphttp = self.client.handle_logout_request(samlreq, nid, BINDING_HTTP_POST)
+        _dic = unpack_form(resphttp["data"], "SAMLResponse")
+        xml = b64decode(_dic["SAMLResponse"].encode("UTF-8")).decode("UTF-8")
+        assert "urn:oasis:names:tc:SAML:2.0:status:Success" in xml
+        assert "Wrong user" not in xml
 
     def test_create_logout_request(self):
         req_id, req = self.client.create_logout_request(

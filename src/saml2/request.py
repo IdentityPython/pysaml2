@@ -6,6 +6,8 @@ from saml2.attribute_converter import to_local
 from saml2.response import IncorrectlySigned
 from saml2.s_utils import OtherError
 from saml2.s_utils import VersionMismatch
+from saml2.saml import name_id_from_string
+from saml2.sigver import DecryptError
 from saml2.sigver import verify_redirect_signature
 from saml2.validate import NotValid
 from saml2.validate import valid_instance
@@ -194,6 +196,55 @@ class LogoutRequest(Request):
     def __init__(self, sec_context, receiver_addrs, attribute_converters=None, timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs, attribute_converters, timeslack)
         self.signature_check = self.sec.correctly_signed_logout_request
+
+    def _loads(
+        self,
+        xmldata,
+        binding=None,
+        origdoc=None,
+        must=None,
+        only_valid_cert=False,
+        relay_state=None,
+        sigalg=None,
+        signature=None,
+    ):
+        super()._loads(
+            xmldata,
+            binding,
+            origdoc,
+            must,
+            only_valid_cert=only_valid_cert,
+            relay_state=relay_state,
+            sigalg=sigalg,
+            signature=signature,
+        )
+
+        if self.message.name_id is None and self.message.encrypted_id is not None:
+            self.message.name_id = self._decrypt_name_id(self.message.encrypted_id)
+
+        return self
+
+    def _decrypt_name_id(self, encrypted_id):
+        """Decrypt the EncryptedID of the request with our encryption keys.
+
+        A Shibboleth IdP encrypts the NameID of a LogoutRequest whenever the
+        service provider publishes an encryption key in its metadata, so this
+        is what a service provider in an identity federation receives. Without
+        the NameID the request cannot be matched to a session and the logout
+        is answered with "Wrong user".
+
+        :param encrypted_id: The EncryptedID element of the request
+        :return: The decrypted NameID, or None if no key could decrypt it
+        """
+        try:
+            name_id_str = self.sec.decrypt_keys(encrypted_id.encrypted_data.to_string())
+        except DecryptError as exc:
+            logger.warning("Could not decrypt the EncryptedID of the logout request: %s", exc)
+            return None
+
+        name_id = name_id_from_string(name_id_str)
+        logger.debug("Decrypted NameID of the logout request: %s", name_id)
+        return name_id
 
     @property
     def issuer(self):
