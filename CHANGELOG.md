@@ -1,6 +1,13 @@
 # Changelog
 
 
+## v7.5.5 (2026-09-17)
+
+- Resolve CVE-2026-26007 by migrating to the from pyOpenSSL to the cryptography APIs
+- build: Fix project metadata for known URLs
+- docs: Improved documentation for signing/encryption keys
+
+
 ## v7.5.4 (2025-10-07)
 
 - Minor refactor to handle `shelve.open` and `dbm` errors
