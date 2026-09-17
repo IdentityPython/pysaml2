@@ -397,13 +397,13 @@ def cert_from_key_info(key_info, ignore_age=False):
     """
     res = []
     for x509_data in key_info.x509_data:
-        x509_certificate = x509_data.x509_certificate
-        cert = x509_certificate.text.strip()
-        cert = "\n".join(split_len("".join([s.strip() for s in cert.split()]), 64))
-        if ignore_age or active_cert(cert):
-            res.append(cert)
-        else:
-            logger.info("Inactive cert")
+        for x509_certificate in x509_data.x509_certificate:
+            cert = x509_certificate.text.strip()
+            cert = "\n".join(split_len("".join([s.strip() for s in cert.split()]), 64))
+            if ignore_age or active_cert(cert):
+                res.append(cert)
+            else:
+                logger.info("Inactive cert")
     return res
 
 
@@ -423,13 +423,13 @@ def cert_from_key_info_dict(key_info, ignore_age=False):
         return res
 
     for x509_data in key_info["x509_data"]:
-        x509_certificate = x509_data["x509_certificate"]
-        cert = x509_certificate["text"].strip()
-        cert = "\n".join(split_len("".join([s.strip() for s in cert.split()]), 64))
-        if ignore_age or active_cert(cert):
-            res.append(cert)
-        else:
-            logger.info("Inactive cert")
+        for x509_certificate in x509_data.get("x509_certificate", []):
+            cert = x509_certificate["text"].strip()
+            cert = "\n".join(split_len("".join([s.strip() for s in cert.split()]), 64))
+            if ignore_age or active_cert(cert):
+                res.append(cert)
+            else:
+                logger.info("Inactive cert")
     return res
 
 
@@ -1024,7 +1024,7 @@ def encrypt_cert_from_item(item):
             if isinstance(_tmp_elem, SPCertEnc):
                 for _tmp_key_info in _tmp_elem.key_info:
                     if _tmp_key_info.x509_data is not None and len(_tmp_key_info.x509_data) > 0:
-                        _encrypt_cert = _tmp_key_info.x509_data[0].x509_certificate.text
+                        _encrypt_cert = _tmp_key_info.x509_data[0].x509_certificate[0].text
                         break
     except Exception:
         pass
@@ -1846,7 +1846,7 @@ def pre_encryption_part(
     msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
     key_encryption_method = EncryptionMethod(algorithm=key_enc)
 
-    x509_data = ds.X509Data(x509_certificate=ds.X509Certificate(text=encrypt_cert)) if encrypt_cert else None
+    x509_data = ds.X509Data(x509_certificate=[ds.X509Certificate(text=encrypt_cert)]) if encrypt_cert else None
     key_name = ds.KeyName(text=key_name) if key_name else None
     key_info = ds.KeyInfo(key_name=key_name, x509_data=x509_data) if key_name or x509_data else None
 

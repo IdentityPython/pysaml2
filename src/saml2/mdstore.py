@@ -492,9 +492,10 @@ class MetaData:
                     key_name_txt = key_name.get("text")
                     if "use" not in key or key_use == use:
                         for dat in key_info["x509_data"]:
-                            cert = repack_cert(dat["x509_certificate"]["text"])
-                            if cert not in res:
-                                res.append((key_name_txt, cert))
+                            for x509_cert in dat.get("x509_certificate", []):
+                                cert = repack_cert(x509_cert["text"])
+                                if cert not in res:
+                                    res.append((key_name_txt, cert))
 
             return res
 

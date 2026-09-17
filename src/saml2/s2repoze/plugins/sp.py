@@ -323,7 +323,7 @@ class SAML2Plugin:
                 if _cli.config.generate_cert_func is not None:
                     cert_str, req_key_str = _cli.config.generate_cert_func()
                     cert = {"cert": cert_str, "key": req_key_str}
-                    spcertenc = SPCertEnc(x509_data=ds.X509Data(x509_certificate=ds.X509Certificate(text=cert_str)))
+                    spcertenc = SPCertEnc(x509_data=ds.X509Data(x509_certificate=[ds.X509Certificate(text=cert_str)]))
                     extensions = Extensions(extension_elements=[element_to_extension_element(spcertenc)])
 
                 if _cli.authn_requests_signed:
