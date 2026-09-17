@@ -278,7 +278,7 @@ class OpenSSLWrapper:
                 return False, message
             else:
                 cert_str = tmp_cert_str
-            return (True, "Signed certificate is valid and correctly signed by CA " "certificate.")
+            return (True, "Signed certificate is valid and correctly signed by CA certificate.")
 
     def verify(self, signing_cert_str, cert_str):
         """
@@ -299,60 +299,68 @@ class OpenSSLWrapper:
                                  otherwise false.
                                  Message = Why the validation failed.
         """
+
+        cert_str_bytes = cert_str if isinstance(cert_str, bytes) else cert_str.encode("ascii")
+        signing_cert_bytes = (
+            signing_cert_str if isinstance(signing_cert_str, bytes) else signing_cert_str.encode("ascii")
+        )
+
         try:
-            cert_str_bytes = cert_str if isinstance(cert_str, bytes) else cert_str.encode("ascii")
-            signing_cert_bytes = (
-                signing_cert_str if isinstance(signing_cert_str, bytes) else signing_cert_str.encode("ascii")
-            )
-
             cert_crypto = saml2.cryptography.pki.load_pem_x509_certificate(cert_str_bytes)
+        except ValueError as e:
+            return False, f"Failed to load certificate: {e}"
+
+        try:
             ca_cert_crypto = saml2.cryptography.pki.load_pem_x509_certificate(signing_cert_bytes)
+        except ValueError as e:
+            return False, f"Failed to load CA certificate: {e}"
 
-            now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc)
+        if now < ca_cert_crypto.not_valid_before_utc:
+            return False, "CA certificate is not valid yet."
+        if now >= ca_cert_crypto.not_valid_after_utc:
+            return False, "CA certificate is expired."
+        if now < cert_crypto.not_valid_before_utc:
+            return False, "The signed certificate is not valid yet."
+        if now >= cert_crypto.not_valid_after_utc:
+            return False, "The signed certificate is expired."
 
-            if now < ca_cert_crypto.not_valid_before_utc:
-                return False, "CA certificate is not valid yet."
+        ca_cn_attr = ca_cert_crypto.subject.get_attributes_for_oid(_x509.NameOID.COMMON_NAME)
+        ca_cn_value = ca_cn_attr and ca_cn_attr[0].value
+        cert_cn_attr = cert_crypto.subject.get_attributes_for_oid(_x509.NameOID.COMMON_NAME)
+        cert_cn_value = cert_cn_attr and cert_cn_attr[0].value
+        if ca_cn_value == cert_cn_value:
+            return False, "CN may not be equal for CA certificate and the signed certificate."
 
-            if now >= ca_cert_crypto.not_valid_after_utc:
-                return False, "CA certificate is expired."
+        if cert_crypto.signature_hash_algorithm is None:
+            return False, "Unsupported signature algorithm (no hash algorithm present)."
 
-            if now >= cert_crypto.not_valid_after_utc:
-                return False, "The signed certificate is expired."
+        ca_public_key = ca_cert_crypto.public_key()
 
-            if now < cert_crypto.not_valid_before_utc:
-                return False, "The signed certificate is not valid yet."
-
-            ca_cn = ca_cert_crypto.subject.get_attributes_for_oid(_x509.NameOID.COMMON_NAME)
-            cert_cn = cert_crypto.subject.get_attributes_for_oid(_x509.NameOID.COMMON_NAME)
-            if ca_cn and cert_cn and ca_cn[0].value == cert_cn[0].value:
-                return False, "CN may not be equal for CA certificate and the signed certificate."
-
-            if cert_crypto.signature_hash_algorithm is None:
-                return False, "Unsupported signature algorithm (no hash algorithm present)."
-
-            ca_public_key = ca_cert_crypto.public_key()
-
+        if isinstance(ca_public_key, _rsa.RSAPublicKey):
             try:
-                if isinstance(ca_public_key, _rsa.RSAPublicKey):
-                    ca_public_key.verify(
-                        cert_crypto.signature,
-                        cert_crypto.tbs_certificate_bytes,
-                        _padding.PKCS1v15(),
-                        cert_crypto.signature_hash_algorithm,
-                    )
-                elif isinstance(ca_public_key, _ec.EllipticCurvePublicKey):
-                    ca_public_key.verify(
-                        cert_crypto.signature,
-                        cert_crypto.tbs_certificate_bytes,
-                        _ec.ECDSA(cert_crypto.signature_hash_algorithm),
-                    )
-                else:
-                    return False, f"Unsupported public key type: {type(ca_public_key)}"
+                ca_public_key.verify(
+                    signature=cert_crypto.signature,
+                    data=cert_crypto.tbs_certificate_bytes,
+                    padding=_padding.PKCS1v15(),
+                    algorithm=cert_crypto.signature_hash_algorithm,
+                )
                 return True, "Signed certificate is valid and correctly signed by CA certificate."
             except InvalidSignature as e:
                 return False, f"Certificate is incorrectly signed: {str(e)}"
-        except Exception as e:
-            return False, f"Certificate is not valid for an unknown reason. {str(e)}"
+
+        if isinstance(ca_public_key, _ec.EllipticCurvePublicKey):
+            try:
+                ca_public_key.verify(
+                    signature=cert_crypto.signature,
+                    data=cert_crypto.tbs_certificate_bytes,
+                    signature_algorithm=_ec.ECDSA(cert_crypto.signature_hash_algorithm),
+                )
+                return True, "Signed certificate is valid and correctly signed by CA certificate."
+            except InvalidSignature as e:
+                return False, f"Certificate is incorrectly signed: {str(e)}"
+
+        return False, f"Unsupported public key type: {type(ca_public_key)}"
 
 
 def read_cert_from_file(cert_file, cert_type="pem"):
