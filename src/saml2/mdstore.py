@@ -1,3 +1,4 @@
+import urllib.parse
 import hashlib
 from hashlib import sha1
 import importlib
@@ -903,6 +904,10 @@ class MetaDataMDX(InMemoryMetaData):
         transform = f"{{sha1}}{entity_id_sha1}"
         return transform
 
+    @staticmethod
+    def percent_encoded_entity_transform(entity_id):
+        return urllib.parse.quote(entity_id, safe='')
+
     def __init__(
         self,
         url=None,
@@ -932,7 +937,9 @@ class MetaDataMDX(InMemoryMetaData):
 
         self.url = url.rstrip("/")
 
-        if entity_transform:
+        if entity_transform == "percent_encoded":
+            self.entity_transform = MetaDataMDX.percent_encoded_entity_transform
+        elif entity_transform:
             self.entity_transform = entity_transform
         else:
             self.entity_transform = MetaDataMDX.sha1_entity_transform
