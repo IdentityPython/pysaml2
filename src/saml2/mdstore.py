@@ -1304,14 +1304,17 @@ class MetadataStore(MetaData):
             if entity_id in md_source:
                 return md_source.attribute_requirement(entity_id, index)
 
-    def subject_id_requirement(self, entity_id):
+    def subject_id_requirement_type(self, entity_id):
         try:
             entity_attributes = self.entity_attributes(entity_id)
         except KeyError:
-            return []
+            return ""
 
         subject_id_reqs = entity_attributes.get("urn:oasis:names:tc:SAML:profiles:subject-id:req") or []
-        subject_id_req = next(iter(subject_id_reqs), None)
+        return next(iter(subject_id_reqs), None)
+
+    def subject_id_requirement(self, entity_id):
+        subject_id_req = self.subject_id_requirement_type(entity_id)
         if subject_id_req == "any":
             return [
                 {

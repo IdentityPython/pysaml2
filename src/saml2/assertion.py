@@ -488,6 +488,38 @@ class Policy:
 
         return in_a_while(**self.get_lifetime(sp_entity_id))
 
+    @staticmethod
+    def _subject_id_or_pairwise_id(
+        ava,
+        required,
+    ):
+        """
+        If both subject-id and pairwise-id are present in required attributes, check if both are present in
+        available attributes and if so default to pairwise-id only.
+        """
+        if required is None:
+            return ava, None
+
+        # check if both subject-id and pairwise-id are in required attributes
+        subject_id = None
+        pairwise_id = None
+        for item in required:
+            if item["name"] == "urn:oasis:names:tc:SAML:attribute:subject-id":
+                subject_id = item
+            if item["name"] == "urn:oasis:names:tc:SAML:attribute:pairwise-id":
+                pairwise_id = item
+
+        # if both are in required attributes, check if both are in available attributes and if so remove subject-id
+        # from required attributes and ava
+        if subject_id and pairwise_id:
+            if all(
+                [friendly_name in ava for friendly_name in [subject_id["friendly_name"], pairwise_id["friendly_name"]]]
+            ):
+                required.pop(required.index(subject_id))
+                ava.pop(subject_id["friendly_name"])
+
+        return ava, required
+
     def filter(self, ava, sp_entity_id, mdstore=None, required=None, optional=None):
         """What attribute and attribute values returns depends on what
         the SP or the registration authority has said it wants in the request
@@ -517,6 +549,10 @@ class Policy:
             self.acs = ac_factory()
 
         subject_ava = ava.copy()
+
+        # make sure we don't assert both subject-id and pairwise-id if subject-id requirement is "any"
+        if self.metadata_store and self.metadata_store.subject_id_requirement_type(sp_entity_id) == "any":
+            subject_ava, required = self._subject_id_or_pairwise_id(subject_ava, required)
 
         # entity category restrictions
         _ent_rest = self.get_entity_categories(sp_entity_id, mds=mdstore, required=required)
