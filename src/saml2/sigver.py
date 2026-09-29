@@ -1398,16 +1398,23 @@ class SecurityContext:
 
         try:
             validate_doc_with_schema(str(item))
-        except XMLSchemaError as e:
-            error_context = {
-                "message": "Signature verification failed. Invalid document format.",
-                "reason": str(e),
-                "ID": item.id,
-                "issuer": _issuer,
-                "type": node_name,
-                "document": decoded_xml,
-            }
-            raise SignatureError(error_context) from e
+        except XMLSchemaError:
+            # ElementTree round-trips can lose namespace declarations needed
+            # for QName attribute values (e.g. xsi:type="tn:boolean"), making
+            # the re-serialized XML fail schema validation even when the
+            # original document is valid. Fall back to the original XML.
+            try:
+                validate_doc_with_schema(decoded_xml)
+            except XMLSchemaError as e:
+                error_context = {
+                    "message": "Signature verification failed. Invalid document format.",
+                    "reason": str(e),
+                    "ID": item.id,
+                    "issuer": _issuer,
+                    "type": node_name,
+                    "document": decoded_xml,
+                }
+                raise SignatureError(error_context) from e
 
         # saml-core section "5.4 XML Signature Profile" defines constrains on the
         # xmldsig-core facilities. It explicitly dictates that enveloped signatures
