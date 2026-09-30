@@ -14,6 +14,7 @@ from saml2.mdie import to_dict
 from saml2.mdstore import MetadataStore
 from saml2.saml import NAME_FORMAT_URI
 from saml2.server import Server
+from saml2.typing import AttributeAsDict
 
 
 ATTRCONV = ac_factory(full_path("attributemaps"))
@@ -293,7 +294,6 @@ def test_filter_ava_esi_coco():
     )
 
 
-@pytest.mark.skip("Temporarily disabled")
 def test_filter_ava_refeds_anonymous_access():
     entity_id = "https://anonymous.example.edu/saml2/metadata/"
     mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
@@ -322,7 +322,6 @@ def test_filter_ava_refeds_anonymous_access():
     assert _eq(ava["schacHomeOrganization"], ["example.com"])
 
 
-@pytest.mark.skip("Temporarily disabled")
 def test_filter_ava_refeds_pseudonymous_access():
     entity_id = "https://pseudonymous.example.edu/saml2/metadata/"
     mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
@@ -355,7 +354,6 @@ def test_filter_ava_refeds_pseudonymous_access():
     assert _eq(ava["schacHomeOrganization"], ["example.com"])
 
 
-@pytest.mark.skip("Temporarily disabled")
 def test_filter_ava_refeds_personalized_access():
     entity_id = "https://personalized.example.edu/saml2/metadata/"
     mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
@@ -377,7 +375,11 @@ def test_filter_ava_refeds_personalized_access():
         "subject-id": ["subject-id@example.com"],
     }
 
-    ava = policy.filter(ava, entity_id)
+    attribute_requirements = mds.attribute_requirement(entity_id)
+    required = attribute_requirements.get("required", [])
+    optional = attribute_requirements.get("optional", [])
+
+    ava = policy.filter(ava, entity_id, required=required, optional=optional)
 
     assert _eq(
         list(ava.keys()),
@@ -390,6 +392,7 @@ def test_filter_ava_refeds_personalized_access():
             "eduPersonScopedAffiliation",
             "eduPersonAssurance",
             "schacHomeOrganization",
+            "eduPersonTargetedID",
         ],
     )
     assert _eq(ava["subject-id"], ["subject-id@example.com"])
