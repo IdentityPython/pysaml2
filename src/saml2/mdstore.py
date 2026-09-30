@@ -1114,7 +1114,7 @@ class MetadataStore(MetaData):
 
     def imp(self, spec):
         # This serves as a backwards compatibility
-        if type(spec) is dict:
+        if isinstance(spec, dict):
             # Old style...
             for key, vals in spec.items():
                 for val in vals:
