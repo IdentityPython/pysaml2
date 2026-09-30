@@ -992,8 +992,8 @@ class X509DataType_(SamlBase):
     c_cardinality["x509_ski"] = {"min": 0, "max": 1}
     c_children["{http://www.w3.org/2000/09/xmldsig#}X509SubjectName"] = ("x509_subject_name", X509SubjectName)
     c_cardinality["x509_subject_name"] = {"min": 0, "max": 1}
-    c_children["{http://www.w3.org/2000/09/xmldsig#}X509Certificate"] = ("x509_certificate", X509Certificate)
-    c_cardinality["x509_certificate"] = {"min": 0, "max": 1}
+    c_children["{http://www.w3.org/2000/09/xmldsig#}X509Certificate"] = ("x509_certificate", [X509Certificate])
+    c_cardinality["x509_certificate"] = {"min": 0}
     c_children["{http://www.w3.org/2000/09/xmldsig#}X509CRL"] = ("x509_crl", X509CRL)
     c_cardinality["x509_crl"] = {"min": 0, "max": 1}
     c_child_order.extend(["x509_issuer_serial", "x509_ski", "x509_subject_name", "x509_certificate", "x509_crl"])

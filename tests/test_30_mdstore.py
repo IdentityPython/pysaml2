@@ -624,6 +624,75 @@ def test_get_certs_from_metadata_without_keydescriptor():
     assert len(certs) == 0
 
 
+TEST_SIGNING_CERT = """MIIDQTCCAimgAwIBAgIUX8x3mr8kEGTCYgQit+f8m4EqanYwDQYJKoZIhvcNAQEL
+BQAwNzELMAkGA1UEBhMCQkUxETAPBgNVBAgMCEJydXNzZWxzMRUwEwYDVQQKDAxU
+ZXN0IFJvb3QgQ0EwHhcNMjYwMzEyMjE1NTI1WhcNMjcwMzEyMjE1NTI1WjA6MQsw
+CQYDVQQGEwJCRTERMA8GA1UECAwIQnJ1c3NlbHMxGDAWBgNVBAoMD1Rlc3QgU2ln
+bmluZyBTQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALKxUPRwpNyx
+H+0jiq+Pv8f0Q70zwdT/e9i03G/MG8JUctm69cFTo+snhbGhWbzpldyr+g8Tw8XA
+saWNMG8UvuZIh3YEty3viyCp1urHki0cNPKSdVkTU35TkmMskaIoxG6FgjPvpACt
+Z7XIjI8Ya9Y+GTkf8snWXPqL01ROH/0SwJkC1af77yoy8RfHJp9jvU5t+ulEfezn
+dR1iwFYCbq43FAL6kuvW+9Y1G1d69nXrcrKno0vYJ0UaLXigYWG6x278aUHEOR1o
+NmWb3wbXjSaZkgNdCPU3xt2riUF4LeoAOQFbSGmjtTmGXnpc8gDzras4XfmMhNQ3
+bsKxcWD3L/cCAwEAAaNCMEAwHQYDVR0OBBYEFJp0YG00psBAXr9N/yStQeZKWIHT
+MB8GA1UdIwQYMBaAFOURsA+UoO8h3d8ea4CnSLSlEFXuMA0GCSqGSIb3DQEBCwUA
+A4IBAQAId3IHM9nE5T+qwIcM6v/gweuIjiFakhAIwPWsTAbAIF9Q2P8CWkCF6lVG
+XUvB9l2SCvZCwYpQZNSb1mn43qSBfcnX3qwe1MljFeL8p54Z2AVVK3LCq3FiS+9N
+kbMEZkfm5hjH6D4MnSBSZE3NVB++QtnY4MtZ0kit1F2ziki+ptieE3DS6fbDKItN
+SZpm6i0267ujZZuzV5Mi1LDtaMujHwdEfDuA7zCqYxLF645h2BFzr6WhJIbTEWfX
+JRKjESU8gDk6jP3D/0HgqOjI0Z+n6p/L7PYi+0Hr8h6ezUHB+wywtxgTL5XCJ9T1
+M4skhVpmS5z0l0Mz0VaJ+fvgmv1G"""
+
+TEST_CA_CERT = """MIIDTzCCAjegAwIBAgIUCiB5e+gHpFzhSOVclgujbA9sKwswDQYJKoZIhvcNAQEL
+BQAwNzELMAkGA1UEBhMCQkUxETAPBgNVBAgMCEJydXNzZWxzMRUwEwYDVQQKDAxU
+ZXN0IFJvb3QgQ0EwHhcNMjYwMzEyMjE1NTI1WhcNMjcwMzEyMjE1NTI1WjA3MQsw
+CQYDVQQGEwJCRTERMA8GA1UECAwIQnJ1c3NlbHMxFTATBgNVBAoMDFRlc3QgUm9v
+dCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMVD3uB4wPW5WWCe
+pfEesnxQOzZ5azJ7iVd4MmCaJKZuesNJ3K56eO7U5wh3EW01gbZtbgpr2G7sjHcG
+YIE4ILKew8RMZRFgdjm2SEv3zhiU1RiQTNYMs6w2fE9u5d/JwYO2QQXAsK3mAvRx
+Dr6XvxdtkWTXDJP0EXkpcsIMHHiLKfUE1H3stmaJXzzFf1w9laErSXuSw8iExp45
+VxNB0iJRQWmd1Gov3QG+yTTE6kuv8NTG1AAYlW7V3YoMlSSrEXRoWcJ4U+/jKjy0
+4wUGndn3D29to0BaJFJp2+DfnPKo3689qaGCs4bW4Hu6ahBom91EOWvcVR8mnwaE
+W/EtdP8CAwEAAaNTMFEwHQYDVR0OBBYEFOURsA+UoO8h3d8ea4CnSLSlEFXuMB8G
+A1UdIwQYMBaAFOURsA+UoO8h3d8ea4CnSLSlEFXuMA8GA1UdEwEB/wQFMAMBAf8w
+DQYJKoZIhvcNAQELBQADggEBAKUrGs+0rtWGyRbHoNzZGR573r/msJm/wWewvqsO
++yNsr6yX/v98CR06yZfIz68bxEuYvMXq33T5TybXMM64L2zVjNMynIOt5Hhky4Dy
+/Cxew1RcQYjqK9LFb+hTyek+sDhVx6Y9OsgsLQSAkJ2ySHMxJsstpGATGPt0+8Y+
+7dKdG1eMTjeGSYK4keHoX8xL4iO3npOXd3cKzr3OZ60ikNhQaPFhizCTq2XN9Bj7
+ufNZ3l6CCfFRIKV9dmF5SJ7NkpAX3hnrGeLZ0WqyTIZTct4q496cOO3WEVoInys6
+ckaoNnueMSDx2MfF//Nc63XDtlpz57PBy7Qw03xooFEfoBU="""
+
+
+def test_get_certs_from_metadata_with_cert_chain():
+    """Test that certs() returns all certificates when X509Data contains a chain"""
+    metadata_xml = """<EntitiesDescriptor
+        xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
+        xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+        Name="urn:test:cert-chain">
+      <EntityDescriptor entityID="http://idp.example.com/metadata">
+        <IDPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+          <KeyDescriptor use="signing">
+            <ds:KeyInfo>
+              <ds:X509Data>
+                <ds:X509Certificate>{signing_cert}</ds:X509Certificate>
+                <ds:X509Certificate>{ca_cert}</ds:X509Certificate>
+              </ds:X509Data>
+            </ds:KeyInfo>
+          </KeyDescriptor>
+          <SingleSignOnService
+              Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+              Location="http://idp.example.com/sso"/>
+        </IDPSSODescriptor>
+      </EntityDescriptor>
+    </EntitiesDescriptor>""".format(signing_cert=TEST_SIGNING_CERT, ca_cert=TEST_CA_CERT)
+
+    mds = MetadataStore(ATTRCONV, None)
+    mds.imp([{"class": "saml2.mdstore.InMemoryMetaData", "metadata": [(metadata_xml,)]}])
+    certs = mds.certs("http://idp.example.com/metadata", "any", "signing")
+    # Both certs from the chain should be returned
+    assert len(certs) == 2
+
+
 def test_metadata_extension_algsupport():
     mds = MetadataStore(ATTRCONV, None)
     mds.imp(METADATACONF["12"])

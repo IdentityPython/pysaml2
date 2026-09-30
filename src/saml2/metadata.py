@@ -184,7 +184,7 @@ def do_key_descriptor(cert=None, enc_cert=None, use="both"):
         for _cert in cert:
             kd_list.append(
                 md.KeyDescriptor(
-                    key_info=ds.KeyInfo(x509_data=ds.X509Data(x509_certificate=ds.X509Certificate(text=_cert))),
+                    key_info=ds.KeyInfo(x509_data=ds.X509Data(x509_certificate=[ds.X509Certificate(text=_cert)])),
                     use="signing",
                 )
             )
@@ -194,13 +194,13 @@ def do_key_descriptor(cert=None, enc_cert=None, use="both"):
         for _enc_cert in enc_cert:
             kd_list.append(
                 md.KeyDescriptor(
-                    key_info=ds.KeyInfo(x509_data=ds.X509Data(x509_certificate=ds.X509Certificate(text=_enc_cert))),
+                    key_info=ds.KeyInfo(x509_data=ds.X509Data(x509_certificate=[ds.X509Certificate(text=_enc_cert)])),
                     use="encryption",
                 )
             )
     if len(kd_list) == 0 and cert is not None:
         return md.KeyDescriptor(
-            key_info=ds.KeyInfo(x509_data=ds.X509Data(x509_certificate=ds.X509Certificate(text=cert)))
+            key_info=ds.KeyInfo(x509_data=ds.X509Data(x509_certificate=[ds.X509Certificate(text=cert)]))
         )
     return kd_list
 

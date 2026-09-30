@@ -137,7 +137,7 @@ class TestX509Data:
         self.x509_data.x509_issuer_serial = st
         self.x509_data.x509_ski = ds.X509SKI(text="x509 ski")
         self.x509_data.x509_subject_name = ds.X509SubjectName(text="x509 subject name")
-        self.x509_data.x509_certificate = ds.X509Certificate(text="x509 certificate")
+        self.x509_data.x509_certificate = [ds.X509Certificate(text="x509 certificate")]
         self.x509_data.x509_crl = ds.X509CRL(text="x509 crl")
 
         new_x509_data = ds.x509_data_from_string(self.x509_data.to_string())
@@ -149,8 +149,9 @@ class TestX509Data:
         assert isinstance(new_x509_data.x509_ski, ds.X509SKI)
         assert new_x509_data.x509_subject_name.text.strip() == "x509 subject name"
         assert isinstance(new_x509_data.x509_subject_name, ds.X509SubjectName)
-        assert new_x509_data.x509_certificate.text.strip() == "x509 certificate"
-        assert isinstance(new_x509_data.x509_certificate, ds.X509Certificate)
+        assert len(new_x509_data.x509_certificate) == 1
+        assert new_x509_data.x509_certificate[0].text.strip() == "x509 certificate"
+        assert isinstance(new_x509_data.x509_certificate[0], ds.X509Certificate)
         assert new_x509_data.x509_crl.text.strip() == "x509 crl"
         assert isinstance(new_x509_data.x509_crl, ds.X509CRL)
 
@@ -162,10 +163,24 @@ class TestX509Data:
         assert isinstance(new_x509_data.x509_ski, ds.X509SKI)
         assert new_x509_data.x509_subject_name.text.strip() == "x509 subject name"
         assert isinstance(new_x509_data.x509_subject_name, ds.X509SubjectName)
-        assert new_x509_data.x509_certificate.text.strip() == "x509 certificate"
-        assert isinstance(new_x509_data.x509_certificate, ds.X509Certificate)
+        assert len(new_x509_data.x509_certificate) == 1
+        assert new_x509_data.x509_certificate[0].text.strip() == "x509 certificate"
+        assert isinstance(new_x509_data.x509_certificate[0], ds.X509Certificate)
         assert new_x509_data.x509_crl.text.strip() == "x509 crl"
         assert isinstance(new_x509_data.x509_crl, ds.X509CRL)
+
+
+    def testMultipleCertificatesInX509Data(self):
+        """Test that multiple X509Certificate elements in a single X509Data are parsed correctly"""
+        xml_string = """<X509Data xmlns="http://www.w3.org/2000/09/xmldsig#">
+            <X509Certificate>cert_one</X509Certificate>
+            <X509Certificate>cert_two</X509Certificate>
+        </X509Data>"""
+        x509_data = ds.x509_data_from_string(xml_string)
+        assert isinstance(x509_data.x509_certificate, list)
+        assert len(x509_data.x509_certificate) == 2
+        assert x509_data.x509_certificate[0].text.strip() == "cert_one"
+        assert x509_data.x509_certificate[1].text.strip() == "cert_two"
 
 
 class TestTransform:
