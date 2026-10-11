@@ -4,10 +4,12 @@ import base64
 from os import remove
 from os.path import join
 from datetime import datetime
+from datetime import timedelta
 from datetime import timezone
 
-from OpenSSL import crypto
 from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import hashes as _hashes
+from cryptography.hazmat.primitives import serialization as _serialization
 from cryptography.hazmat.primitives.asymmetric import ec as _ec
 from cryptography.hazmat.primitives.asymmetric import padding as _padding
 from cryptography.hazmat.primitives.asymmetric import rsa as _rsa
@@ -26,6 +28,18 @@ class CertificateError(Exception):
 
 class PayloadError(Exception):
     pass
+
+
+def _hash_algorithm(hash_alg):
+    """Map a digest name such as "sha256" to the cryptography hash."""
+    algorithm = getattr(_hashes, hash_alg.upper(), None)
+    if not (isinstance(algorithm, type) and issubclass(algorithm, _hashes.HashAlgorithm)):
+        raise ValueError(f"No such digest method: {hash_alg}")
+    return algorithm()
+
+
+def _to_bytes(data):
+    return data.encode("utf-8") if isinstance(data, str) else data
 
 
 class OpenSSLWrapper:
@@ -105,9 +119,11 @@ class OpenSSLWrapper:
                                   ASKING!
         :param cert_dir:          Where to save the files if write_to_file is
                                   true.
-        :param cipher_passphrase  A dictionary with cipher and passphrase.
+        :param cipher_passphrase  A dictionary with cipher and passphrase. The
+                                  key is encrypted with AES-256; "cipher" is
+                                  ignored.
         Example::
-                {"cipher": "blowfish", "passphrase": "qwerty"}
+                {"cipher": "aes256", "passphrase": "qwerty"}
 
         :return:                  string representation of certificate,
                                   string representation of private key
@@ -135,44 +151,42 @@ class OpenSSLWrapper:
             k_f = join(cert_dir, key_file)
 
         # create a key pair
-        k = crypto.PKey()
-        k.generate_key(crypto.TYPE_RSA, key_length)
-
-        # create a self-signed cert
-        cert = crypto.X509()
-
-        if request:
-            cert = crypto.X509Req()
+        k = _rsa.generate_private_key(public_exponent=65537, key_size=key_length)
 
         if len(cert_info["country_code"]) != 2:
             raise WrongInput("Country code must be two letters!")
-        cert.get_subject().C = cert_info["country_code"]
-        cert.get_subject().ST = cert_info["state"]
-        cert.get_subject().L = cert_info["city"]
-        cert.get_subject().O = cert_info["organization"]  # noqa: E741
-        cert.get_subject().OU = cert_info["organization_unit"]
-        cert.get_subject().CN = cn
-        if not request:
-            cert.set_serial_number(sn)
-            cert.gmtime_adj_notBefore(valid_from)  # Valid before present time
-            cert.gmtime_adj_notAfter(valid_to)  # 3 650 days
-            cert.set_issuer(cert.get_subject())
-        cert.set_pubkey(k)
-        cert.sign(k, hash_alg)
+        subject = _x509.Name(
+            [
+                _x509.NameAttribute(_x509.NameOID.COUNTRY_NAME, cert_info["country_code"]),
+                _x509.NameAttribute(_x509.NameOID.STATE_OR_PROVINCE_NAME, cert_info["state"]),
+                _x509.NameAttribute(_x509.NameOID.LOCALITY_NAME, cert_info["city"]),
+                _x509.NameAttribute(_x509.NameOID.ORGANIZATION_NAME, cert_info["organization"]),
+                _x509.NameAttribute(_x509.NameOID.ORGANIZATIONAL_UNIT_NAME, cert_info["organization_unit"]),
+                _x509.NameAttribute(_x509.NameOID.COMMON_NAME, cn),
+            ]
+        )
+        if request:
+            cert = _x509.CertificateSigningRequestBuilder().subject_name(subject).sign(k, _hash_algorithm(hash_alg))
+        else:
+            now = datetime.now(timezone.utc)
+            cert = (
+                _x509.CertificateBuilder()
+                .subject_name(subject)
+                .issuer_name(subject)
+                .public_key(k.public_key())
+                .serial_number(sn)
+                .not_valid_before(now + timedelta(seconds=valid_from))
+                .not_valid_after(now + timedelta(seconds=valid_to))
+                .sign(k, _hash_algorithm(hash_alg))
+            )
 
         try:
-            if request:
-                tmp_cert = crypto.dump_certificate_request(crypto.FILETYPE_PEM, cert)
-            else:
-                tmp_cert = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
-            tmp_key = None
+            tmp_cert = cert.public_bytes(_serialization.Encoding.PEM)
+            encryption = _serialization.NoEncryption()
             if cipher_passphrase is not None:
-                passphrase = cipher_passphrase["passphrase"]
-                if isinstance(cipher_passphrase["passphrase"], str):
-                    passphrase = passphrase.encode("utf-8")
-                tmp_key = crypto.dump_privatekey(crypto.FILETYPE_PEM, k, cipher_passphrase["cipher"], passphrase)
-            else:
-                tmp_key = crypto.dump_privatekey(crypto.FILETYPE_PEM, k)
+                # cryptography chooses the cipher (AES-256); cipher_passphrase["cipher"] is ignored.
+                encryption = _serialization.BestAvailableEncryption(_to_bytes(cipher_passphrase["passphrase"]))
+            tmp_key = k.private_bytes(_serialization.Encoding.PEM, _serialization.PrivateFormat.PKCS8, encryption)
             if write_to_file:
                 with open(c_f, "w") as fc:
                     fc.write(tmp_cert.decode("utf-8"))
@@ -241,27 +255,28 @@ class OpenSSLWrapper:
         :return:                  String representation of the signed
                                   certificate.
         """
-        ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, sign_cert_str)
-        ca_key = None
-        if passphrase is not None:
-            ca_key = crypto.load_privatekey(crypto.FILETYPE_PEM, sign_key_str, passphrase)
-        else:
-            ca_key = crypto.load_privatekey(crypto.FILETYPE_PEM, sign_key_str)
-        req_cert = crypto.load_certificate_request(crypto.FILETYPE_PEM, request_cert_str)
+        ca_cert = _x509.load_pem_x509_certificate(_to_bytes(sign_cert_str))
+        sign_key = _to_bytes(sign_key_str)
+        password = None if passphrase is None else _to_bytes(passphrase)
+        try:
+            ca_key = _serialization.load_pem_private_key(sign_key, password=password)
+        except TypeError:
+            # A passphrase for an unencrypted key is ignored, as pyOpenSSL did.
+            ca_key = _serialization.load_pem_private_key(sign_key, password=None)
+        req_cert = _x509.load_pem_x509_csr(_to_bytes(request_cert_str))
 
-        cert = crypto.X509()
-        cert.set_subject(req_cert.get_subject())
-        cert.set_serial_number(sn)
-        cert.gmtime_adj_notBefore(valid_from)
-        cert.gmtime_adj_notAfter(valid_to)
-        cert.set_issuer(ca_cert.get_subject())
-        cert.set_pubkey(req_cert.get_pubkey())
-        cert.sign(ca_key, hash_alg)
-
-        cert_dump = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
-        if isinstance(cert_dump, str):
-            return cert_dump
-        return cert_dump.decode("utf-8")
+        now = datetime.now(timezone.utc)
+        cert = (
+            _x509.CertificateBuilder()
+            .subject_name(req_cert.subject)
+            .issuer_name(ca_cert.subject)
+            .public_key(req_cert.public_key())
+            .serial_number(sn)
+            .not_valid_before(now + timedelta(seconds=valid_from))
+            .not_valid_after(now + timedelta(seconds=valid_to))
+            .sign(ca_key, _hash_algorithm(hash_alg))
+        )
+        return cert.public_bytes(_serialization.Encoding.PEM).decode("utf-8")
 
     def verify_chain(self, cert_chain_str_list, cert_str):
         """

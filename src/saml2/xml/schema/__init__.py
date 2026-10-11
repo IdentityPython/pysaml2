@@ -1,5 +1,6 @@
 from importlib.resources import files as _resource_files
 
+from xmlschema import XMLResource as _XMLResource
 from xmlschema import XMLSchema as _XMLSchema
 from xmlschema.exceptions import XMLSchemaException as _XMLSchemaException
 
@@ -60,7 +61,9 @@ _schema_validator_default = _create_xml_schema_validator()
 def validate(doc, validator=None):
     validator = _schema_validator_default if validator is None else validator
     try:
-        validator.validate(doc)
+        # Load the document as xmlschema < 4 did: allow="sandbox" restricts the
+        # schema files; since xmlschema 4 it would also block the document itself.
+        validator.validate(_XMLResource(doc))
     except _XMLSchemaException as e:
         error_context = {
             "doc": doc,

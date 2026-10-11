@@ -18,9 +18,6 @@ from time import mktime
 from urllib import parse
 from uuid import uuid4 as gen_random_key
 
-from OpenSSL import crypto
-import dateutil
-
 from saml2 import ExtensionElement
 from saml2 import SamlBase
 from saml2 import SAMLError
@@ -373,15 +370,12 @@ def active_cert(key):
     """
     try:
         cert_str = pem_format(key)
-        cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_str)
+        cert = saml2.cryptography.pki.load_pem_x509_certificate(cert_str)
     except AttributeError:
         return False
 
     now = datetime.now(timezone.utc)
-    valid_from = dateutil.parser.parse(cert.get_notBefore())
-    valid_to = dateutil.parser.parse(cert.get_notAfter())
-    active = not cert.has_expired() and valid_from <= now < valid_to
-    return active
+    return cert.not_valid_before_utc <= now < cert.not_valid_after_utc
 
 
 def cert_from_key_info(key_info, ignore_age=False):

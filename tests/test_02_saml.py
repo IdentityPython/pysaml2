@@ -278,6 +278,18 @@ class TestSAMLBase:
         assert av.text == _value
         assert type(av.text) is str
 
+    def test_empty_value_keeps_type_prefix_declaration(self):
+        for prefix in ("xs", "xsd"):
+            xml = (
+                '<saml:AttributeValue xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
+                ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+                f' xmlns:{prefix}="http://www.w3.org/2001/XMLSchema" xsi:type="{prefix}:string"/>'
+            )
+            av = saml2.create_class_from_xml_string(AttributeValue, xml)
+            txt = av.to_string().decode("utf-8")
+            assert f'xsi:type="{prefix}:string"' in txt
+            assert f'xmlns:{prefix}="http://www.w3.org/2001/XMLSchema"' in txt
+
     def test_make_vals_div(self):
         foo = saml2.make_vals(666, AttributeValue, part=True)
         assert foo.text == "666"
