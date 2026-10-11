@@ -6,6 +6,9 @@ import time
 __author__ = "haho0032"
 import unittest
 
+from cryptography import x509
+from cryptography.exceptions import UnsupportedAlgorithm
+
 from saml2.cert import OpenSSLWrapper
 
 
@@ -157,7 +160,16 @@ class TestGenerateCertificates(unittest.TestCase):
         )
 
         req_cert_str, req_key_str = osw.create_certificate(cert_info, request=True)
-        cert_str = osw.create_cert_signed_certificate(ca_cert_str, ca_key_str, req_cert_str, passphrase=b"qwerty")
+        for passphrase in (b"qwerty", "qwerty"):
+            cert_str = osw.create_cert_signed_certificate(ca_cert_str, ca_key_str, req_cert_str, passphrase=passphrase)
+            self.assertTrue(osw.verify(ca_cert_str, cert_str)[0])
+
+        # A passphrase for an unencrypted key is ignored.
+        plain_ca_cert_str, plain_ca_key_str = osw.create_certificate(cert_info_ca, request=False)
+        cert_str = osw.create_cert_signed_certificate(
+            plain_ca_cert_str, plain_ca_key_str, req_cert_str, passphrase=b"qwerty"
+        )
+        self.assertTrue(osw.verify(plain_ca_cert_str, cert_str)[0])
 
         valid = False
         try:
@@ -225,3 +237,51 @@ class TestGenerateCertificates(unittest.TestCase):
         time.sleep(2)
         valid, mess = osw.verify(ca_cert_str, cert_str)
         self.assertFalse(valid)
+
+    def test_hash_alg(self):
+        cert_info = {
+            "cn": "qwerty",
+            "country_code": "qw",
+            "state": "qwerty",
+            "city": "qwerty",
+            "organization": "qwerty",
+            "organization_unit": "qwerty",
+        }
+        osw = OpenSSLWrapper()
+
+        ca_cert_str, ca_key_str = osw.create_certificate(cert_info, request=False, hash_alg="sha512")
+        req_cert_str, req_key_str = osw.create_certificate(
+            dict(cert_info, cn="asdfgh"), request=True, hash_alg="sha384"
+        )
+        cert_str = osw.create_cert_signed_certificate(ca_cert_str, ca_key_str, req_cert_str, hash_alg="SHA384")
+        self.assertEqual(x509.load_pem_x509_certificate(ca_cert_str).signature_hash_algorithm.name, "sha512")
+        self.assertEqual(x509.load_pem_x509_csr(req_cert_str).signature_hash_algorithm.name, "sha384")
+        self.assertEqual(x509.load_pem_x509_certificate(cert_str.encode()).signature_hash_algorithm.name, "sha384")
+
+        # cryptography no longer signs certificates with SHA-1 or MD5.
+        for hash_alg in ("sha1", "md5"):
+            with self.assertRaises(UnsupportedAlgorithm):
+                osw.create_certificate(cert_info, request=False, hash_alg=hash_alg)
+        with self.assertRaisesRegex(ValueError, "No such digest method: sha-256"):
+            osw.create_certificate(cert_info, request=False, hash_alg="sha-256")
+
+    def test_validate_legacy_sha1_certificates(self):
+        # Created by pysaml2 7.5.5 with pyOpenSSL: SHA-1 signatures and a des3-encrypted CA key.
+        pki = f"{os.path.dirname(os.path.abspath(__file__))}/pki"
+        osw = OpenSSLWrapper()
+        ca_cert_str = osw.read_str_from_file(f"{pki}/legacy_sha1_ca.crt")
+        ca_key_str = osw.read_str_from_file(f"{pki}/legacy_sha1_ca_des3.key")
+        signed_cert_str = osw.read_str_from_file(f"{pki}/legacy_sha1_signed.crt")
+        self.assertTrue(osw.verify(ca_cert_str, signed_cert_str)[0])
+
+        cert_info = {
+            "cn": "asdfgh",
+            "country_code": "as",
+            "state": "asdfgh",
+            "city": "asdfgh",
+            "organization": "asdfgh",
+            "organization_unit": "asdfg",
+        }
+        req_cert_str, req_key_str = osw.create_certificate(cert_info, request=True)
+        cert_str = osw.create_cert_signed_certificate(ca_cert_str, ca_key_str, req_cert_str, passphrase=b"qwerty")
+        self.assertTrue(osw.verify(ca_cert_str, cert_str)[0])

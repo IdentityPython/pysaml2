@@ -191,17 +191,16 @@ class AttributeValueBase(SamlBase):
         except AttributeError:
             self._extatt[XSI_TYPE] = typ
 
-        if typ.startswith("xs:"):
-            try:
-                self.extension_attributes["xmlns:xs"] = XS_NAMESPACE
-            except AttributeError:
-                self._extatt["xmlns:xs"] = XS_NAMESPACE
+        self._declare_type_prefix(typ)
 
-        if typ.startswith("xsd:"):
-            try:
-                self.extension_attributes["xmlns:xsd"] = XS_NAMESPACE
-            except AttributeError:
-                self._extatt["xmlns:xsd"] = XS_NAMESPACE
+    def _declare_type_prefix(self, typ):
+        """Declare the xs/xsd prefix used by an xsi:type value, e.g. xs:string."""
+        for prefix in ("xs", "xsd"):
+            if typ.startswith(f"{prefix}:"):
+                try:
+                    self.extension_attributes[f"xmlns:{prefix}"] = XS_NAMESPACE
+                except AttributeError:
+                    self._extatt[f"xmlns:{prefix}"] = XS_NAMESPACE
 
     def get_type(self):
         try:
@@ -351,6 +350,11 @@ class AttributeValueBase(SamlBase):
             self._convert_element_tree_to_member(child)
         for attribute, value in iter(tree.attrib.items()):
             self._convert_element_attribute_to_member(attribute, value)
+
+        # Parsing drops namespace declarations, and only set_text() restores the
+        # one an xsi:type prefix needs; an empty value would serialize with an
+        # undeclared prefix (xsi:type="xs:string" without xmlns:xs).
+        self._declare_type_prefix(self.get_type())
 
         # if we have added children to this node
         # we consider whitespace insignificant
