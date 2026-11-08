@@ -99,6 +99,7 @@ METADATACONF = {
             {
                 "url": "http://md.incommon.org/InCommon/InCommon-metadata-export.xml",
                 "cert": full_path("inc-md-cert.pem"),
+                "require_signature": False,
             }
         ]
     },
