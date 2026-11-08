@@ -241,7 +241,16 @@ def repack_cert(cert):
 
 
 class MetaData:
-    def __init__(self, attrc, metadata="", node_name=None, check_validity=True, security=None, **kwargs):
+    def __init__(
+        self,
+        attrc,
+        metadata="",
+        node_name=None,
+        check_validity=True,
+        security=None,
+        require_signature=True,
+        **kwargs,
+    ):
         self.attrc = attrc
         self.metadata = metadata
         self.entity = None
@@ -250,6 +259,7 @@ class MetaData:
         self.node_name = node_name
         self.check_validity = check_validity
         self.security = security
+        self.require_signature = require_signature
 
     def items(self):
         """
@@ -515,8 +525,17 @@ class MetaData:
 
 
 class InMemoryMetaData(MetaData):
-    def __init__(self, attrc, metadata="", node_name=None, check_validity=True, security=None, **kwargs):
-        super().__init__(attrc, metadata=metadata)
+    def __init__(
+        self,
+        attrc,
+        metadata="",
+        node_name=None,
+        check_validity=True,
+        security=None,
+        require_signature=True,
+        **kwargs,
+    ):
+        super().__init__(attrc, metadata=metadata, require_signature=require_signature)
         self.entity = {}
         self.security = security
         self.node_name = node_name
@@ -732,6 +751,8 @@ class InMemoryMetaData(MetaData):
             return True
 
         if not self.signed():
+            if self.require_signature:
+                raise SignatureError("Metadata is not signed")
             return True
 
         if self.node_name is not None:
@@ -1059,7 +1080,7 @@ class MetadataStore(MetaData):
             if "url" not in kwargs:
                 raise ValueError("Remote metadata must be structured as a dict containing the key 'url'")
             key = kwargs["url"]
-            for _key in ["node_name", "check_validity"]:
+            for _key in ["node_name", "check_validity", "require_signature"]:
                 try:
                     _args[_key] = kwargs[_key]
                 except KeyError:
@@ -1083,6 +1104,7 @@ class MetadataStore(MetaData):
                 freshness_period = kwargs.get("freshness_period", None)
                 security = self.security
                 entity_transform = kwargs.get("entity_transform", None)
+                require_signature = kwargs.get("require_signature", True)
                 _md = MetaDataMDX(
                     url,
                     security,
@@ -1090,6 +1112,7 @@ class MetadataStore(MetaData):
                     entity_transform,
                     freshness_period=freshness_period,
                     http_client_timeout=self.http_client_timeout,
+                    require_signature=require_signature,
                 )
             else:
                 key = args[1]
@@ -1145,6 +1168,9 @@ class MetadataStore(MetaData):
 
                 if self.filter:
                     kwargs["filter"] = self.filter
+
+                if "require_signature" in item:
+                    kwargs["require_signature"] = item["require_signature"]
 
                 for key in item["metadata"]:
                     # Separately handle MetaDataFile and directory

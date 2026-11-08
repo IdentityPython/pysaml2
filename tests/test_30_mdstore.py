@@ -30,6 +30,7 @@ from saml2.mdstore import MetadataStore
 from saml2.mdstore import locations
 from saml2.mdstore import name
 from saml2.s_utils import UnknownPrincipal
+from saml2.sigver import SignatureError
 
 
 TESTS_DIR = os.path.dirname(__file__)
@@ -156,6 +157,7 @@ METADATACONF = {
             "metadata": [
                 ("http://md.incommon.org/InCommon/InCommon-metadata-export.xml", full_path("inc-md-cert.pem"))
             ],
+            "require_signature": False,
         }
     ],
     "11": [{"class": "saml2.mdstore.InMemoryMetaData", "metadata": [(TEST_METADATA_STRING,)]}],
@@ -522,10 +524,122 @@ def test_load_remote_encoding(mock_request):
     sc = sigver.SecurityContext(crypto, key_type="", cert_type="")
     url = "http://metadata.aai.switch.ch/metadata.aaitest.xml"
     httpc = HTTPBase(http_client_timeout=10)
-    mds = MetaDataExtern(ATTRCONV, url, sc, full_path("SWITCHaaiRootCA.crt.pem"), httpc)
+    mds = MetaDataExtern(ATTRCONV, url, sc, full_path("SWITCHaaiRootCA.crt.pem"), httpc, require_signature=False)
     mds.load()
 
     mock_request.assert_called_with("GET", url, allow_redirects=False, verify=True, timeout=10)
+
+
+def test_unsigned_metadata_with_cert_is_rejected():
+    mds = MetaDataExtern(
+        ATTRCONV,
+        "https://example.org/metadata.xml",
+        cert=full_path("inc-md-cert.pem"),
+    )
+
+    with raises(SignatureError, match="Metadata is not signed"):
+        mds.parse_and_check_signature(TEST_METADATA_STRING)
+
+
+def test_unsigned_metadata_with_cert_can_opt_out():
+    mds = MetaDataExtern(
+        ATTRCONV,
+        "https://example.org/metadata.xml",
+        cert=full_path("inc-md-cert.pem"),
+        require_signature=False,
+    )
+
+    assert mds.parse_and_check_signature(TEST_METADATA_STRING) is True
+
+
+def test_unsigned_metadata_without_cert_is_accepted():
+    mds = MetaDataExtern(ATTRCONV, "https://example.org/metadata.xml")
+
+    assert mds.parse_and_check_signature(TEST_METADATA_STRING) is True
+
+
+@patch("saml2.httpbase.requests.request")
+def test_load_remote_unsigned_metadata_is_rejected(mock_request):
+    mock_request.return_value.ok = True
+    mock_request.return_value.status_code = 200
+    mock_request.return_value.content = TEST_METADATA_STRING
+
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    metadata_conf = {
+        "remote": [
+            {
+                "url": "https://example.org/metadata.xml",
+                "cert": full_path("inc-md-cert.pem"),
+            }
+        ]
+    }
+
+    with raises(SignatureError, match="Metadata is not signed"):
+        mds.imp(metadata_conf)
+
+
+@patch("saml2.httpbase.requests.request")
+def test_load_remote_unsigned_metadata_can_opt_out(mock_request):
+    mock_request.return_value.ok = True
+    mock_request.return_value.status_code = 200
+    mock_request.return_value.content = TEST_METADATA_STRING
+
+    mds = MetadataStore(ATTRCONV, sec_config, disable_ssl_certificate_validation=True)
+    metadata_conf = {
+        "remote": [
+            {
+                "url": "https://example.org/metadata.xml",
+                "cert": full_path("inc-md-cert.pem"),
+                "require_signature": False,
+            }
+        ]
+    }
+
+    mds.imp(metadata_conf)
+
+    assert "https://example.org/metadata.xml" in mds.metadata
+
+
+def test_load_mdq_require_signature_opt_out():
+    mds = MetadataStore(ATTRCONV, sec_config)
+
+    mds.load(
+        "mdq",
+        url="http://mdx.example.com",
+        cert=full_path("inc-md-cert.pem"),
+        require_signature=False,
+    )
+
+    assert mds.metadata["http://mdx.example.com"].require_signature is False
+
+
+@responses.activate
+def test_mdx_unsigned_metadata_with_cert_is_rejected():
+    entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+    url = f"http://mdx.example.com/entities/{parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id))}"
+    responses.add(responses.GET, url, body=TEST_METADATA_STRING, status=200, content_type=SAML_METADATA_CONTENT_TYPE)
+
+    mdx = MetaDataMDX("http://mdx.example.com", cert=full_path("inc-md-cert.pem"))
+
+    with raises(SignatureError, match="Metadata is not signed"):
+        mdx.single_sign_on_service(entity_id, BINDING_HTTP_REDIRECT)
+
+
+@responses.activate
+def test_mdx_unsigned_metadata_with_cert_can_opt_out():
+    entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+    url = f"http://mdx.example.com/entities/{parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id))}"
+    responses.add(responses.GET, url, body=TEST_METADATA_STRING, status=200, content_type=SAML_METADATA_CONTENT_TYPE)
+
+    mdx = MetaDataMDX(
+        "http://mdx.example.com",
+        cert=full_path("inc-md-cert.pem"),
+        require_signature=False,
+    )
+
+    sso_loc = mdx.single_sign_on_service(entity_id, BINDING_HTTP_REDIRECT)
+
+    assert sso_loc[0]["location"] == entity_id
 
 
 def test_load_string():

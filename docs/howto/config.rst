@@ -415,6 +415,12 @@ file system.
 When the parameter *check_validity* is set to False metadata that have expired
 will be accepted as valid.
 
+When the parameter *require_signature* is set to False metadata that are not
+signed will be accepted even when a signing certificate (*cert*) is configured.
+By default *require_signature* is True, so unsigned metadata is rejected with a
+``SignatureError`` when *cert* is configured. The option has no effect when no
+*cert* is configured.
+
 When the parameter *disable_ssl_certificate_validation* is set to True the
 validity of ssl certificate will be skipped.
 
