@@ -1,13 +1,17 @@
 __author__ = "haho0032"
 
 import base64
-import datetime
 from os import remove
 from os.path import join
+from datetime import datetime
+from datetime import timezone
 
 from OpenSSL import crypto
-import dateutil.parser
-import pytz
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric import ec as _ec
+from cryptography.hazmat.primitives.asymmetric import padding as _padding
+from cryptography.hazmat.primitives.asymmetric import rsa as _rsa
+import cryptography.x509 as _x509
 
 import saml2.cryptography.pki
 
@@ -274,14 +278,7 @@ class OpenSSLWrapper:
                 return False, message
             else:
                 cert_str = tmp_cert_str
-            return (True, "Signed certificate is valid and correctly signed by CA " "certificate.")
-
-    def certificate_not_valid_yet(self, cert):
-        starts_to_be_valid = dateutil.parser.parse(cert.get_notBefore())
-        now = pytz.UTC.localize(datetime.datetime.utcnow())
-        if starts_to_be_valid < now:
-            return False
-        return True
+            return (True, "Signed certificate is valid and correctly signed by CA certificate.")
 
     def verify(self, signing_cert_str, cert_str):
         """
@@ -302,38 +299,68 @@ class OpenSSLWrapper:
                                  otherwise false.
                                  Message = Why the validation failed.
         """
+
+        cert_str_bytes = cert_str if isinstance(cert_str, bytes) else cert_str.encode("ascii")
+        signing_cert_bytes = (
+            signing_cert_str if isinstance(signing_cert_str, bytes) else signing_cert_str.encode("ascii")
+        )
+
         try:
-            ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, signing_cert_str)
-            cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_str)
+            cert_crypto = saml2.cryptography.pki.load_pem_x509_certificate(cert_str_bytes)
+        except ValueError as e:
+            return False, f"Failed to load certificate: {e}"
 
-            if self.certificate_not_valid_yet(ca_cert):
-                return False, "CA certificate is not valid yet."
+        try:
+            ca_cert_crypto = saml2.cryptography.pki.load_pem_x509_certificate(signing_cert_bytes)
+        except ValueError as e:
+            return False, f"Failed to load CA certificate: {e}"
 
-            if ca_cert.has_expired() == 1:
-                return False, "CA certificate is expired."
+        now = datetime.now(timezone.utc)
+        if now < ca_cert_crypto.not_valid_before_utc:
+            return False, "CA certificate is not valid yet."
+        if now >= ca_cert_crypto.not_valid_after_utc:
+            return False, "CA certificate is expired."
+        if now < cert_crypto.not_valid_before_utc:
+            return False, "The signed certificate is not valid yet."
+        if now >= cert_crypto.not_valid_after_utc:
+            return False, "The signed certificate is expired."
 
-            if cert.has_expired() == 1:
-                return False, "The signed certificate is expired."
+        ca_cn_attr = ca_cert_crypto.subject.get_attributes_for_oid(_x509.NameOID.COMMON_NAME)
+        ca_cn_value = ca_cn_attr and ca_cn_attr[0].value
+        cert_cn_attr = cert_crypto.subject.get_attributes_for_oid(_x509.NameOID.COMMON_NAME)
+        cert_cn_value = cert_cn_attr and cert_cn_attr[0].value
+        if ca_cn_value == cert_cn_value:
+            return False, "CN may not be equal for CA certificate and the signed certificate."
 
-            if self.certificate_not_valid_yet(cert):
-                return False, "The signed certificate is not valid yet."
+        if cert_crypto.signature_hash_algorithm is None:
+            return False, "Unsupported signature algorithm (no hash algorithm present)."
 
-            if ca_cert.get_subject().CN == cert.get_subject().CN:
-                return False, ("CN may not be equal for CA certificate and the " "signed certificate.")
+        ca_public_key = ca_cert_crypto.public_key()
 
-            cert_algorithm = cert.get_signature_algorithm()
-            cert_algorithm = cert_algorithm.decode("ascii")
-            cert_str = cert_str.encode("ascii")
-
-            cert_crypto = saml2.cryptography.pki.load_pem_x509_certificate(cert_str)
-
+        if isinstance(ca_public_key, _rsa.RSAPublicKey):
             try:
-                crypto.verify(ca_cert, cert_crypto.signature, cert_crypto.tbs_certificate_bytes, cert_algorithm)
+                ca_public_key.verify(
+                    signature=cert_crypto.signature,
+                    data=cert_crypto.tbs_certificate_bytes,
+                    padding=_padding.PKCS1v15(),
+                    algorithm=cert_crypto.signature_hash_algorithm,
+                )
                 return True, "Signed certificate is valid and correctly signed by CA certificate."
-            except crypto.Error as e:
+            except InvalidSignature as e:
                 return False, f"Certificate is incorrectly signed: {str(e)}"
-        except Exception as e:
-            return False, f"Certificate is not valid for an unknown reason. {str(e)}"
+
+        if isinstance(ca_public_key, _ec.EllipticCurvePublicKey):
+            try:
+                ca_public_key.verify(
+                    signature=cert_crypto.signature,
+                    data=cert_crypto.tbs_certificate_bytes,
+                    signature_algorithm=_ec.ECDSA(cert_crypto.signature_hash_algorithm),
+                )
+                return True, "Signed certificate is valid and correctly signed by CA certificate."
+            except InvalidSignature as e:
+                return False, f"Certificate is incorrectly signed: {str(e)}"
+
+        return False, f"Unsupported public key type: {type(ca_public_key)}"
 
 
 def read_cert_from_file(cert_file, cert_type="pem"):
