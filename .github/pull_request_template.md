@@ -2,8 +2,8 @@
 
 ##### The feature or problem addressed by this PR
 
-<!-- an explaination of the issue that is being resolved with this PR -->
-<!-- or, an explaination of the feature that is being added with this PR -->
+<!-- an explanation of the issue that is being resolved with this PR -->
+<!-- or, an explanation of the feature that is being added with this PR -->
 <!-- or, link to an issue describing the problem -->
 
 

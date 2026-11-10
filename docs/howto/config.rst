@@ -221,26 +221,30 @@ contact_person
 ^^^^^^^^^^^^^^
 
 This is only used by *make_metadata.py* when it constructs the metadata for
-the service described by the configuration file.
-This is where you describe who can be contacted if questions arise
-about the service or if support is needed. The possible types are according to
-the standard **technical**, **support**, **administrative**, **billing**
-and **other**.::
+the service described by the configuration file. This is where you describe
+who can be contacted if questions arise about the service or if support is
+needed.
+
+Note that `contact_type` is required for a valid schema. The possible types
+are according to the standard **technical**, **support**, **administrative**,
+**billing** and **other**::
 
     contact_person: [
         {
-            "givenname": "Derek",
-            "surname": "Jeter",
+            "given_name": "Derek",
+            "sur_name": "Jeter",
             "company": "Example Co.",
-            "mail": ["jeter@example.com"],
-            "type": "technical",
+            "email_address": ["jeter@example.com"],
+            "telephone_number": ["123-456-789", "+1 234 567 89"]
+            "contact_type": "technical",
         },
         {
-            "givenname": "Joe",
-            "surname": "Girardi",
+            "given_name": "Joe",
+            "sur_name": "Girardi",
             "company": "Example Co.",
-            "mail": "girardi@example.com",
-            "type": "administrative",
+            "email_address": ["girardi@example.com", "admin@example.com"]
+            "telephone_number": ["987-654-321"]
+            "contact_type": "administrative",
         },
     ]
 
@@ -292,8 +296,8 @@ Example::
     key_file: "key.pem"
 
 *key_file* is the name of a PEM formatted file that contains the private key
-of the service. This is currently used both to encrypt/sign assertions and as
-the client key in an HTTPS session.
+of the service. This is currently used both to sign assertions and as
+the client key in an HTTPS (mutual TLS) session.
 
 cert_file
 ^^^^^^^^^
@@ -324,7 +328,14 @@ Example::
 encryption_keypairs
 ^^^^^^^^^^^^^^^^^^^
 
-Indicates which certificates will be used for encryption capabilities::
+A list of dictionaries, each containing paths to the private and public keys
+used for encryption. The *key_file* refers to the PEM-formatted file that
+contains the private key for the service, while the *cert_file* refers to the
+corresponding public key (certificate) from the service's key pair. Both files
+must be in PEM format, and the *cert_file* should contain only a single
+certificate.
+
+Example::
 
     # Encryption
     'encryption_keypairs': [
@@ -404,7 +415,7 @@ file system.
 When the parameter *check_validity* is set to False metadata that have expired
 will be accepted as valid.
 
-When the paramenter *disable_ssl_certificate_validation* is set to True the
+When the parameter *disable_ssl_certificate_validation* is set to True the
 validity of ssl certificate will be skipped.
 
 When using a remote metadata source, the `node_name` option can be set to
@@ -522,7 +533,7 @@ accepted_time_diff
 
 If your computer and another computer that you are communicating with are not
 in sync regarding the computer clock, then here you can state how big a
-difference you are prepared to accept.
+difference in seconds you are prepared to accept.
 
 .. note:: This will indiscriminately affect all time comparisons.
     Hence your server may accept a statement that in fact is too old.
@@ -1481,11 +1492,11 @@ We start with a simple but fairly complete Service provider configuration::
         }
         "contact_person": [
             {
-                "givenname": "Roland",
-                "surname": "Hedberg",
-                "phone": "+46 90510",
-                "mail": "roland@example.com",
-                "type": "technical",
+                "given_name": "Roland",
+                "sur_name": "Hedberg",
+                "telephone_number": ["+46 90510"],
+                "email_address": ["roland@example.com"],
+                "contact_type": "technical",
             },
         ]
     }
@@ -1539,11 +1550,11 @@ A slightly more complex configuration::
         }
         "contact_person": [
             {
-                "givenname": "Roland",
-                "surname": "Hedberg",
-                "phone": "+46 90510",
-                "mail": "roland@example.com",
-                "type": "technical",
+                "given_name": "Roland",
+                "sur_name": "Hedberg",
+                "telephone_number": ["+46 90510"],
+                "email_address": ["roland@example.com"],
+                "contact_type": "technical",
             },
         ]
     }

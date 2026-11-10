@@ -44,6 +44,7 @@ GEANT_COCO = [
     "cn",
     "givenName",
     "sn",
+    "norEduPersonLegalName",
     "eduPersonAssurance",
     "eduPersonScopedAffiliation",
     "eduPersonAffiliation",

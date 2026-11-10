@@ -15,6 +15,14 @@ import cryptography.hazmat.primitives.ciphers as _ciphers
 from .errors import SymmetricCryptographyError
 
 
+try:
+    # cryptography >= 47 moved CFB here; use it to avoid CryptographyDeprecationWarning.
+    from cryptography.hazmat.decrepit.ciphers.modes import CFB as _CFB
+except ImportError:
+    # older cryptography versions don't have the "decrepit" module yet.
+    _CFB = _ciphers.modes.CFB
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -105,7 +113,7 @@ class AESCipher:
 
     POSTFIX_MODE = {
         "cbc": _ciphers.modes.CBC,
-        "cfb": _ciphers.modes.CFB,
+        "cfb": _CFB,
     }
 
     AES_BLOCK_SIZE = int(_ciphers.algorithms.AES.block_size / 8)

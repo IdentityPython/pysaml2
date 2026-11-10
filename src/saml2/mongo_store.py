@@ -1,6 +1,7 @@
-import datetime
-from hashlib import sha1
 import logging
+from hashlib import sha1
+from datetime import datetime
+from datetime import timezone
 
 from pymongo import MongoClient
 import pymongo.errors
@@ -205,7 +206,7 @@ class MDB:
         doc.update(kwargs)
         # Add timestamp to all documents to allow external garbage collecting
         if "created_at" not in doc:
-            doc["created_at"] = datetime.datetime.utcnow()
+            doc["created_at"] = datetime.now(timezone.utc)
         _ = self.db.insert_one(doc)
 
     def get(self, value=None, **kwargs):

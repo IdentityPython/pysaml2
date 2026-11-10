@@ -1,12 +1,4 @@
-import sys
-
-
-# importlib.resources was introduced in python 3.7
-# files API from importlib.resources introduced in python 3.9
-if sys.version_info[:2] >= (3, 9):
-    from importlib.resources import files as _resource_files
-else:
-    from importlib_resources import files as _resource_files
+from importlib.resources import files as _resource_files
 
 from xmlschema import XMLSchema as _XMLSchema
 from xmlschema.exceptions import XMLSchemaException as _XMLSchemaException
@@ -23,6 +15,7 @@ def _create_xml_schema_validator(source=None, **kwargs):
     path_schema_xml = str(schema_resources.joinpath("xml.xsd"))
     path_schema_envelope = str(schema_resources.joinpath("envelope.xsd"))
     path_schema_xenc = str(schema_resources.joinpath("xenc-schema.xsd"))
+    path_schema_xenc_11 = str(schema_resources.joinpath("xenc-schema-11.xsd"))
     path_schema_xmldsig_core = str(schema_resources.joinpath("xmldsig-core-schema.xsd"))
     path_schema_saml_assertion = str(schema_resources.joinpath("saml-schema-assertion-2.0.xsd"))
     path_schema_saml_metadata = str(schema_resources.joinpath("saml-schema-metadata-2.0.xsd"))
@@ -39,6 +32,7 @@ def _create_xml_schema_validator(source=None, **kwargs):
         "http://www.w3.org/XML/1998/namespace": path_schema_xml,
         "http://schemas.xmlsoap.org/soap/envelope/": path_schema_envelope,
         "http://www.w3.org/2001/04/xmlenc#": path_schema_xenc,
+        "http://www.w3.org/2009/xmlenc11#": path_schema_xenc_11,
         "http://www.w3.org/2000/09/xmldsig#": path_schema_xmldsig_core,
         "urn:oasis:names:tc:SAML:2.0:assertion": path_schema_saml_assertion,
         "urn:oasis:names:tc:SAML:2.0:metadata": path_schema_saml_metadata,
